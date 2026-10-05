@@ -1,0 +1,585 @@
+// Sahaya Bridge — privacy-first donation platform
+//
+// PRIVACY ARCHITECTURE
+// --------------------
+// Public-facing data and personally identifying information (PII) live in
+// separate tables. PII tables (UserPrivate, OrganizationPrivate, DeliveryPrivate)
+// store values encrypted with AES-256-GCM (see src/lib/crypto.ts) and are only
+// read by services guarded by the VIEW_PRIVATE_IDENTITY / DELIVERY_MANAGEMENT
+// permissions. Public identifiers (publicId) are random and never derived from
+// row counts. Internal ids are UUIDs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────── Enums ───────────────────────────────
+
+enum Role {
+  DONOR
+  RECIPIENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Permission {
+  REQUEST_REVIEW
+  USER_MANAGEMENT
+  DONATION_MANAGEMENT
+  VIEW_PRIVATE_IDENTITY
+  VERIFICATION_REVIEW
+  DELIVERY_MANAGEMENT
+  ANALYTICS_VIEW
+  AUDIT_LOG_VIEW
+  SYSTEM_SETTINGS
+  ADMIN_MANAGEMENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum OrganizationType {
+  PLAY_SCHOOL
+  SCHOOL
+  ORPHANAGE
+  OLD_AGE_HOME
+  NGO
+  COMMUNITY_ORGANIZATION
+  SHELTER
+  CARE_CENTER
+  INDIVIDUAL
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  NEEDS_INFO
+  ACTIVE
+  FULFILLED
+  CLOSED
+  REJECTED
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  NORMAL
+}
+
+enum Recurrence {
+  NONE
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+enum DonationType {
+  ITEM
+  MONETARY
+  SPONSOR
+}
+
+enum DonationStatus {
+  CREATED
+  CONFIRMED
+  PREPARING
+  IN_TRANSIT
+  RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  PLATFORM_PICKUP
+  PARTNER_DROPOFF
+  DELIVERY
+}
+
+enum ItemCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+}
+
+enum DonorGroupType {
+  INDIVIDUAL
+  COMMUNITY_GROUP
+  COMPANY
+  SCHOOL
+  COLLEGE
+  CLUB
+}
+
+enum DeliveryStatus {
+  UNASSIGNED
+  SCHEDULED
+  PICKED_UP
+  DELIVERED
+  FAILED
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  PHONE_OTP
+}
+
+enum DocumentKind {
+  REGISTRATION_CERTIFICATE
+  AUTHORIZATION
+  PROOF_OF_OPERATION
+  SUPPORTING_EVIDENCE
+}
+
+enum ReportReason {
+  SUSPICIOUS_INFORMATION
+  DUPLICATE_REQUEST
+  INCORRECT_REQUIREMENT
+  MISUSE
+  FAKE_ORGANIZATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+// ─────────────────────────────── Identity ───────────────────────────────
+
+/// Login identity. Contains no display name; email is used only for login and
+/// platform notifications and is never returned by non-admin APIs.
+model User {
+  id              String        @id @default(uuid()) @db.Uuid
+  publicId        String        @unique // e.g. D-7KQ9XM / R-4HT2WP / A-X9K2LM (random)
+  email           String        @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String
+  role            Role          @default(DONOR)
+  permissions     Permission[]
+  status          AccountStatus @default(ACTIVE)
+  locale          String        @default("en")
+  lastLoginAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  private       UserPrivate?
+  donorProfile  DonorProfile?
+  organization  RecipientOrganization?
+  sessions      Session[]
+  tokens        AuthToken[]
+  donations     Donation[]           @relation("DonorDonations")
+  notifications Notification[]
+  auditLogs     AuditLog[]           @relation("AuditActor")
+  reports       Report[]
+  reviews       Verification[]       @relation("VerificationReviewer")
+
+  @@index([role, status])
+  @@map("users")
+}
+
+/// Sensitive personal data — encrypted at rest, admin-only.
+model UserPrivate {
+  userId          String    @id @db.Uuid
+  fullNameEnc     String
+  phoneEnc        String?
+  phoneVerifiedAt DateTime?
+  addressEnc      String?
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("private_profiles")
+}
+
+/// Public-safe donor profile. Contains only aggregate, non-identifying data.
+model DonorProfile {
+  userId             String   @id @db.Uuid
+  preferredDistrict  String?
+  preferredCategories String[]
+  createdAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("donor_profiles")
+}
+
+/// Public-safe organisation record. Only coarse location + safe descriptor.
+model RecipientOrganization {
+  id                 String             @id @default(uuid()) @db.Uuid
+  publicId           String             @unique // e.g. R-4HT2WP
+  userId             String             @unique @db.Uuid
+  orgType            OrganizationType
+  publicDescriptor   String // "Verified Learning Center"
+  focusArea          String? // "Children's Education"
+  district           String
+  city               String?
+  state              String             @default("Kerala")
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  private       OrganizationPrivate?
+  verifications Verification[]
+  documents     VerificationDocument[]
+  requests      Request[]
+  donations     Donation[]
+
+  @@index([verificationStatus])
+  @@index([district])
+  @@map("organizations")
+}
+
+/// Sensitive organisation data — encrypted at rest, admin-only.
+model OrganizationPrivate {
+  organizationId        String   @id @db.Uuid
+  legalNameEnc          String
+  contactPersonEnc      String
+  phoneEnc              String
+  addressEnc            String
+  pinCodeEnc            String?
+  registrationNumberEnc String?
+  updatedAt             DateTime @updatedAt
+
+  organization RecipientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_private")
+}
+
+model Verification {
+  id             String             @id @default(uuid()) @db.Uuid
+  organizationId String             @db.Uuid
+  status         VerificationStatus @default(PENDING)
+  /// { registration, contactPerson, location, documents, proofOfNeed, previousActivity } booleans
+  checklist      Json               @default("{}")
+  applicantNote  String?
+  reviewNote     String?
+  reviewerId     String?            @db.Uuid
+  submittedAt    DateTime           @default(now())
+  reviewedAt     DateTime?
+
+  organization RecipientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewer     User?                 @relation("VerificationReviewer", fields: [reviewerId], references: [id])
+
+  @@index([status, submittedAt])
+  @@map("verifications")
+}
+
+/// Metadata for privately stored documents. The file itself lives in private
+/// object storage under a random key; there is no public URL.
+model VerificationDocument {
+  id               String       @id @default(uuid()) @db.Uuid
+  organizationId   String       @db.Uuid
+  kind             DocumentKind
+  storageKey       String       @unique
+  originalNameEnc  String
+  mimeType         String
+  sizeBytes        Int
+  sha256           String
+  uploadedAt       DateTime     @default(now())
+  retainUntil      DateTime?
+
+  organization RecipientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("verification_documents")
+}
+
+// ─────────────────────────────── Catalogue ───────────────────────────────
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String
+  icon        String // emoji
+  description String?
+  /// Schema-driven form definition: { fields: [{ key, label, type, options?, required? }] }
+  fieldSchema Json     @default("{\"fields\":[]}")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(100)
+  createdAt   DateTime @default(now())
+
+  requests Request[]
+
+  @@map("categories")
+}
+
+model Request {
+  id              String         @id @default(uuid()) @db.Uuid
+  publicId        String         @unique // NR-XXXXXX
+  organizationId  String         @db.Uuid
+  categoryId      String         @db.Uuid
+  title           String
+  description     String
+  status          RequestStatus  @default(PENDING_VERIFICATION)
+  priority        Priority       @default(NORMAL)
+  /// Internal score used to rank; never exposed to donors.
+  priorityScore   Int            @default(0)
+  peopleAffected  Int?
+  neededBy        DateTime?
+  district        String
+  city            String?
+  state           String         @default("Kerala")
+  donationTypes   DonationType[] @default([ITEM])
+  deliveryMethods DeliveryMethod[] @default([PLATFORM_PICKUP, PARTNER_DROPOFF, DELIVERY])
+  recurrence      Recurrence     @default(NONE)
+  adminNote       String?
+  rejectionReason String?
+  popularity      Int            @default(0)
+  /// Denormalised fulfillment figures, maintained transactionally by the
+  /// donation service so Browse Needs can filter/sort without aggregation.
+  percentFulfilled  Int          @default(0)
+  quantityRemaining Int          @default(0)
+  approvedAt      DateTime?
+  fulfilledAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  organization RecipientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category              @relation(fields: [categoryId], references: [id])
+  items        RequestItem[]
+  donations    Donation[]
+  reports      Report[]
+
+  @@index([status, priority])
+  @@index([status, createdAt])
+  @@index([categoryId, status])
+  @@index([district, status])
+  @@index([status, percentFulfilled])
+  @@index([organizationId, status])
+  @@map("requests")
+}
+
+model RequestItem {
+  id                String  @id @default(uuid()) @db.Uuid
+  requestId         String  @db.Uuid
+  name              String
+  unit              String  @default("pcs")
+  quantityRequired  Int
+  /// Sum of active (non-cancelled) commitments. Guarded by an atomic
+  /// conditional UPDATE so it can never exceed quantityRequired.
+  quantityCommitted Int     @default(0)
+  quantityReceived  Int     @default(0)
+  /// Category-specific variant attributes (size, age group, pages, packaging…)
+  attributes        Json    @default("{}")
+  estimatedUnitValue Int?   // ₹, used only for donor-facing estimates
+  /// Numeric age bounds derived from attributes, for "toys for 5 year old" search.
+  ageMin            Int?
+  ageMax            Int?
+  sortOrder         Int     @default(0)
+
+  request       Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  donationItems DonationItem[]
+
+  @@index([requestId])
+  @@map("request_items")
+}
+
+// ─────────────────────────────── Donations ───────────────────────────────
+
+/// The secure DONOR → Donation → REQUEST → Recipient mapping.
+/// donorId / organizationId are never serialised to non-admin clients.
+model Donation {
+  id             String         @id @default(uuid()) @db.Uuid
+  publicId       String         @unique // DN-XXXXXX
+  donorId        String         @db.Uuid
+  requestId      String         @db.Uuid
+  organizationId String         @db.Uuid
+  type           DonationType   @default(ITEM)
+  status         DonationStatus @default(CONFIRMED)
+  deliveryMethod DeliveryMethod
+  condition      ItemCondition  @default(NEW)
+  groupType      DonorGroupType @default(INDIVIDUAL)
+  estimatedValue Int? // ₹
+  expectedBy     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  donor        User                  @relation("DonorDonations", fields: [donorId], references: [id])
+  request      Request               @relation(fields: [requestId], references: [id])
+  organization RecipientOrganization @relation(fields: [organizationId], references: [id])
+  items        DonationItem[]
+  events       DonationEvent[]
+  delivery     Delivery?
+
+  @@index([donorId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([requestId])
+  @@index([status])
+  @@map("donations")
+}
+
+model DonationItem {
+  id            String @id @default(uuid()) @db.Uuid
+  donationId    String @db.Uuid
+  requestItemId String @db.Uuid
+  quantity      Int
+  variant       Json   @default("{}")
+
+  donation    Donation    @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  requestItem RequestItem @relation(fields: [requestItemId], references: [id])
+
+  @@index([requestItemId])
+  @@map("donation_items")
+}
+
+/// Status timeline. Records the acting ROLE only — never the acting user.
+model DonationEvent {
+  id         String         @id @default(uuid()) @db.Uuid
+  donationId String         @db.Uuid
+  status     DonationStatus
+  actorRole  Role
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId, createdAt])
+  @@map("donation_events")
+}
+
+model Delivery {
+  id                 String         @id @default(uuid()) @db.Uuid
+  donationId         String         @unique @db.Uuid
+  status             DeliveryStatus @default(UNASSIGNED)
+  pickupScheduledAt  DateTime?
+  assigneeLabel      String? // volunteer / partner reference (no PII)
+  notes              String?
+  proofNote          String?
+  deliveredAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  donation Donation         @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  private  DeliveryPrivate?
+
+  @@index([status])
+  @@map("deliveries")
+}
+
+/// Minimal logistics PII (donor pickup address) — encrypted, staff-only.
+model DeliveryPrivate {
+  deliveryId       String  @id @db.Uuid
+  pickupAddressEnc String?
+  pickupPhoneEnc   String?
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_private")
+}
+
+// ─────────────────────────────── Platform ───────────────────────────────
+
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenHash  String   @unique
+  userId     String   @db.Uuid
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  ipHash     String?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model AuthToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      TokenType
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@map("auth_tokens")
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+/// Append-only audit trail of sensitive actions.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  actorLabel String // e.g. "Admin #A-X9K2LM" — safe to display
+  action     String // VIEW_PRIVATE_IDENTITY, LOGIN, VERIFY_ORG, …
+  targetType String?
+  targetId   String?
+  metadata   Json     @default("{}")
+  ipEnc      String? // encrypted IP — "stored securely"
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Report {
+  id         String       @id @default(uuid()) @db.Uuid
+  requestId  String       @db.Uuid
+  reporterId String?      @db.Uuid
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(OPEN)
+  resolution String?
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+
+  request  Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  reporter User?   @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}

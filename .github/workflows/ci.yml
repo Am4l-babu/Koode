@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: donation
+          POSTGRES_PASSWORD: donation
+          POSTGRES_DB: donation_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U donation" --health-interval 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://donation:donation@localhost:5432/donation_test?schema=public
+      E2E_DATABASE_URL: postgresql://donation:donation@localhost:5432/donation_e2e?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Unit + integration + security tests
+        run: npm test
+      - name: Create e2e database
+        run: PGPASSWORD=donation psql -h localhost -U donation -d donation_test -c "CREATE DATABASE donation_e2e"
+      - run: npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: playwright-report }
