@@ -45,7 +45,7 @@ function root(): string {
 }
 
 function resolveKey(key: string): string {
-  if (!/^[A-Za-z0-9_-]{20,80}\.[a-z]{3,4}$/.test(key)) throw new AppError("BAD_REQUEST", "Invalid storage key.");
+  if (!/^[A-Za-z0-9_-]{20,80}\.[a-z0-9]{3,4}$/.test(key)) throw new AppError("BAD_REQUEST", "Invalid storage key.");
   const full = path.resolve(root(), key);
   if (!full.startsWith(root() + path.sep)) throw new AppError("BAD_REQUEST", "Invalid storage key.");
   return full;

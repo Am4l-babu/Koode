@@ -53,5 +53,6 @@ export const RATE_LIMITS = {
   requestCreate: { limit: 10, windowMs: 60 * 60_000 },
   report: { limit: 10, windowMs: 60 * 60_000 },
   upload: { limit: 20, windowMs: 60 * 60_000 },
+  media: { limit: 60, windowMs: 60 * 60_000 },
   mutation: { limit: 120, windowMs: 60_000 },
 } as const;

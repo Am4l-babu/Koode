@@ -141,6 +141,17 @@ enum TokenType {
   PHONE_OTP
 }
 
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum MediaStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum DocumentKind {
   REGISTRATION_CERTIFICATE
   AUTHORIZATION
@@ -411,6 +422,8 @@ model Donation {
   deliveryMethod DeliveryMethod
   condition      ItemCondition  @default(NEW)
   groupType      DonorGroupType @default(INDIVIDUAL)
+  /// Donor's own description of the items (shown to the recipient; PII-checked on input).
+  description    String?
   estimatedValue Int? // ₹
   expectedBy     DateTime?
   createdAt      DateTime       @default(now())
@@ -422,6 +435,7 @@ model Donation {
   items        DonationItem[]
   events       DonationEvent[]
   delivery     Delivery?
+  media        DonationMedia[]
 
   @@index([donorId, createdAt])
   @@index([organizationId, createdAt])
@@ -442,6 +456,28 @@ model DonationItem {
 
   @@index([requestItemId])
   @@map("donation_items")
+}
+
+/// Photos / short videos of the items a donor intends to give. Files live in private
+/// storage under random keys; the original filename is never kept. Images are re-encoded
+/// (metadata stripped) and auto-approved; videos wait for moderator approval.
+model DonationMedia {
+  id         String      @id @default(uuid()) @db.Uuid
+  donationId String      @db.Uuid
+  kind       MediaKind
+  status     MediaStatus @default(PENDING)
+  storageKey String      @unique
+  mimeType   String
+  sizeBytes  Int
+  sha256     String
+  reviewedAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId, createdAt])
+  @@index([status])
+  @@map("donation_media")
 }
 
 /// Status timeline. Records the acting ROLE only — never the acting user.

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicIdSchema, trimmed, uuidSchema } from "./common";
+import { publicIdSchema, publicText, trimmed, uuidSchema } from "./common";
 import { DELIVERY_METHODS } from "./request";
 import { INDIAN_PHONE_RE } from "../geo";
 
@@ -23,6 +23,7 @@ export const createDonationSchema = z
     condition: z.enum(CONDITIONS).default("NEW"),
     deliveryMethod: z.enum(DELIVERY_METHODS),
     groupType: z.enum(GROUP_TYPES).default("INDIVIDUAL"),
+    description: publicText(1, 600, "Description").optional(),
     pickupAddress: trimmed(5, 240, "Pickup address").optional(),
     pickupPhone: z.string().trim().regex(INDIAN_PHONE_RE, "Enter a valid Indian mobile number.").optional(),
     anonymousAcknowledged: z.literal(true, {

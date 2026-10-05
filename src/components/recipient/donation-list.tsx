@@ -3,6 +3,7 @@ import { StatusPill } from "@/components/donations/tracker";
 import { DELIVERY_METHOD_LABELS } from "@/lib/descriptors";
 import { formatDate } from "@/lib/format";
 import type { RecipientDonationDTO } from "@/lib/dto/donations";
+import { MediaGallery } from "@/components/donations/media-gallery";
 import { ReceiveButton } from "./receive-button";
 
 /** Recipient's view of donations — the donor is only ever an anonymous alias. */
@@ -14,6 +15,8 @@ export function RecipientDonationList({ donations }: { donations: RecipientDonat
           <div className="min-w-0 space-y-2">
             <AnonymousIdentityBadge label={d.donor.displayName} sublabel={`Donation ${d.id} · ${formatDate(d.createdAt)}`} />
             <p className="font-semibold">{d.items.map((i) => `${i.quantity} × ${i.name}${i.variant.size ? ` (size ${i.variant.size})` : ""}`).join(", ")}</p>
+            {d.description && <p className="max-w-md whitespace-pre-line text-sm">{d.description}</p>}
+            {d.media.length > 0 && <div className="max-w-md"><MediaGallery media={d.media} /></div>}
             <p className="text-sm text-muted">
               For “{d.request.title}” · {DELIVERY_METHOD_LABELS[d.deliveryMethod as keyof typeof DELIVERY_METHOD_LABELS]} · expected {formatDate(d.expectedBy)}
             </p>

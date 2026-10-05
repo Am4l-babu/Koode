@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { donorAliasFor } from "../anonymity";
 import { donorDisplayName } from "../descriptors";
+import type { MediaKind, MediaStatus } from "@prisma/client";
 
 const timelineSelect = {
   orderBy: { createdAt: "asc" },
@@ -15,6 +16,19 @@ const itemsSelect = {
     requestItem: { select: { id: true, name: true, unit: true } },
   },
 } satisfies Prisma.Donation$itemsArgs;
+
+const mediaFields = { id: true, kind: true, status: true, createdAt: true } as const;
+
+export interface DonationMediaDTO {
+  id: string;
+  kind: MediaKind;
+  status: MediaStatus;
+  url: string;
+}
+
+function mapMedia(rows: { id: string; kind: MediaKind; status: MediaStatus }[]): DonationMediaDTO[] {
+  return rows.map((m) => ({ id: m.id, kind: m.kind, status: m.status, url: `/api/media/${m.id}` }));
+}
 
 export interface DonationItemDTO {
   requestItemId: string;
@@ -62,12 +76,14 @@ export const donorDonationSelect = {
   type: true,
   deliveryMethod: true,
   condition: true,
+  description: true,
   groupType: true,
   estimatedValue: true,
   expectedBy: true,
   createdAt: true,
   items: itemsSelect,
   events: timelineSelect,
+  media: { orderBy: { createdAt: "asc" }, select: mediaFields },
   delivery: { select: { status: true, pickupScheduledAt: true, deliveredAt: true } },
   request: {
     select: {
@@ -88,11 +104,13 @@ export interface DonorDonationDTO {
   type: string;
   deliveryMethod: string;
   condition: string;
+  description: string | null;
   groupType: string;
   estimatedValue: number | null;
   expectedBy: string | null;
   createdAt: string;
   items: DonationItemDTO[];
+  media: DonationMediaDTO[];
   timeline: TimelineEntryDTO[];
   delivery: { status: string; scheduledAt: string | null; deliveredAt: string | null } | null;
   request: { id: string; title: string; category: { slug: string; name: string; icon: string } };
@@ -106,11 +124,13 @@ export function toDonorDonation(row: DonorDonationRow): DonorDonationDTO {
     type: row.type,
     deliveryMethod: row.deliveryMethod,
     condition: row.condition,
+    description: row.description,
     groupType: row.groupType,
     estimatedValue: row.estimatedValue,
     expectedBy: row.expectedBy?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     items: mapItems(row.items),
+    media: mapMedia(row.media),
     timeline: mapTimeline(row.events),
     delivery: row.delivery
       ? {
@@ -142,11 +162,14 @@ export const recipientDonationSelect = {
   type: true,
   deliveryMethod: true,
   condition: true,
+  description: true,
   groupType: true,
   expectedBy: true,
   createdAt: true,
   items: itemsSelect,
   events: timelineSelect,
+  // Recipients only ever receive media a moderator/auto-check has approved.
+  media: { where: { status: "APPROVED" }, orderBy: { createdAt: "asc" }, select: mediaFields },
   request: { select: { publicId: true, title: true } },
 } satisfies Prisma.DonationSelect;
 
@@ -158,9 +181,11 @@ export interface RecipientDonationDTO {
   type: string;
   deliveryMethod: string;
   condition: string;
+  description: string | null;
   expectedBy: string | null;
   createdAt: string;
   items: DonationItemDTO[];
+  media: DonationMediaDTO[];
   timeline: TimelineEntryDTO[];
   request: { id: string; title: string };
   donor: { alias: string; displayName: string };
@@ -174,9 +199,11 @@ export function toRecipientDonation(row: RecipientDonationRow): RecipientDonatio
     type: row.type,
     deliveryMethod: row.deliveryMethod,
     condition: row.condition,
+    description: row.description,
     expectedBy: row.expectedBy?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     items: mapItems(row.items),
+    media: mapMedia(row.media),
     timeline: mapTimeline(row.events),
     request: { id: row.request.publicId, title: row.request.title },
     donor: { alias, displayName: donorDisplayName(alias, row.groupType) },

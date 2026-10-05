@@ -83,6 +83,20 @@ export const templates = {
         : `Your verification status is now: ${status.replace("_", " ").toLowerCase()}.`,
     link: `/recipient/verification`,
   }),
+  mediaDecisionDonor: (donationId: string, approved: boolean): NotificationTemplate => ({
+    type: "MEDIA_DECISION",
+    title: approved ? "Your video was approved" : "A file was not approved",
+    body: approved
+      ? `The video you added to donation ${donationId} was approved and is now visible to the organisation.`
+      : `A photo or video on donation ${donationId} could not be approved, so the organisation will not see it. You can upload a different one.`,
+    link: `/donor/donations/${donationId}`,
+  }),
+  adminMediaAwaiting: (donationId: string): NotificationTemplate => ({
+    type: "ADMIN_MEDIA",
+    title: "Video awaiting review",
+    body: `A video attached to donation ${donationId} is waiting for approval.`,
+    link: `/admin/donations`,
+  }),
   adminNewVerification: (orgRef: string): NotificationTemplate => ({
     type: "ADMIN_VERIFICATION",
     title: "Verification awaiting review",

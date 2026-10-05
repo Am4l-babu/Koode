@@ -365,6 +365,7 @@ export async function getDonationAdmin(donationId: string) {
       type: true,
       deliveryMethod: true,
       condition: true,
+      description: true,
       groupType: true,
       estimatedValue: true,
       expectedBy: true,

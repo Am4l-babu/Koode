@@ -139,6 +139,7 @@ export async function createDonation(actor: SessionUser, input: CreateDonationIn
             deliveryMethod: input.deliveryMethod,
             condition: input.condition,
             groupType: input.groupType,
+            description: input.description ?? null,
             estimatedValue,
             expectedBy,
             items: {

@@ -36,7 +36,7 @@ test.describe("Donor journey", () => {
     // Step 3 — anonymity acknowledgement is required
     await dialog.getByRole("button", { name: "Continue" }).click();
     await expect(dialog.getByRole("alert")).toContainText("anonymous");
-    await dialog.getByLabel(/I understand this donation is anonymous/).check();
+    await dialog.getByLabel(/I understand that my donation is anonymous/).check();
     await dialog.getByRole("button", { name: "Continue" }).click();
     // Step 4 — review
     await expect(dialog.getByText("Verified Learning Center")).toBeVisible();

@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
 import { DonationTracker, StatusPill } from "@/components/donations/tracker";
 import { DonationStatusActions, IdentityReveal } from "@/components/admin/actions";
+import { MediaModeration } from "@/components/admin/media-moderation";
+import { listMediaForAdmin } from "@/services/donation-media";
 import { requirePagePermission } from "@/lib/auth/guards";
 import { hasPermission } from "@/lib/permissions";
 import { getDonationAdmin } from "@/services/admin";
@@ -22,6 +24,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
     throw e;
   });
   if (!d) notFound();
+  const media = await listMediaForAdmin(d.id);
   const timeline = d.events.map((e) => ({ status: e.status, at: e.createdAt, note: e.note, by: (e.actorRole === "DONOR" ? "Donor" : e.actorRole === "RECIPIENT" ? "Recipient" : "Platform") as "Donor" | "Recipient" | "Platform" }));
   return (
     <>
@@ -44,9 +47,14 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
               <dt className="text-muted">Delivery</dt><dd>{DELIVERY_METHOD_LABELS[d.deliveryMethod]} · {d.delivery?.status.toLowerCase() ?? "—"}</dd>
               <dt className="text-muted">Condition</dt><dd>{CONDITION_LABELS[d.condition]}</dd>
               <dt className="text-muted">Donating as</dt><dd>{GROUP_LABELS[d.groupType]}</dd>
+              {d.description && <><dt className="text-muted">Description</dt><dd className="whitespace-pre-line">{d.description}</dd></>}
               <dt className="text-muted">Est. value</dt><dd>{formatINR(d.estimatedValue)}</dd>
               <dt className="text-muted">Expected by</dt><dd>{formatDate(d.expectedBy)}</dd>
             </dl>
+          </section>
+          <section className="card p-6">
+            <h2 className="mb-3 font-semibold">Photos &amp; videos</h2>
+            <MediaModeration media={media} />
           </section>
           <section className="card p-6">
             <h2 className="mb-3 font-semibold">Admin identity view</h2>

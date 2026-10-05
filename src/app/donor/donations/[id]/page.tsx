@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/card";
 import { AnonymousIdentityBadge, PrivacyBadge } from "@/components/brand/badges";
 import { DonationTracker, StatusPill } from "@/components/donations/tracker";
 import { DonorDonationActions } from "@/components/donations/donor-actions";
+import { DonationMediaManager } from "@/components/donations/media-manager";
 import { requirePageUser } from "@/lib/auth/guards";
 import { getDonorDonation } from "@/services/donations";
 import { AppError } from "@/lib/errors";
@@ -45,6 +46,16 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
               <dt className="text-muted">Expected by</dt><dd className="text-right">{formatDate(d.expectedBy)}</dd>
               {d.estimatedValue ? <><dt className="text-muted">Estimated value</dt><dd className="text-right">{formatINR(d.estimatedValue)}</dd></> : null}
             </dl>
+          </section>
+          {d.description && (
+            <section className="card p-6" aria-labelledby="desc">
+              <h2 id="desc" className="mb-2 text-lg font-semibold">Description</h2>
+              <p className="whitespace-pre-line text-sm">{d.description}</p>
+            </section>
+          )}
+          <section className="card p-6" aria-labelledby="media">
+            <h2 id="media" className="mb-4 text-lg font-semibold">Photos &amp; videos</h2>
+            <DonationMediaManager donationId={d.id} media={d.media} editable={["CONFIRMED", "PREPARING", "IN_TRANSIT"].includes(d.status)} />
           </section>
           <section className="card p-6" aria-labelledby="rec">
             <h2 id="rec" className="mb-4 text-lg font-semibold">Recipient</h2>

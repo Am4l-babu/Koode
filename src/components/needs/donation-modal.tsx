@@ -9,6 +9,8 @@ import { Button, buttonClass } from "@/components/ui/button";
 import { Checkbox, Field, RadioCard, Select, Textarea, Input } from "@/components/ui/form";
 import { Callout } from "@/components/ui/states";
 import { PrivacyBadge } from "@/components/brand/badges";
+import { MediaPicker, uploadDonationMedia } from "@/components/donations/media-picker";
+import { detectPii, piiMessage } from "@/lib/pii-guard";
 import { api, ApiError } from "@/lib/client-api";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/components/ui/cn";
@@ -51,6 +53,7 @@ export function DonationModal({
   const [qty, setQty] = useState<Record<string, number>>({});
   const [sizes, setSizes] = useState<Record<string, string>>({});
   const [condition, setCondition] = useState("NEW");
+  const [description, setDescription] = useState("");
   const [method, setMethod] = useState(need.deliveryMethods[0] ?? "PLATFORM_PICKUP");
   const [groupType, setGroupType] = useState("INDIVIDUAL");
   const [pickupAddress, setPickupAddress] = useState("");
@@ -60,6 +63,8 @@ export function DonationModal({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState<CreatedDonation | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploadNote, setUploadNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +72,9 @@ export function DonationModal({
     setError(null);
     setFieldErrors({});
     setDone(null);
+    setFiles([]);
+    setDescription("");
+    setUploadNote(null);
     setAck(false);
     const initial: Record<string, number> = {};
     if (preset) initial[preset.itemId] = Math.max(1, preset.qty);
@@ -93,6 +101,10 @@ export function DonationModal({
     if (step === 0) {
       if (total === 0) return "Select at least one item to donate.";
       for (const l of lines) if (l.quantity > l.item.remaining) return `Only ${l.item.remaining} ${l.item.name.toLowerCase()} remaining.`;
+    }
+    if (step === 0 && description.trim()) {
+      const pii = detectPii(description);
+      if (pii.length) return piiMessage(pii);
     }
     if (step === 1 && method === "PLATFORM_PICKUP" && pickupAddress.trim().length < 5) return "Add a pickup address so our team can collect the items.";
     if (step === 2 && !ack) return "Please confirm that you understand how anonymous donations work.";
@@ -121,11 +133,20 @@ export function DonationModal({
           condition,
           deliveryMethod: method,
           groupType,
+          description: description.trim() || undefined,
           pickupAddress: method === "PLATFORM_PICKUP" ? pickupAddress.trim() : undefined,
           pickupPhone: pickupPhone.trim() || undefined,
           anonymousAcknowledged: true,
         },
       });
+      // The donation is already confirmed; attach any photos/videos afterwards so a
+      // failed upload can never block or undo the gift itself.
+      const problems: string[] = [];
+      for (const f of files) {
+        const problem = await uploadDonationMedia(created.id, f);
+        if (problem) problems.push(problem);
+      }
+      if (problems.length) setUploadNote(`${[...new Set(problems)].join(" ")} You can add photos and videos again from the tracking page.`);
       setDone(created);
     } catch (e) {
       if (e instanceof ApiError) {
@@ -146,7 +167,7 @@ export function DonationModal({
   if (done) {
     return (
       <Dialog open={open} onClose={onClose} title="Donation Confirmed" size="md">
-        <SuccessView donationId={done.id} />
+        <SuccessView donationId={done.id} uploadNote={uploadNote} />
       </Dialog>
     );
   }
@@ -216,6 +237,13 @@ export function DonationModal({
               ))}
             </div>
           </fieldset>
+          <Field label="Description (optional)" htmlFor="donate-description" help="Describe what you're giving — brand, age, condition, anything the recipient should know. Don't include names or contact details.">
+            <Textarea id="donate-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={600} placeholder="e.g. Two school bags, lightly used, all zips working." />
+          </Field>
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">Photos or video of the items <span className="font-normal text-muted">(optional)</span></h3>
+            <MediaPicker files={files} onChange={setFiles} disabled={submitting} idPrefix="donate-media" />
+          </div>
         </div>
       )}
 
@@ -311,7 +339,7 @@ export function DonationModal({
   );
 }
 
-function SuccessView({ donationId }: { donationId: string }) {
+function SuccessView({ donationId, uploadNote }: { donationId: string; uploadNote: string | null }) {
   const pieces = Array.from({ length: 18 }, (_, i) => i);
   return (
     <div className="relative flex flex-col items-center overflow-hidden py-4 text-center">
@@ -339,6 +367,7 @@ function SuccessView({ donationId }: { donationId: string }) {
       <p className="mt-5 text-sm text-muted">Donation ID</p>
       <p className="font-mono text-2xl font-bold tracking-wide text-primary-ink" data-testid="donation-id">{donationId}</p>
       <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary-ink">Your identity remains private.</p>
+      {uploadNote && <div className="mt-4 w-full text-left"><Callout tone="warning" title="Some files could not be added">{uploadNote}</Callout></div>}
       <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
         <Link href={`/donor/donations/${donationId}`} className={buttonClass("primary", "md")}>Track Donation</Link>
         <Link href="/needs" className={buttonClass("outline", "md")}>Browse more needs</Link>
