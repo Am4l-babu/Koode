@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koode — interactive preview</title>
+<meta name="description" content="Interactive preview of Koode, a privacy-first donation platform: verified needs, anonymous donors, audited identity resolution.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%230f766e'/%3E%3Cpath d='M8 27 C 12 15, 28 15, 32 27' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='8.5' cy='27.5' r='3.6' fill='white'/%3E%3Ccircle cx='31.5' cy='27.5' r='3.6' fill='%2322c55e'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f8faf7;--bg-tint:#eef5f1;--surface:#fff;--surface-2:#f3f7f4;--surface-3:#e8f0ec;
+  --border:#dde7e2;--border-strong:#c3d3cc;--fg:#17202a;--fg-muted:#4b5a63;--fg-subtle:#6b7a82;
+  --primary:#0f766e;--primary-hover:#0c5f59;--primary-soft:#e0f2ef;--primary-fg:#fff;--primary-ink:#0b5c56;
+  --secondary:#22c55e;--secondary-soft:#e3f8ea;--secondary-ink:#15803d;
+  --accent:#f59e0b;--accent-soft:#fff4dc;--accent-ink:#92400e;
+  --critical:#b42318;--critical-soft:#fde8e6;--high:#c2410c;--high-soft:#ffeedd;--medium:#a16207;--medium-soft:#fdf5d8;--normal:#0f766e;--normal-soft:#e0f2ef;
+  --shadow-sm:0 1px 2px rgb(16 40 36/.06),0 1px 1px rgb(16 40 36/.04);
+  --shadow-md:0 6px 20px -6px rgb(16 40 36/.14),0 2px 6px -2px rgb(16 40 36/.06);
+  --shadow-lg:0 24px 48px -16px rgb(16 40 36/.22);
+  --ring:0 0 0 3px rgb(15 118 110/.35);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0a1413;--bg-tint:#0e1d1b;--surface:#111f1d;--surface-2:#152624;--surface-3:#1b302d;
+  --border:#233a36;--border-strong:#31504b;--fg:#e8f0ed;--fg-muted:#a9bab5;--fg-subtle:#8a9c97;
+  --primary:#2dd4bf;--primary-hover:#5eead4;--primary-soft:#133a36;--primary-fg:#04201d;--primary-ink:#5eead4;
+  --secondary:#4ade80;--secondary-soft:#133325;--secondary-ink:#86efac;
+  --accent:#fbbf24;--accent-soft:#3a2a0c;--accent-ink:#fcd34d;
+  --critical:#f87171;--critical-soft:#3b1514;--high:#fb923c;--high-soft:#3a1f0e;--medium:#facc15;--medium-soft:#352c0c;--normal:#2dd4bf;--normal-soft:#133a36;
+  --shadow-sm:0 1px 2px rgb(0 0 0/.4);--shadow-md:0 8px 24px -8px rgb(0 0 0/.6);--shadow-lg:0 24px 48px -16px rgb(0 0 0/.7);
+  --ring:0 0 0 3px rgb(45 212 191/.45);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Malayalam","Noto Sans Devanagari",sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;letter-spacing:-.02em;margin:0;line-height:1.12}
+a{color:var(--primary-ink)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:none;box-shadow:var(--ring);border-radius:10px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.sr{position:absolute;left:-9999px}
+.skip:focus{left:12px;top:12px;z-index:99;background:var(--primary);color:var(--primary-fg);padding:8px 14px;border-radius:10px}
+
+/* header */
+header.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.bar{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg);font-weight:650;font-size:1.15rem;letter-spacing:-.02em}
+.brand svg{width:36px;height:36px;transition:transform .3s}
+.brand:hover svg{transform:rotate(-8deg)}
+nav.main{margin-left:auto;display:flex;gap:4px;align-items:center}
+nav.main a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--fg-muted);font-size:.93rem;font-weight:550}
+nav.main a:hover{background:var(--surface-3);color:var(--fg)}
+.iconbtn{border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:10px;height:40px;min-width:40px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:.85rem}
+.iconbtn:hover{background:var(--surface-3)}
+.langs{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.langs button{border:0;background:none;color:var(--fg-muted);padding:0 10px;height:38px;font-weight:600;font-size:.82rem}
+.langs button[aria-pressed=true]{background:var(--primary);color:var(--primary-fg)}
+@media(max-width:820px){nav.main a.hide-m{display:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:12px;padding:0 20px;min-height:46px;font-weight:650;text-decoration:none;transition:transform .15s,background .15s,box-shadow .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--primary);color:var(--primary-fg);box-shadow:var(--shadow-sm)}
+.btn.primary:hover{background:var(--primary-hover);box-shadow:var(--shadow-md)}
+.btn.ghost{background:var(--surface);color:var(--fg);border-color:var(--border-strong)}
+.btn.ghost:hover{background:var(--surface-3)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:.9rem;border-radius:10px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding:64px 0 40px;background:
+  radial-gradient(900px 400px at 80% -10%,color-mix(in srgb,var(--secondary) 18%,transparent),transparent 70%),
+  radial-gradient(700px 360px at 0% 0%,color-mix(in srgb,var(--primary) 14%,transparent),transparent 70%)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--primary-soft);color:var(--primary-ink);border-radius:999px;padding:6px 14px;font-weight:650;font-size:.82rem}
+.eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--secondary);box-shadow:0 0 0 0 var(--secondary);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.hero h1{font-size:clamp(2.3rem,5.4vw,3.9rem);margin:18px 0 16px}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--primary),var(--secondary));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:1.15rem;color:var(--fg-muted);max-width:34em}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.trust{display:flex;flex-wrap:wrap;gap:18px;margin-top:28px;color:var(--fg-muted);font-size:.9rem}
+.trust span{display:inline-flex;gap:7px;align-items:center}
+.trust svg{width:18px;height:18px;color:var(--primary)}
+
+/* bridge scene */
+.scene{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:28px;box-shadow:var(--shadow-lg);padding:18px 18px 14px;overflow:hidden}
+.scene svg{width:100%;height:auto;display:block}
+.scene .cap{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;color:var(--fg-subtle);padding:4px 6px 0}
+.packet{offset-rotate:0deg;animation:travel 5s linear infinite;offset-path:path("M70 190 C 130 70, 330 70, 390 190")}
+.packet.b{animation-delay:-1.7s}.packet.c{animation-delay:-3.3s}
+@keyframes travel{0%{offset-distance:0%;opacity:0}8%{opacity:1}92%{opacity:1}100%{offset-distance:100%;opacity:0}}
+.pulse-ring{transform-origin:230px 92px;animation:ring 3s ease-in-out infinite}
+@keyframes ring{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.18);opacity:.1}}
+
+/* sections */
+section{padding:64px 0}
+.sec-head{max-width:720px;margin-bottom:28px}
+.sec-head h2{font-size:clamp(1.7rem,3.4vw,2.4rem)}
+.sec-head p{color:var(--fg-muted);margin:10px 0 0;font-size:1.05rem}
+.tint{background:var(--bg-tint)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:6px}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:var(--shadow-sm)}
+.stat b{display:block;font-size:2rem;font-family:ui-rounded,system-ui;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat span{color:var(--fg-muted);font-size:.88rem}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;counter-reset:s}
+@media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.steps{grid-template-columns:1fr}}
+.step{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;transition:transform .25s,box-shadow .25s,border-color .25s}
+.step:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--primary)}
+.step::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--primary);color:var(--primary-fg);font-weight:700;margin-bottom:12px}
+.step h3{font-size:1.1rem;margin-bottom:6px}.step p{margin:0;color:var(--fg-muted);font-size:.95rem}
+
+/* identity lens */
+.lens{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.lens{grid-template-columns:1fr}}
+.tabs{display:inline-flex;background:var(--surface-3);border-radius:14px;padding:4px;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{border:0;background:none;color:var(--fg-muted);padding:9px 16px;border-radius:10px;font-weight:650}
+.tabs button[aria-selected=true]{background:var(--surface);color:var(--primary-ink);box-shadow:var(--shadow-sm)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow-sm)}
+.donation{padding:22px}
+.donation .ref{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:var(--primary-ink)}
+.row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px dashed var(--border);align-items:center}
+.row:last-of-type{border-bottom:0}
+.row small{color:var(--fg-subtle);display:block;font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;font-weight:650}
+.masked{filter:blur(6px);user-select:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:.78rem;font-weight:650;background:var(--primary-soft);color:var(--primary-ink)}
+.chip.crit{background:var(--critical-soft);color:var(--critical)}.chip.high{background:var(--high-soft);color:var(--high)}.chip.med{background:var(--medium-soft);color:var(--medium)}.chip.ok{background:var(--secondary-soft);color:var(--secondary-ink)}.chip.amber{background:var(--accent-soft);color:var(--accent-ink)}
+.denied{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--critical-soft);color:var(--critical);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.84rem;display:none}
+.denied.on{display:block;animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.audit{padding:20px}
+.audit h3{font-size:1.05rem;margin-bottom:10px}
+.audit ol{list-style:none;margin:0;padding:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;max-height:260px;overflow:auto}
+.audit li{padding:8px 10px;border-left:3px solid var(--border-strong);background:var(--surface-2);border-radius:0 10px 10px 0;margin-bottom:8px;animation:slide .4s}
+.audit li.new{border-color:var(--accent)}
+@keyframes slide{from{opacity:0;transform:translateX(-10px)}}
+.note{color:var(--fg-muted);font-size:.9rem;margin-top:12px}
+
+/* browse */
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:760px){.filters{grid-template-columns:1fr}}
+.field{position:relative}
+.field input,.field select,.mfield input,.mfield select{width:100%;height:50px;border-radius:14px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);padding:0 14px;font:inherit}
+.field input{padding-left:44px}
+.field svg{position:absolute;left:14px;top:15px;width:20px;height:20px;color:var(--fg-subtle)}
+.field input:focus,.field select:focus,.mfield input:focus,.mfield select:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
+.cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.cats button{border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg-muted);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.88rem}
+.cats button[aria-pressed=true]{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.hints{color:var(--fg-subtle);font-size:.86rem;margin-bottom:18px}
+.hints button{border:0;background:none;color:var(--primary-ink);text-decoration:underline;padding:0 4px;font:inherit;font-size:.86rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.need{padding:20px;display:flex;flex-direction:column;gap:12px;transition:transform .25s,box-shadow .25s}
+.need:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.need h3{font-size:1.1rem}
+.need .org{color:var(--fg-muted);font-size:.86rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.need .tags{display:flex;gap:6px;flex-wrap:wrap}
+.bar-track{height:10px;background:var(--surface-3);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.need .meta{display:flex;justify-content:space-between;font-size:.84rem;color:var(--fg-muted)}
+.need .meta b{color:var(--fg);font-variant-numeric:tabular-nums}
+.need .foot{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:auto}
+.need.flash{animation:flash 1.2s}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--secondary)}60%{box-shadow:0 0 0 10px transparent}}
+.empty{grid-column:1/-1;text-align:center;padding:40px;color:var(--fg-muted);border:2px dashed var(--border-strong);border-radius:22px}
+.live{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;font-size:.88rem;color:var(--fg-muted);min-height:44px}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--critical);animation:pulse2 1.4s infinite;flex:none}
+@keyframes pulse2{50%{opacity:.25}}
+
+/* my donations */
+#mine .card{padding:22px;margin-bottom:14px}
+.timeline{display:flex;gap:0;margin:16px 0 4px;position:relative}
+.tl{flex:1;text-align:center;position:relative;font-size:.76rem;color:var(--fg-subtle);font-weight:600}
+.tl::before{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--border-strong);z-index:0}
+.tl:first-child::before{display:none}
+.tl.done::before{background:var(--primary)}
+.tl .dot{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;margin:0 auto 6px;background:var(--surface);border:3px solid var(--border-strong);display:grid;place-items:center;transition:all .4s}
+.tl.done .dot{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}
+.tl.done{color:var(--primary-ink)}
+.tl.now .dot{box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 25%,transparent)}
+.tl .dot svg{width:14px;height:14px}
+
+/* modal */
+dialog{border:0;padding:0;border-radius:26px;width:min(560px,calc(100vw - 24px));background:var(--surface);color:var(--fg);box-shadow:var(--shadow-lg);overflow:hidden}
+dialog::backdrop{background:rgb(5 20 18/.55);backdrop-filter:blur(4px)}
+.mhead{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px}
+.mhead h3{font-size:1.2rem}.mhead p{margin:4px 0 0;color:var(--fg-muted);font-size:.9rem}
+.mbody{padding:20px 24px;min-height:250px}
+.mfoot{padding:14px 24px 20px;display:flex;justify-content:space-between;gap:10px}
+.dots{display:flex;gap:6px;padding:12px 24px 0}
+.dots i{flex:1;height:5px;border-radius:9px;background:var(--surface-3);transition:background .3s}
+.dots i.on{background:var(--primary)}
+.mfield{margin-bottom:14px}.mfield label{display:block;font-weight:650;font-size:.9rem;margin-bottom:6px}
+.qty{display:flex;align-items:center;gap:12px}
+.qty button{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);font-size:1.3rem;font-weight:700}
+.qty output{min-width:60px;text-align:center;font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1.5px solid var(--border-strong);border-radius:14px;margin-bottom:10px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft)}
+.opt input{margin-top:4px;accent-color:var(--primary)}
+.opt b{display:block}.opt span{color:var(--fg-muted);font-size:.88rem}
+.shield{display:flex;gap:12px;align-items:center;background:var(--primary-soft);color:var(--primary-ink);padding:12px 14px;border-radius:14px;font-size:.9rem;font-weight:550;margin-top:6px}
+.shield svg{width:26px;height:26px;flex:none}
+.success{text-align:center;padding:6px 0}
+.success .big{width:76px;height:76px;margin:0 auto 10px;border-radius:50%;background:var(--secondary-soft);color:var(--secondary-ink);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.success .big svg{width:40px;height:40px}
+@keyframes pop{from{transform:scale(0)}}
+.success .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.7rem;font-weight:800;color:var(--primary-ink);letter-spacing:.05em}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:100;overflow:hidden}
+.confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.8}}
+
+footer{border-top:1px solid var(--border);padding:34px 0 50px;color:var(--fg-muted);font-size:.92rem}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="sr skip" href="#browse">Skip to needs</a>
+
+<header class="top"><div class="wrap bar">
+  <a class="brand" href="#top" aria-label="Koode — home">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="var(--primary)"/><path d="M8 27 C 12 15, 28 15, 32 27" fill="none" stroke="var(--primary-fg)" stroke-width="2.6" stroke-linecap="round" opacity=".9"/><circle cx="8.5" cy="27.5" r="3.6" fill="var(--primary-fg)"/><circle cx="31.5" cy="27.5" r="3.6" fill="var(--secondary)"/><path d="M20 8.5 L26 11 V15.5 C26 19.6 23.4 22.3 20 23.4 C16.6 22.3 14 19.6 14 15.5 V11 Z" fill="var(--primary-fg)"/><path d="M20 19.6 C 17.2 17.8 16.6 16.3 17.2 15.2 C 17.8 14.1 19.3 14.2 20 15.3 C 20.7 14.2 22.2 14.1 22.8 15.2 C 23.4 16.3 22.8 17.8 20 19.6 Z" fill="var(--accent)"/></svg>
+    Koode
+  </a>
+  <nav class="main" aria-label="Sections">
+    <a href="#browse" data-i="nav_browse">Browse Needs</a>
+    <a href="#privacy" class="hide-m" data-i="nav_privacy">Privacy lens</a>
+    <a href="#how" class="hide-m" data-i="nav_how">How It Works</a>
+    <a href="#mine" class="hide-m" data-i="nav_mine">My Donations</a>
+    <div class="langs" role="group" aria-label="Language">
+      <button data-lang="en" aria-pressed="true">EN</button><button data-lang="ml" aria-pressed="false">മല</button><button data-lang="hi" aria-pressed="false">हि</button>
+    </div>
+    <button class="iconbtn" id="theme" aria-label="Toggle dark mode"><span id="themeIcon">🌙</span></button>
+  </nav>
+</div></header>
+
+<main id="top">
+<section class="hero" style="padding-top:56px"><div class="wrap hero-grid">
+  <div>
+    <span class="eyebrow"><i></i><span data-i="eyebrow">Privacy-first community giving</span></span>
+    <h1><span data-i="h1a">Give What Matters.</span><br><em data-i="h1b">Keep Identities Private.</em></h1>
+    <p class="lead" data-i="lead">A trusted community platform where verified needs meet generous people — without exposing personal identities.</p>
+    <div class="cta">
+      <a class="btn primary" href="#browse" data-i="cta1">Help Someone</a>
+      <a class="btn ghost" href="#privacy" data-i="cta2">See the privacy lens</a>
+    </div>
+    <div class="trust">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-i="t1">Verified organisations</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span data-i="t2">AES-256 encrypted PII</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span data-i="t3">Audited identity access</span></span>
+    </div>
+  </div>
+  <div class="scene" aria-label="Animation: a donation travels over the Koode bridge between an anonymous donor and a verified recipient">
+    <svg viewBox="0 0 460 280" role="img" aria-hidden="true">
+      <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--secondary)"/></linearGradient></defs>
+      <rect x="0" y="206" width="460" height="74" rx="0" fill="var(--bg-tint)"/>
+      <path d="M0 214 Q 115 196 230 214 T 460 214" fill="none" stroke="var(--border-strong)" stroke-width="2" stroke-dasharray="3 7"/>
+      <path d="M70 190 C 130 70, 330 70, 390 190" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+      <g stroke="var(--border-strong)" stroke-width="2"><line x1="120" y1="124" x2="120" y2="196"/><line x1="165" y1="100" x2="165" y2="200"/><line x1="295" y1="100" x2="295" y2="200"/><line x1="340" y1="124" x2="340" y2="196"/></g>
+      <circle class="pulse-ring" cx="230" cy="92" r="46" fill="var(--primary)"/>
+      <g transform="translate(206 62)"><path d="M24 0 L46 9 V26 C46 40 37 49 24 54 C11 49 2 40 2 26 V9 Z" fill="var(--primary)"/><path d="M24 36 C 14 30 12 24 14 20 C 16 16 22 16 24 20 C 26 16 32 16 34 20 C 36 24 34 30 24 36 Z" fill="var(--accent)"/></g>
+      <g><circle cx="70" cy="200" r="26" fill="var(--surface)" stroke="var(--primary)" stroke-width="3"/><circle cx="70" cy="193" r="7" fill="var(--fg-subtle)"/><path d="M56 212 q14-17 28 0" fill="var(--fg-subtle)"/><rect x="40" y="226" width="60" height="22" rx="11" fill="var(--primary-soft)"/><text x="70" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="var(--primary-ink)">D·7K2Q</text></g>
+      <g><circle cx="390" cy="200" r="26" fill="var(--surface)" stroke="var(--secondary)" stroke-width="3"/><path d="M376 208 h28 v-12 l-14 -10 l-14 10z" fill="var(--secondary)"/><rect x="386" y="199" width="8" height="9" fill="var(--surface)"/><rect x="354" y="226" width="72" height="22" rx="11" fill="var(--secondary-soft)"/><text x="390" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="var(--secondary-ink)">R·4HT2WP</text></g>
+      <g class="packet"><rect x="-9" y="-9" width="18" height="18" rx="5" fill="var(--accent)"/></g>
+      <g class="packet b"><rect x="-8" y="-8" width="16" height="16" rx="5" fill="var(--secondary)"/></g>
+      <g class="packet c"><rect x="-7" y="-7" width="14" height="14" rx="4" fill="var(--primary)"/></g>
+      <text x="230" y="30" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fg-muted)">only the platform sees both ends</text>
+    </svg>
+    <div class="cap"><span>Anonymous donor</span><span>Verified recipient</span></div>
+  </div>
+</div></section>
+
+<section style="padding-top:20px"><div class="wrap">
+  <div class="stats" id="stats">
+    <div class="stat"><b data-count="1284">0</b><span>items delivered</span></div>
+    <div class="stat"><b data-count="86">0</b><span>verified organisations</span></div>
+    <div class="stat"><b data-count="14">0</b><span>districts reached</span></div>
+    <div class="stat"><b data-count="0">0</b><span>identities exposed</span></div>
+  </div>
+</div></section>
+
+<section id="browse" class="tint"><div class="wrap">
+  <div class="sec-head reveal"><h2 data-i="browse_h">Browse verified needs</h2><p data-i="browse_p">Try natural-language search — type what you can give, or where.</p></div>
+  <div class="filters">
+    <div class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="e.g. shirts size 30 · food near Kozhikode" aria-label="Search needs"></div>
+    <select id="district" aria-label="District"><option value="">All districts</option></select>
+    <select id="urgency" aria-label="Urgency"><option value="">Any urgency</option><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="NORMAL">Normal</option></select>
+  </div>
+  <div class="cats" id="cats" role="group" aria-label="Categories"></div>
+  <div class="hints">Try: <button data-try="shirts size 30">shirts size 30</button><button data-try="food near Kozhikode">food near Kozhikode</button><button data-try="toys for 5 year old children">toys for 5 year old children</button><button data-try="urgent blankets">urgent blankets</button></div>
+  <div class="live" role="status" aria-live="polite"><i></i><span id="liveText">Listening for live donations…</span></div>
+  <div class="grid" id="grid"></div>
+</div></section>
+
+<section id="privacy"><div class="wrap">
+  <div class="sec-head reveal"><h2 data-i="priv_h">The privacy lens</h2><p data-i="priv_p">Same donation, four viewers. Switch roles and try to peek — the API answers with a 404, never a 403.</p></div>
+  <div class="lens">
+    <div>
+      <div class="tabs" role="tablist" aria-label="Viewer role">
+        <button role="tab" aria-selected="true" data-role="donor">🙋 Donor</button>
+        <button role="tab" aria-selected="false" data-role="recipient">🏫 Recipient</button>
+        <button role="tab" aria-selected="false" data-role="mod">🧑‍💼 Moderator</button>
+        <button role="tab" aria-selected="false" data-role="ops">🛡️ Ops admin</button>
+      </div>
+      <div class="card donation" id="lensCard"></div>
+      <div class="denied" id="denied" role="alert"></div>
+    </div>
+    <div class="card audit">
+      <h3>Append-only audit log</h3>
+      <ol id="audit"><li>00:00:00 · system · seed · demo data loaded</li></ol>
+      <p class="note">Every identity resolution writes a record (with the actor and an encrypted IP) <em>before</em> any data is returned. The database blocks edits and deletes with a trigger.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="how" class="tint"><div class="wrap">
+  <div class="sec-head reveal"><h2 data-i="how_h">How it works</h2><p data-i="how_p">Four calm steps from a real requirement to a delivered donation.</p></div>
+  <div class="steps">
+    <div class="step reveal"><h3>Verified Need</h3><p>Organisations submit real, specific requirements and prove who they are.</p></div>
+    <div class="step reveal"><h3>Choose</h3><p>Donors browse exactly what is needed — no guessing, no clutter.</p></div>
+    <div class="step reveal"><h3>Give</h3><p>Commit to specific items and quantities. Racing donors never over-commit.</p></div>
+    <div class="step reveal"><h3>Delivered</h3><p>The platform coordinates each leg of delivery; nobody learns a name.</p></div>
+  </div>
+</div></section>
+
+<section id="mine"><div class="wrap">
+  <div class="sec-head reveal"><h2 data-i="mine_h">My donations</h2><p>Donate above and watch your anonymous donation travel — the timeline updates live.</p></div>
+  <div id="mineList"><div class="empty">No donations yet — pick a need and press <b>Help</b>.</div></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>Built for dignity, privacy and community. · Static preview with sample data — no real donations.</span>
+  <span><a href="https://github.com/Am4l-babu/Koode">View source on GitHub →</a></span>
+</div></footer>
+
+<dialog id="dlg" aria-labelledby="dtitle">
+  <div class="mhead"><div><h3 id="dtitle">Donate</h3><p id="dsub"></p></div><button class="iconbtn" id="dclose" aria-label="Close">✕</button></div>
+  <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+  <div class="mbody" id="mbody"></div>
+  <div class="mfoot"><button class="btn ghost" id="back">Back</button><button class="btn primary" id="next">Continue</button></div>
+</dialog>
+
+<script>
+"use strict";
+/* ───────── data (mirrors prisma/seed.ts) ───────── */
+const NEEDS=[
+ {id:"NR-4HT2WP",cat:"education",title:"School Bags for the New Academic Year",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"HIGH",days:15,people:40,items:[["School bags",40,22]],kw:"bag bags school backpack"},
+ {id:"NR-8KQ2DX",cat:"clothing",title:"Children's Shirts for Daily Wear",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"MEDIUM",days:30,people:25,items:[["Shirts (size 28)",10,4],["Shirts (size 30)",15,6]],kw:"shirt shirts clothes size children"},
+ {id:"NR-3ZP7MA",cat:"elder-care",title:"Warm Blankets for the Monsoon",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"HIGH",days:10,people:15,items:[["Wool blankets",30,19]],kw:"blanket blankets warm monsoon bedding"},
+ {id:"NR-6WC9TE",cat:"children",title:"Educational Toys for the Play Corner",org:"Verified Early-Childhood Centre",ref:"R-6WC9TE",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:45,people:30,items:[["Building blocks",12,3],["Puzzle sets (age 4–6)",18,5]],kw:"toy toys play puzzle blocks age 5 year old children"},
+ {id:"NR-M23N3C",cat:"food",title:"Monthly Rice & Groceries for the Community Kitchen",org:"Verified Community Kitchen",ref:"R-M23N3C",district:"Kozhikode",city:"Vadakara",urg:"CRITICAL",days:5,people:120,items:[["Rice (kg)",200,140],["Pulses (kg)",60,21]],kw:"food rice grocery groceries pulses kitchen meal",rec:"Monthly"},
+ {id:"NR-5UV1LB",cat:"clothing",title:"School Uniforms for Grade 3 and 4",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"MEDIUM",days:20,people:18,items:[["Uniform sets",18,7]],kw:"uniform uniforms clothes school"},
+ {id:"NR-2RD4NH",cat:"elder-care",title:"Walking Aids for Residents",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"NORMAL",days:60,people:8,items:[["Walking sticks",8,5],["Walkers",4,1]],kw:"walking aid stick walker mobility"},
+ {id:"NR-9FB6KS",cat:"sports",title:"Football Kit for the Weekend Club",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:40,people:22,items:[["Footballs",6,2],["Boots (UK 3–5)",22,4]],kw:"football soccer sports boots kit ball"}
+];
+const CATS={all:["All","✨"],education:["Education","📚"],clothing:["Clothing","👕"],"elder-care":["Elder care","🧓"],children:["Children","🧸"],food:["Food","🍚"],sports:["Sports","⚽"]};
+const URGW={CRITICAL:4,HIGH:3,MEDIUM:2,NORMAL:1};
+const URGC={CRITICAL:"crit",HIGH:"high",MEDIUM:"med",NORMAL:""};
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rid=(p)=>p+"-"+Array.from({length:6},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.random()*32|0]).join("");
+const tot=n=>n.items.reduce((a,i)=>a+i[1],0), got=n=>n.items.reduce((a,i)=>a+i[2],0), pct=n=>Math.round(got(n)/tot(n)*100);
+let state={cat:"all",q:"",district:"",urgency:""};
+const mine=[]; let reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ───────── i18n (hero + headings) ───────── */
+const I18N={
+ en:{nav_browse:"Browse Needs",nav_privacy:"Privacy lens",nav_how:"How It Works",nav_mine:"My Donations",eyebrow:"Privacy-first community giving",h1a:"Give What Matters.",h1b:"Keep Identities Private.",lead:"A trusted community platform where verified needs meet generous people — without exposing personal identities.",cta1:"Help Someone",cta2:"See the privacy lens",t1:"Verified organisations",t2:"AES-256 encrypted PII",t3:"Audited identity access",browse_h:"Browse verified needs",browse_p:"Try natural-language search — type what you can give, or where.",priv_h:"The privacy lens",priv_p:"Same donation, four viewers. Switch roles and try to peek — the API answers with a 404, never a 403.",how_h:"How it works",how_p:"Four calm steps from a real requirement to a delivered donation.",mine_h:"My donations"},
+ ml:{nav_browse:"ആവശ്യങ്ങൾ",nav_privacy:"സ്വകാര്യത",nav_how:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",nav_mine:"എന്റെ സംഭാവനകൾ",eyebrow:"സ്വകാര്യത മുൻനിർത്തിയുള്ള സാമൂഹിക സഹായം",h1a:"ആവശ്യമുള്ളത് നൽകൂ.",h1b:"വ്യക്തിത്വം സ്വകാര്യമാക്കൂ.",lead:"സ്ഥിരീകരിച്ച ആവശ്യങ്ങളും ഉദാരമനസ്കരായ ആളുകളും കണ്ടുമുട്ടുന്ന, ആരുടെയും വ്യക്തിത്വം വെളിപ്പെടുത്താത്ത വിശ്വസ്ത വേദി.",cta1:"ഒരാളെ സഹായിക്കൂ",cta2:"സ്വകാര്യത കാണൂ",t1:"സ്ഥിരീകരിച്ച സ്ഥാപനങ്ങൾ",t2:"AES-256 എൻക്രിപ്ഷൻ",t3:"ഓഡിറ്റ് ചെയ്ത ആക്സസ്",browse_h:"സ്ഥിരീകരിച്ച ആവശ്യങ്ങൾ",browse_p:"നൽകാനാവുന്നത് അല്ലെങ്കിൽ സ്ഥലം ടൈപ്പ് ചെയ്യൂ.",priv_h:"സ്വകാര്യതാ ലെൻസ്",priv_p:"ഒരേ സംഭാവന, വ്യത്യസ്ത കാഴ്ചക്കാർ. റോൾ മാറ്റി നോക്കൂ.",how_h:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",how_p:"യഥാർത്ഥ ആവശ്യത്തിൽ നിന്ന് സംഭാവന എത്തുന്നതുവരെ നാല് ലളിത ഘട്ടങ്ങൾ.",mine_h:"എന്റെ സംഭാവനകൾ"},
+ hi:{nav_browse:"ज़रूरतें देखें",nav_privacy:"निजता लेंस",nav_how:"कैसे काम करता है",nav_mine:"मेरे दान",eyebrow:"निजता-प्रथम सामुदायिक दान",h1a:"जो ज़रूरी है वह दें।",h1b:"पहचान निजी रखें।",lead:"एक भरोसेमंद मंच जहाँ सत्यापित ज़रूरतें उदार लोगों से मिलती हैं — बिना किसी की पहचान उजागर किए।",cta1:"किसी की मदद करें",cta2:"निजता लेंस देखें",t1:"सत्यापित संस्थाएँ",t2:"AES-256 एन्क्रिप्शन",t3:"ऑडिट की गई पहुँच",browse_h:"सत्यापित ज़रूरतें",browse_p:"जो दे सकते हैं या कहाँ — लिखकर खोजें।",priv_h:"निजता लेंस",priv_p:"एक ही दान, अलग-अलग दर्शक। भूमिका बदलकर देखें।",how_h:"कैसे काम करता है",how_p:"असली ज़रूरत से पहुँचे हुए दान तक चार सरल चरण।",mine_h:"मेरे दान"}
+};
+function setLang(l){document.documentElement.lang=l;$$("[data-i]").forEach(e=>{const v=I18N[l][e.dataset.i];if(v)e.textContent=v});$$("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===l))}
+$$("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+
+/* ───────── theme ───────── */
+const root=document.documentElement;
+function setTheme(t){root.dataset.theme=t;$("#themeIcon").textContent=t==="dark"?"☀️":"🌙";try{localStorage.setItem("koode-theme",t)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem("koode-theme")}catch(e){}
+setTheme(saved||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+$("#theme").onclick=()=>setTheme(root.dataset.theme==="dark"?"light":"dark");
+
+/* ───────── natural-language search ───────── */
+const CATKEY={food:["food","rice","grocery","groceries","meal","hungry"],clothing:["shirt","shirts","cloth","clothes","uniform","uniforms","dress"],education:["bag","bags","book","books","school","notebook","stationery","science"],children:["toy","toys","play","puzzle"],"elder-care":["blanket","blankets","elder","elderly","walker","walking","stick"],sports:["football","sport","sports","ball","boots","kit"]};
+function parse(q){
+  const s=q.toLowerCase().trim(); const out={words:[],district:null,cat:null,urg:null,size:null,age:null};
+  const dm=NEEDS.map(n=>n.district).filter((d,i,a)=>a.indexOf(d)===i).find(d=>s.includes(d.toLowerCase()));
+  if(dm)out.district=dm;
+  const sz=s.match(/size\s*(\d{2})/);if(sz)out.size=sz[1];
+  const ag=s.match(/(\d+)\s*(?:year|yr)/);if(ag)out.age=+ag[1];
+  if(/urgent|critical|asap/.test(s))out.urg="HIGH";
+  const stop=new Set(["near","in","for","the","a","an","of","old","year","years","children","kids","size","urgent","to","at","need","needs"]);
+  out.words=s.replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w=>w&&!stop.has(w)&&!/^\d+$/.test(w)&&!(dm&&w===dm.toLowerCase()));
+  for(const [c,ks] of Object.entries(CATKEY)) if(out.words.some(w=>ks.includes(w))){out.cat=c;break}
+  return out;
+}
+function score(n,p){
+  let sc=0; const hay=(n.title+" "+n.kw+" "+n.items.map(i=>i[0]).join(" ")+" "+n.org+" "+n.district+" "+n.city).toLowerCase();
+  if(p.district){if(n.district!==p.district)return -1;sc+=2}
+  if(p.words.length){let hit=0;p.words.forEach(w=>{if(hay.includes(w)||(w.length>3&&hay.includes(w.replace(/s$/,""))))hit++});if(!hit&&!(p.cat&&n.cat===p.cat))return -1;sc+=hit*2+(p.cat&&n.cat===p.cat?2:0)}
+  if(p.size&&!hay.includes("size "+p.size)&&hay.includes("size"))sc-=1;
+  if(p.size&&hay.includes("size "+p.size))sc+=3;
+  if(p.age&&/age (\d)–(\d)/.test(hay)){const m=hay.match(/age (\d)–(\d)/);if(p.age>=+m[1]&&p.age<=+m[2])sc+=3}
+  if(p.urg&&URGW[n.urg]>=3)sc+=2;
+  return sc;
+}
+function visible(){
+  const p=parse(state.q);
+  return NEEDS.map(n=>({n,s:score(n,p)})).filter(x=>x.s>=0)
+   .filter(x=>state.cat==="all"||x.n.cat===state.cat)
+   .filter(x=>!state.district||x.n.district===state.district)
+   .filter(x=>!state.urgency||x.n.urg===state.urgency)
+   .sort((a,b)=>b.s-a.s||URGW[b.n.urg]-URGW[a.n.urg]||a.n.days-b.n.days).map(x=>x.n);
+}
+
+/* ───────── render browse ───────── */
+function renderCats(){$("#cats").innerHTML=Object.entries(CATS).map(([k,[l,e]])=>`<button aria-pressed="${state.cat===k}" data-cat="${k}">${e} ${l}</button>`).join("");$$("#cats button").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;renderCats();renderGrid()})}
+$("#district").insertAdjacentHTML("beforeend",[...new Set(NEEDS.map(n=>n.district))].sort().map(d=>`<option>${d}</option>`).join(""));
+function card(n){
+  const p=pct(n), left=tot(n)-got(n);
+  return `<article class="card need" id="${n.id}" data-id="${n.id}">
+   <div class="tags"><span class="chip ${URGC[n.urg]}">${n.urg==="CRITICAL"?"🔥":""} ${n.urg[0]+n.urg.slice(1).toLowerCase()}</span><span class="chip">${CATS[n.cat][1]} ${CATS[n.cat][0]}</span>${n.rec?`<span class="chip amber">↻ ${n.rec}</span>`:""}</div>
+   <h3>${esc(n.title)}</h3>
+   <div class="org"><span class="chip ok">✔ Verified</span> ${esc(n.org)} · Partner #${n.ref} · ${n.city}, ${n.district}</div>
+   <div><div class="bar-track" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Fulfilment"><div class="bar-fill" style="width:${p}%"></div></div>
+   <div class="meta" style="margin-top:6px"><span><b data-got>${got(n)}</b> / ${tot(n)} items</span><span><b data-pct>${p}%</b> fulfilled</span></div></div>
+   <div class="meta"><span>👥 ${n.people} people</span><span>⏳ needed in ${n.days} days</span></div>
+   <div class="foot"><span class="chip" title="Identity protected">🔒 Identity protected</span><button class="btn primary sm" data-help="${n.id}" ${left<=0?"disabled":""}>${left<=0?"Fulfilled 🎉":"Help"}</button></div>
+  </article>`;
+}
+function renderGrid(){
+  const list=visible();
+  $("#grid").innerHTML=list.length?list.map(card).join(""):`<div class="empty">No matching needs. Try “food near Kozhikode” or clear the filters.</div>`;
+  $$("[data-help]").forEach(b=>b.onclick=()=>openDonate(b.dataset.help));
+  // animate bars from 0
+  if(!reducedMotion)$$(".bar-fill").forEach(f=>{const w=f.style.width;f.style.width="0";requestAnimationFrame(()=>requestAnimationFrame(()=>f.style.width=w))});
+}
+function refreshNeed(n,flash){
+  const el=document.getElementById(n.id); if(!el){return}
+  const p=pct(n);$("[data-got]",el).textContent=got(n);$("[data-pct]",el).textContent=p+"%";$(".bar-fill",el).style.width=p+"%";$(".bar-track",el).setAttribute("aria-valuenow",p);
+  const btn=$("[data-help]",el);if(tot(n)-got(n)<=0){btn.disabled=true;btn.textContent="Fulfilled 🎉"}
+  if(flash){el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}
+}
+$("#q").oninput=e=>{state.q=e.target.value;renderGrid()};
+$("#district").onchange=e=>{state.district=e.target.value;renderGrid()};
+$("#urgency").onchange=e=>{state.urgency=e.target.value;renderGrid()};
+$$("[data-try]").forEach(b=>b.onclick=()=>{$("#q").value=b.dataset.try;state.q=b.dataset.try;state.cat="all";renderCats();renderGrid()});
+
+/* ───────── live feed (simulates the SSE stream) ───────── */
+const donorAliases=["D7K2Q","M4X9C","T2PJ8","B6RW3","K9HNA","L3ZQ5"];
+function liveTick(){
+  const open=NEEDS.filter(n=>tot(n)-got(n)>0); if(!open.length)return;
+  const n=open[Math.random()*open.length|0]; const it=n.items.filter(i=>i[2]<i[1]); const item=it[Math.random()*it.length|0];
+  const q=Math.min(item[1]-item[2],1+(Math.random()*4|0)); item[2]+=q;
+  $("#liveText").innerHTML=`Community Donor <b>#${donorAliases[Math.random()*donorAliases.length|0]}</b> just committed <b>${q} × ${esc(item[0])}</b> to <b>${esc(n.org)}</b> (#${n.ref}).`;
+  refreshNeed(n,true);
+}
+setInterval(()=>{if(!document.hidden&&!$("#dlg").open)liveTick()},6500);
+
+/* ───────── donation modal ───────── */
+const dlg=$("#dlg"); let dn=null, step=0, form={};
+function openDonate(id){
+  dn=NEEDS.find(n=>n.id===id); step=0; const first=dn.items.findIndex(i=>i[2]<i[1]);
+  form={item:first,qty:1,method:"hub",name:"",agree:false};
+  render(); dlg.showModal();
+}
+function remaining(){const it=dn.items[form.item];return it[1]-it[2]}
+function render(){
+  $("#dtitle").textContent=step<4?"Donate anonymously":"Thank you!";
+  $("#dsub").textContent=dn.title;
+  $$("#dots i").forEach((d,i)=>d.classList.toggle("on",i<=Math.min(step,3)));
+  const b=$("#mbody"); $("#back").style.visibility=step>0&&step<4?"visible":"hidden";
+  $("#next").textContent=step===3?"Confirm donation":step===4?"Done":"Continue";
+  if(step===0){
+    b.innerHTML=`<div class="mfield"><label for="mi">What would you like to give?</label><select id="mi">${dn.items.map((i,x)=>`<option value="${x}" ${i[2]>=i[1]?"disabled":""} ${x===form.item?"selected":""}>${esc(i[0])} — ${i[1]-i[2]} still needed</option>`).join("")}</select></div>
+     <div class="mfield"><label>How many?</label><div class="qty"><button id="dec" aria-label="Fewer">−</button><output id="qv" aria-live="polite">${form.qty}</output><button id="inc" aria-label="More">+</button><span style="color:var(--fg-muted)">of ${remaining()} needed</span></div></div>`;
+    $("#mi").onchange=e=>{form.item=+e.target.value;form.qty=Math.min(form.qty,remaining());render()};
+    $("#dec").onclick=()=>{form.qty=Math.max(1,form.qty-1);$("#qv").textContent=form.qty};
+    $("#inc").onclick=()=>{form.qty=Math.min(remaining(),form.qty+1);$("#qv").textContent=form.qty};
+  }else if(step===1){
+    b.innerHTML=`<label class="opt"><input type="radio" name="m" value="hub" ${form.method==="hub"?"checked":""}><div><b>Drop at a Koode hub</b><span>Nearest hub in your district. We carry it the rest of the way.</span></div></label>
+     <label class="opt"><input type="radio" name="m" value="pickup" ${form.method==="pickup"?"checked":""}><div><b>Arrange a pickup</b><span>A coordinator sees only the pickup leg — never the recipient.</span></div></label>
+     <label class="opt"><input type="radio" name="m" value="ship" ${form.method==="ship"?"checked":""}><div><b>Courier to the hub</b><span>Ship it to our hub; we handle the last mile.</span></div></label>`;
+    $$("[name=m]").forEach(r=>r.onchange=()=>form.method=r.value);
+  }else if(step===2){
+    b.innerHTML=`<div class="mfield"><label for="nm">Name for your receipt (optional, kept private)</label><input id="nm" placeholder="Never shown to the recipient" value="${esc(form.name)}"></div>
+     <div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Your details are encrypted with AES-256-GCM. The recipient will only see a random alias — and a <em>different</em> alias for every organisation.</span></div>
+     <p class="note">This preview doesn't store or send anything you type.</p>`;
+    $("#nm").oninput=e=>form.name=e.target.value;
+  }else if(step===3){
+    const it=dn.items[form.item];
+    b.innerHTML=`<div class="row"><span><small>Giving</small><b>${form.qty} × ${esc(it[0])}</b></span><span class="chip">${CATS[dn.cat][1]} ${CATS[dn.cat][0]}</span></div>
+     <div class="row"><span><small>To</small>${esc(dn.org)} · Partner #${dn.ref}, ${dn.district}</span></div>
+     <div class="row"><span><small>Delivery</small>${{hub:"Drop at hub",pickup:"Arranged pickup",ship:"Courier to hub"}[form.method]}</span></div>
+     <div class="row"><span><small>Visible to recipient</small>Community Donor #<span id="alias">${donorAliases[Math.random()*6|0]}</span></span><span class="chip ok">🔒 Anonymous</span></div>`;
+  }else{
+    b.innerHTML=`<div class="success"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+      <p style="margin:0;color:var(--fg-muted)">Your anonymous donation reference</p><div class="code" data-testid="donation-id">${form.ref}</div>
+      <p class="note">Track it under <b>My donations</b>. The recipient will see only an alias.</p></div>`;
+  }
+}
+$("#next").onclick=()=>{
+  if(step===3){
+    const it=dn.items[form.item]; const q=Math.min(form.qty,remaining()); it[2]+=q;
+    form.ref=rid("DN"); mine.unshift({ref:form.ref,need:dn,item:it[0],qty:q,stage:0,method:form.method});
+    refreshNeed(dn,true); renderMine(); advance(mine[0]); confetti(); step=4; render(); return;
+  }
+  if(step===4){dlg.close();location.hash="#mine";return}
+  step++; render();
+};
+$("#back").onclick=()=>{step=Math.max(0,step-1);render()};
+$("#dclose").onclick=()=>dlg.close();
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+
+/* ───────── my donations + timeline ───────── */
+const STAGES=["Committed","Collected","In transit","Delivered","Received"];
+function renderMine(){
+  if(!mine.length)return;
+  $("#mineList").innerHTML=mine.map(m=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><span class="ref" style="font-family:ui-monospace,monospace;font-weight:700;color:var(--primary-ink)">${m.ref}</span><div style="font-weight:650;margin-top:2px">${m.qty} × ${esc(m.item)}</div><div style="color:var(--fg-muted);font-size:.9rem">to ${esc(m.need.org)} · Partner #${m.need.ref}</div></div><span class="chip ${m.stage>=4?"ok":"amber"}">${STAGES[m.stage]}</span></div>
+   <div class="timeline">${STAGES.map((s,i)=>`<div class="tl ${i<=m.stage?"done":""} ${i===m.stage?"now":""}"><div class="dot">${i<=m.stage?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>':""}</div>${s}</div>`).join("")}</div></div>`).join("");
+}
+function advance(m){
+  const t=setInterval(()=>{if(m.stage>=4){clearInterval(t);return}m.stage++;renderMine()},2600);
+}
+function confetti(){
+  if(reducedMotion)return; const c=document.createElement("div");c.className="confetti";
+  const cols=["var(--primary)","var(--secondary)","var(--accent)","var(--primary-ink)"];
+  c.innerHTML=Array.from({length:70},()=>`<i style="left:${Math.random()*100}%;background:${cols[Math.random()*4|0]};animation-duration:${1.6+Math.random()*1.6}s;animation-delay:${Math.random()*.4}s;transform:rotate(${Math.random()*360}deg)"></i>`).join("");
+  document.body.appendChild(c); setTimeout(()=>c.remove(),3800);
+}
+
+/* ───────── privacy lens ───────── */
+const AUDIT=$("#audit"); let role="donor", resolved=false;
+const clock=()=>new Date().toTimeString().slice(0,8);
+function audit(msg,isNew){const li=document.createElement("li");if(isNew)li.className="new";li.textContent=`${clock()} · ${msg}`;AUDIT.prepend(li)}
+function lens(){
+  const d=$("#denied");d.classList.remove("on");
+  const base=(donor,rec,extra="")=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><small style="color:var(--fg-subtle);font-weight:650;text-transform:uppercase;letter-spacing:.06em;font-size:.74rem">Donation</small><div class="ref" style="font-size:1.25rem">DN-8K2QX7</div></div><span class="chip ok">Delivered</span></div>
+   <div class="row"><span><small>Item</small><b>8 × Geometry kits</b></span><span>📚</span></div>
+   <div class="row"><span><small>Donor</small>${donor}</span></div>
+   <div class="row"><span><small>Recipient</small>${rec}</span></div>${extra}`;
+  const peek=(label,msg)=>`<div style="margin-top:14px"><button class="btn ghost sm" id="peek">🕵️ ${label}</button></div>`;
+  let html="";
+  if(role==="donor")html=base("You — <b>Community Donor #D7K2Q</b>","<b>Verified Learning Center</b> · Partner #R-4HT2WP, Thrissur",peek("Try to see who the recipient is"));
+  if(role==="recipient")html=base("<b>Community Donor #M4X9C</b> <span class='chip'>alias unique to your org</span>","You — <b>Verified Learning Center</b>",peek("Try to see who the donor is"));
+  if(role==="mod")html=base("<span class='masked'>Asha Menon</span> 🔒","<span class='masked'>Little Steps Learning Center</span> 🔒",`<div class="note" style="margin-top:10px">Moderators handle requests, verification and donations — <b>no identity access</b>.</div>`+peek("Try to resolve identity"));
+  if(role==="ops")html=base(resolved?"<b>Asha Menon</b> <span class='chip amber'>sample data</span>":"<span class='masked'>Asha Menon</span> 🔒",resolved?"<b>Little Steps Learning Center</b> <span class='chip amber'>sample data</span>":"<span class='masked'>Little Steps Learning Center</span> 🔒",`<div style="margin-top:14px"><button class="btn primary sm" id="resolve" ${resolved?"disabled":""}>🔓 ${resolved?"Identity resolved (audited)":"Resolve identity · VIEW_PRIVATE_IDENTITY"}</button></div>`);
+  $("#lensCard").innerHTML=html;
+  const pk=$("#peek");if(pk)pk.onclick=()=>{
+    const m={donor:["GET /api/my-donations/DN-8K2QX7/identity","404 not_found — no such resource"],recipient:["GET /api/recipient/donations/DN-8K2QX7/donor","404 not_found — no such resource"],mod:["GET /api/admin/donations/DN-8K2QX7/identity","403 forbidden — VIEW_PRIVATE_IDENTITY required"]}[role];
+    d.textContent=`${m[0]}\n→ ${m[1]}`;d.style.whiteSpace="pre-wrap";d.classList.remove("on");void d.offsetWidth;d.classList.add("on");
+    audit(`DENIED · ${role} · ${m[0].split(" ")[1]}`,true);
+  };
+  const rs=$("#resolve");if(rs)rs.onclick=()=>{audit("RESOLVE_IDENTITY · ops.admin · DN-8K2QX7 · ip=enc:9f3a…c1",true);resolved=true;lens()};
+}
+$$("[data-role]").forEach(b=>b.onclick=()=>{role=b.dataset.role;$$("[data-role]").forEach(x=>x.setAttribute("aria-selected",x===b));lens()});
+
+/* ───────── scroll reveal + counters ───────── */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.15});
+$$(".reveal").forEach(e=>io.observe(e));
+const cio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;cio.unobserve(e.target);const el=$("[data-count]",e.target)||e.target;$$("[data-count]").forEach(c=>{const to=+c.dataset.count,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400);c.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString();if(k<1&&!reducedMotion)requestAnimationFrame(f);else c.textContent=to.toLocaleString()})(t0)})}),{threshold:.4});
+cio.observe($("#stats"));
+
+renderCats();renderGrid();lens();audit("seed · demo data loaded");
+</script>
+</body>
+</html>

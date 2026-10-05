@@ -2,6 +2,12 @@
 
 > **Give what is needed. Receive what is given. Keep identities private.**
 
+### 👉 [**Try the interactive preview**](https://am4l-babu.github.io/Koode/)
+
+[![Koode interactive preview](docs/preview.png)](https://am4l-babu.github.io/Koode/)
+
+A click-through demo with sample data: search needs in plain language, make an anonymous donation and watch it travel, switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations. Source: [`docs/index.html`](docs/index.html).
+
 A privacy-first donation platform that connects people who want to donate specific items with **verified** schools, children's homes, elder-care homes, shelters and community organisations — without either side ever seeing the other's identity. The platform (and only authorised administrators) act as the trusted intermediary.
 
 | | |
