@@ -3,7 +3,7 @@ import { requirePageUser } from "@/lib/auth/guards";
 import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 
-export const metadata = { title: { default: "Admin", template: "%s · Admin · Sahaya Bridge" }, robots: { index: false } };
+export const metadata = { title: { default: "Admin", template: "%s · Admin · Koode" }, robots: { index: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePageUser(["ADMIN", "SUPER_ADMIN"]);

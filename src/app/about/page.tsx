@@ -5,7 +5,7 @@ import { Section } from "@/components/marketing/sections";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Why Sahaya Bridge exists and how it protects the dignity and privacy of everyone involved.",
+  description: "Why Koode exists and how it protects the dignity and privacy of everyone involved.",
 };
 
 const PRINCIPLES = [
@@ -28,9 +28,9 @@ export default function AboutPage() {
     <>
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6">
         <PageHeader
-          eyebrow="About Sahaya Bridge"
+          eyebrow="About Koode"
           title="A trusted digital bridge between genuine community needs and people willing to help"
-          description="“Sahaya” means help. We built the platform so a donor can say “I know exactly what is needed, and I can help without exposing my identity” — and an organisation can say “we can ask for what we actually need without our private information being exposed.”"
+          description="“Koode” means together. We built the platform so a donor can say “I know exactly what is needed, and I can help without exposing my identity” — and an organisation can say “we can ask for what we actually need without our private information being exposed.”"
         />
         <div className="grid gap-4 md:grid-cols-3">
           {PRINCIPLES.map(([title, body]) => (

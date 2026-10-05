@@ -5,7 +5,7 @@ import { DistrictTileMap } from "@/components/charts/tile-map";
 import { publicImpact } from "@/services/impact";
 import { ButtonLink } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Impact", description: "Aggregate, privacy-preserving impact of community giving on Sahaya Bridge." };
+export const metadata: Metadata = { title: "Impact", description: "Aggregate, privacy-preserving impact of community giving on Koode." };
 export const dynamic = "force-dynamic";
 
 export default async function ImpactPage() {

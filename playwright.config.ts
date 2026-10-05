@@ -10,7 +10,7 @@ export const E2E_ENV = {
   APP_SECRET: "e2e-only-app-secret-0123456789abcdefghijklmnop",
   APP_URL: `http://localhost:${PORT}`,
   COOKIE_SECURE: "false",
-  ADMIN_EMAIL: "admin@sahaya.local",
+  ADMIN_EMAIL: "admin@koode.local",
   ADMIN_PASSWORD: "E2E!AdminPass2026",
   DEMO_PASSWORD: "E2E!DemoPass2026",
   STORAGE_DIR: "./storage/e2e-private",

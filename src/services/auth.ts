@@ -124,7 +124,7 @@ export async function sendVerificationEmail(userId: string, email: string) {
   await emailChannel().send({
     to: email,
     subject: "Confirm your email",
-    text: `Welcome to Sahaya Bridge. Confirm your email: ${env.appUrl}/verify-email?token=${token}`,
+    text: `Welcome to Koode. Confirm your email: ${env.appUrl}/verify-email?token=${token}`,
   });
 }
 
@@ -195,7 +195,7 @@ export async function sendPhoneOtp(actor: SessionUser) {
   if (!phoneEnc) throw new AppError("BAD_REQUEST", "Add a phone number to your profile first.");
   const code = randomDigits(6);
   await issueToken(actor.id, "PHONE_OTP", code);
-  await smsChannel().send({ to: decrypt(phoneEnc), text: `Your Sahaya Bridge verification code is ${code}. It expires in 10 minutes.` });
+  await smsChannel().send({ to: decrypt(phoneEnc), text: `Your Koode verification code is ${code}. It expires in 10 minutes.` });
 }
 
 export async function verifyPhoneOtp(actor: SessionUser, code: string) {

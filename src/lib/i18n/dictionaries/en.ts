@@ -1,5 +1,5 @@
 export const en = {
-  brand: { name: "Sahaya Bridge", tagline: "Give what is needed. Receive what is given. Keep identities private." },
+  brand: { name: "Koode", tagline: "Give what is needed. Receive what is given. Keep identities private." },
   nav: {
     home: "Home",
     browse: "Browse Needs",

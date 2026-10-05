@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const FAQ = [
-  ["Do I need to donate money?", "No. The core of Sahaya Bridge is giving exactly the items a verified organisation has asked for. Monetary support can be enabled later through a compliant payment provider."],
+  ["Do I need to donate money?", "No. The core of Koode is giving exactly the items a verified organisation has asked for. Monetary support can be enabled later through a compliant payment provider."],
   ["Who can see my name?", "Only authorised platform administrators with the identity-access permission — and every time they look, it is recorded in an audit log. Recipients only ever see an anonymous reference."],
   ["How are organisations verified?", "Our team checks registration, the contact person, location, supporting documents, proof of need and previous activity before an organisation can publish requests."],
   ["How do items reach the organisation?", "You choose platform pickup, a partner drop-off point or courier delivery. The platform coordinates the handover so neither side needs the other's address."],

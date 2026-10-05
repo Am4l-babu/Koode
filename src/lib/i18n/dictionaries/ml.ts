@@ -1,7 +1,7 @@
 import type { Dictionary } from "./en";
 
 export const ml: Dictionary = {
-  brand: { name: "സഹായ ബ്രിഡ്ജ്", tagline: "ആവശ്യമുള്ളത് നൽകൂ. നൽകിയത് സ്വീകരിക്കൂ. വ്യക്തിത്വം സ്വകാര്യമായി സൂക്ഷിക്കൂ." },
+  brand: { name: "Koode", tagline: "ആവശ്യമുള്ളത് നൽകൂ. നൽകിയത് സ്വീകരിക്കൂ. വ്യക്തിത്വം സ്വകാര്യമായി സൂക്ഷിക്കൂ." },
   nav: {
     home: "ഹോം",
     browse: "ആവശ്യങ്ങൾ കാണുക",

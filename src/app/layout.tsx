@@ -9,11 +9,11 @@ import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
-  title: { default: "Sahaya Bridge — Give what matters. Keep identities private.", template: "%s · Sahaya Bridge" },
+  title: { default: "Koode — Give what matters. Keep identities private.", template: "%s · Koode" },
   description:
     "A trusted community platform where verified needs meet generous people — without exposing personal identities. Donate exactly what verified organisations in Kerala need.",
-  applicationName: "Sahaya Bridge",
-  openGraph: { type: "website", siteName: "Sahaya Bridge", locale: "en_IN" },
+  applicationName: "Koode",
+  openGraph: { type: "website", siteName: "Koode", locale: "en_IN" },
   robots: { index: true, follow: true },
 };
 

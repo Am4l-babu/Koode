@@ -1,7 +1,7 @@
 import type { Dictionary } from "./en";
 
 export const hi: Dictionary = {
-  brand: { name: "सहाय ब्रिज", tagline: "जो ज़रूरी है वह दें। जो दिया गया है वह पाएं। पहचान निजी रखें।" },
+  brand: { name: "Koode", tagline: "जो ज़रूरी है वह दें। जो दिया गया है वह पाएं। पहचान निजी रखें।" },
   nav: {
     home: "होम",
     browse: "ज़रूरतें देखें",

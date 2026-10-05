@@ -246,14 +246,14 @@ async function main() {
   // ── Admins ──
   const superAdmin = await createUser({ email: ADMIN_EMAIL!.toLowerCase(), name: "Platform Super Admin", role: "SUPER_ADMIN", password: ADMIN_PASSWORD! });
   await createUser({
-    email: "ops.admin@sahaya.local",
+    email: "ops.admin@koode.local",
     name: "Operations Admin",
     role: "ADMIN",
     password: DEMO_PASSWORD!,
     permissions: [...DEFAULT_ADMIN_PERMISSIONS, "VIEW_PRIVATE_IDENTITY", "AUDIT_LOG_VIEW"],
   });
   await createUser({
-    email: "moderator@sahaya.local",
+    email: "moderator@koode.local",
     name: "Content Moderator",
     role: "ADMIN",
     password: DEMO_PASSWORD!,
@@ -408,8 +408,8 @@ async function main() {
 
   console.log("\nSeed complete.");
   console.log(`  Super admin     : ${ADMIN_EMAIL}`);
-  console.log("  Ops admin       : ops.admin@sahaya.local      (all admin perms incl. VIEW_PRIVATE_IDENTITY)");
-  console.log("  Moderator       : moderator@sahaya.local      (no identity access)");
+  console.log("  Ops admin       : ops.admin@koode.local      (all admin perms incl. VIEW_PRIVATE_IDENTITY)");
+  console.log("  Moderator       : moderator@koode.local      (no identity access)");
   console.log("  Donor           : donor@demo.local");
   console.log("  Recipient       : learning@demo.local  (verified)  ·  pending@demo.local (pending)");
   console.log("  Demo password   : value of DEMO_PASSWORD (or ADMIN_PASSWORD)\n");

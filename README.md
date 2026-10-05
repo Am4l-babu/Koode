@@ -1,4 +1,4 @@
-# Sahaya Bridge
+# Koode
 
 > **Give what is needed. Receive what is given. Keep identities private.**
 
@@ -59,7 +59,7 @@ The core promise is covered by automated tests — see `tests/integration/privac
 Requirements: **Node 20.11+** (22 recommended) and **PostgreSQL 14+**.
 
 ```bash
-git clone <repo> && cd Donation-
+git clone <repo> && cd Koode
 npm install
 
 # 1. Configure environment
@@ -86,8 +86,8 @@ Created by `npm run db:seed` (refuses to run with `NODE_ENV=production`). Passwo
 | Account | Email | Password env | Notes |
 |---|---|---|---|
 | Super admin | `$ADMIN_EMAIL` | `ADMIN_PASSWORD` | All permissions |
-| Ops admin | `ops.admin@sahaya.local` | `DEMO_PASSWORD` | Includes `VIEW_PRIVATE_IDENTITY`, `AUDIT_LOG_VIEW` |
-| Moderator | `moderator@sahaya.local` | `DEMO_PASSWORD` | Requests, verification, donations — **no identity access** |
+| Ops admin | `ops.admin@koode.local` | `DEMO_PASSWORD` | Includes `VIEW_PRIVATE_IDENTITY`, `AUDIT_LOG_VIEW` |
+| Moderator | `moderator@koode.local` | `DEMO_PASSWORD` | Requests, verification, donations — **no identity access** |
 | Donor | `donor@demo.local` | `DEMO_PASSWORD` | Has donation history |
 | Recipient (verified) | `learning@demo.local` | `DEMO_PASSWORD` | "Verified Learning Center", Thrissur |
 | Recipient (pending) | `pending@demo.local` | `DEMO_PASSWORD` | Awaiting verification |

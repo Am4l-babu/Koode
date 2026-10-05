@@ -17,7 +17,7 @@ export function LogoMark({ className = "h-9 w-9" }: { className?: string }) {
   );
 }
 
-export function Logo({ name = "Sahaya Bridge" }: { name?: string }) {
+export function Logo({ name = "Koode" }: { name?: string }) {
   return (
     <Link href="/" className="group flex items-center gap-2.5 rounded-xl" aria-label={`${name} — home`}>
       <LogoMark className="h-9 w-9 transition-transform duration-300 group-hover:-rotate-6" />

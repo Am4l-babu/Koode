@@ -3,8 +3,8 @@ import { E2E_ENV } from "../playwright.config";
 
 export const ACCOUNTS = {
   admin: { email: E2E_ENV.ADMIN_EMAIL, password: E2E_ENV.ADMIN_PASSWORD },
-  ops: { email: "ops.admin@sahaya.local", password: E2E_ENV.DEMO_PASSWORD },
-  moderator: { email: "moderator@sahaya.local", password: E2E_ENV.DEMO_PASSWORD },
+  ops: { email: "ops.admin@koode.local", password: E2E_ENV.DEMO_PASSWORD },
+  moderator: { email: "moderator@koode.local", password: E2E_ENV.DEMO_PASSWORD },
   donor: { email: "donor@demo.local", password: E2E_ENV.DEMO_PASSWORD },
   recipient: { email: "learning@demo.local", password: E2E_ENV.DEMO_PASSWORD },
 };

@@ -6,7 +6,7 @@ export const GET = route({ permission: "SYSTEM_SETTINGS" }, async (_req, { user,
   return new Response(JSON.stringify(data, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="sahaya-export-${new Date().toISOString().slice(0, 10)}.json"`,
+      "Content-Disposition": `attachment; filename="koode-export-${new Date().toISOString().slice(0, 10)}.json"`,
     },
   });
 });
