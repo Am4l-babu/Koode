@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Koode — interactive preview</title>
 <meta name="description" content="Interactive preview of Koode, a privacy-first donation platform: verified needs, anonymous donors, audited identity resolution.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%230f766e'/%3E%3Cpath d='M8 27 C 12 15, 28 15, 32 27' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='8.5' cy='27.5' r='3.6' fill='white'/%3E%3Ccircle cx='31.5' cy='27.5' r='3.6' fill='%2322c55e'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <style>
 :root{
   --bg:#f8faf7;--bg-tint:#eef5f1;--surface:#fff;--surface-2:#f3f7f4;--surface-3:#e8f0ec;
@@ -45,8 +46,8 @@ button{font:inherit;cursor:pointer}
 header.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .bar{display:flex;align-items:center;gap:16px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg);font-weight:650;font-size:1.15rem;letter-spacing:-.02em}
-.brand svg{width:36px;height:36px;transition:transform .3s}
-.brand:hover svg{transform:rotate(-8deg)}
+.brand img{width:36px;height:36px;transition:transform .3s}
+.brand:hover img{transform:rotate(-8deg)}
 nav.main{margin-left:auto;display:flex;gap:4px;align-items:center}
 nav.main a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--fg-muted);font-size:.93rem;font-weight:550}
 nav.main a:hover{background:var(--surface-3);color:var(--fg)}
@@ -228,7 +229,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <header class="top"><div class="wrap bar">
   <a class="brand" href="#top" aria-label="Koode — home">
-    <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="var(--primary)"/><path d="M8 27 C 12 15, 28 15, 32 27" fill="none" stroke="var(--primary-fg)" stroke-width="2.6" stroke-linecap="round" opacity=".9"/><circle cx="8.5" cy="27.5" r="3.6" fill="var(--primary-fg)"/><circle cx="31.5" cy="27.5" r="3.6" fill="var(--secondary)"/><path d="M20 8.5 L26 11 V15.5 C26 19.6 23.4 22.3 20 23.4 C16.6 22.3 14 19.6 14 15.5 V11 Z" fill="var(--primary-fg)"/><path d="M20 19.6 C 17.2 17.8 16.6 16.3 17.2 15.2 C 17.8 14.1 19.3 14.2 20 15.3 C 20.7 14.2 22.2 14.1 22.8 15.2 C 23.4 16.3 22.8 17.8 20 19.6 Z" fill="var(--accent)"/></svg>
+    <img src="logo.png" alt="" width="36" height="36">
     Koode
   </a>
   <nav class="main" aria-label="Sections">
