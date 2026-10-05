@@ -11,6 +11,7 @@ import { getDonorDonation } from "@/services/donations";
 import { AppError } from "@/lib/errors";
 import { CONDITION_LABELS, DELIVERY_METHOD_LABELS } from "@/lib/descriptors";
 import { formatDate, formatINR } from "@/lib/format";
+import { describeAttributes } from "@/lib/categories";
 
 export const metadata = { title: "Track donation" };
 
@@ -37,7 +38,12 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
           <section className="card p-6" aria-labelledby="sum">
             <h2 id="sum" className="text-lg font-semibold">Summary</h2>
             <ul className="mt-3 space-y-1">
-              {d.items.map((i) => <li key={i.requestItemId} className="font-semibold">{i.quantity} × {i.name}{i.variant.size ? <span className="font-normal text-muted"> · size {i.variant.size}</span> : null}</li>)}
+              {d.items.map((i) => (
+                <li key={i.requestItemId}>
+                  <span className="font-semibold">{i.quantity} × {i.name}</span>
+                  {describeAttributes(i.variant).length > 0 && <span className="block text-sm text-muted">{describeAttributes(i.variant).map((a) => `${a.label}: ${a.value}`).join(" · ")}</span>}
+                </li>
+              ))}
             </ul>
             <dl className="mt-4 grid grid-cols-2 gap-y-2 text-sm">
               <dt className="text-muted">Request</dt><dd className="text-right"><Link className="text-primary-ink hover:underline" href={`/needs/${d.request.id}`}>{d.request.title}</Link></dd>

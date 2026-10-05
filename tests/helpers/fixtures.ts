@@ -68,7 +68,7 @@ async function org(email: string, p: typeof PII.orgB, verified = true) {
   return { user: u, org: o, token: u.token };
 }
 
-export async function activeRequest(organizationId: string, items: { name: string; quantity: number; committed?: number }[], categoryId: string) {
+export async function activeRequest(organizationId: string, items: { name: string; quantity: number; committed?: number; attributes?: Record<string, string | number | boolean> }[], categoryId: string) {
   const total = items.reduce((s, i) => s + i.quantity - (i.committed ?? 0), 0);
   return db.request.create({
     data: {
@@ -84,7 +84,7 @@ export async function activeRequest(organizationId: string, items: { name: strin
       approvedAt: new Date(),
       quantityRemaining: total,
       items: {
-        create: items.map((i, idx) => ({ name: i.name, quantityRequired: i.quantity, quantityCommitted: i.committed ?? 0, estimatedUnitValue: 500, sortOrder: idx })),
+        create: items.map((i, idx) => ({ name: i.name, quantityRequired: i.quantity, quantityCommitted: i.committed ?? 0, estimatedUnitValue: 500, attributes: i.attributes ?? {}, sortOrder: idx })),
       },
     },
     include: { items: true },

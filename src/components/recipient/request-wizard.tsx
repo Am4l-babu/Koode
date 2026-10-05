@@ -5,11 +5,12 @@ import { useMemo, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
+import { AttributeField } from "@/components/ui/attribute-field";
 import { Callout } from "@/components/ui/states";
 import { cn } from "@/components/ui/cn";
 import { api, ApiError } from "@/lib/client-api";
 import { KERALA_DISTRICTS } from "@/lib/geo";
-import type { CategorySchema, FieldDef } from "@/lib/categories";
+import { fieldsFor, findProductType, formatAttributeValue, PRODUCT_TYPE_KEY, type CategorySchema } from "@/lib/categories";
 import { detectPii, piiMessage } from "@/lib/pii-guard";
 
 export interface WizardCategory {
@@ -23,6 +24,8 @@ export interface WizardCategory {
 
 interface ItemDraft {
   key: number;
+  /** A product type name, OTHER, or "" while not chosen yet. */
+  productType: string;
   name: string;
   quantity: string;
   unit: string;
@@ -30,13 +33,15 @@ interface ItemDraft {
   attributes: Record<string, string>;
 }
 
-const STEPS = ["Category", "Describe", "Quantities", "Variants", "Review"];
-const blankItem = (key: number): ItemDraft => ({ key, name: "", quantity: "", unit: "pcs", estimatedUnitValue: "", attributes: {} });
+const STEPS = ["Category", "Describe", "Items", "Review"];
+const OTHER = "__other";
+const blankItem = (key: number): ItemDraft => ({ key, productType: "", name: "", quantity: "", unit: "pcs", estimatedUnitValue: "", attributes: {} });
 
 /**
- * Smart request builder. Variant fields are rendered from the category's
+ * Smart request builder. Item details are rendered from the category's
  * `fieldSchema` — adding a category in the admin panel adds its form here
- * with no code change.
+ * with no code change. Choosing a product type (e.g. Footwear) swaps in that
+ * product's own measurements.
  */
 export function RequestWizard({ categories, defaultDistrict, recurringEnabled }: { categories: WizardCategory[]; defaultDistrict: string; recurringEnabled: boolean }) {
   const router = useRouter();
@@ -52,6 +57,22 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
   const category = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const updateItem = (key: number, patch: Partial<ItemDraft>) => setItems((list) => list.map((i) => (i.key === key ? { ...i, ...patch } : i)));
+  const productTypes = category?.fieldSchema.productTypes ?? [];
+  const itemFields = (it: ItemDraft) => (category ? fieldsFor(category.fieldSchema, it.productType) : []);
+
+  /** Switch an item's product type, carrying over the name and unit only if they were the old type's defaults. */
+  function chooseProductType(it: ItemDraft, value: string) {
+    if (!category) return;
+    const before = findProductType(category.fieldSchema, it.productType);
+    const after = findProductType(category.fieldSchema, value);
+    const keep = new Set(fieldsFor(category.fieldSchema, value).map((f) => f.key));
+    updateItem(it.key, {
+      productType: value,
+      name: !it.name.trim() || it.name === before?.name ? (after?.name ?? "") : it.name,
+      unit: it.unit === "pcs" || it.unit === before?.unit ? (after?.unit ?? "pcs") : it.unit,
+      attributes: Object.fromEntries(Object.entries(it.attributes).filter(([k]) => keep.has(k))),
+    });
+  }
 
   function validateStep(): Record<string, string> {
     const e: Record<string, string> = {};
@@ -66,14 +87,11 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
     }
     if (step === 2) {
       items.forEach((it, idx) => {
+        if (productTypes.length && !it.productType) e[`items.${idx}.attributes.${PRODUCT_TYPE_KEY}`] = "Choose a product type, or “Something else”.";
         if (it.name.trim().length < 2) e[`items.${idx}.name`] = "Name the item.";
         const q = Number(it.quantity);
         if (!Number.isInteger(q) || q < 1) e[`items.${idx}.quantity`] = "Enter a whole number of at least 1.";
-      });
-    }
-    if (step === 3 && category) {
-      items.forEach((it, idx) => {
-        for (const f of category.fieldSchema.fields) {
+        for (const f of itemFields(it)) {
           if (f.required && !it.attributes[f.key]?.trim()) e[`items.${idx}.attributes.${f.key}`] = `${f.label} is required.`;
         }
       });
@@ -106,13 +124,17 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
           recurrence: form.recurrence,
           deliveryMethods: methods,
           submit: !asDraft,
-          items: items.map((i) => ({
-            name: i.name.trim(),
-            quantity: Number(i.quantity),
-            unit: i.unit.trim() || "pcs",
-            estimatedUnitValue: i.estimatedUnitValue ? Number(i.estimatedUnitValue) : undefined,
-            attributes: i.attributes,
-          })),
+          items: items.map((i) => {
+            const keys = new Set(itemFields(i).map((f) => f.key));
+            const attributes = Object.fromEntries(Object.entries(i.attributes).filter(([k, v]) => keys.has(k) && v.trim()));
+            return {
+              name: i.name.trim(),
+              quantity: Number(i.quantity),
+              unit: i.unit.trim() || "pcs",
+              estimatedUnitValue: i.estimatedUnitValue ? Number(i.estimatedUnitValue) : undefined,
+              attributes: i.productType && i.productType !== OTHER ? { ...attributes, [PRODUCT_TYPE_KEY]: i.productType } : attributes,
+            };
+          }),
         },
       });
       router.push(`/recipient/requests/${res.id}?created=1`);
@@ -122,8 +144,7 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
         setError(e.message);
         setErrors(e.fields);
         const keys = Object.keys(e.fields);
-        if (keys.some((k) => k.includes(".attributes."))) setStep(3);
-        else if (keys.some((k) => k.startsWith("items"))) setStep(2);
+        if (keys.some((k) => k.startsWith("items"))) setStep(2);
         else if (keys.some((k) => ["title", "description", "district", "city", "neededBy"].includes(k))) setStep(1);
       } else setError("Something didn't go as planned.");
       setSubmitting(false);
@@ -192,19 +213,50 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
         </div>
       )}
 
-      {step === 2 && (
+      {step === 2 && category && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Specify quantities</h2>
-          <p className="text-muted">Each item is tracked independently, so donors can fulfil part of the request.</p>
-          {items.map((it, idx) => (
-            <div key={it.key} className="grid gap-3 rounded-2xl border border-line p-4 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end">
-              <Field label="Item" htmlFor={`name-${it.key}`} error={errors[`items.${idx}.name`]}><Input id={`name-${it.key}`} value={it.name} onChange={(e) => updateItem(it.key, { name: e.target.value })} placeholder="e.g. Notebook" /></Field>
-              <Field label="Quantity" htmlFor={`qty-${it.key}`} error={errors[`items.${idx}.quantity`]}><Input id={`qty-${it.key}`} type="number" min={1} value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: e.target.value })} /></Field>
-              <Field label="Unit" htmlFor={`unit-${it.key}`}><Input id={`unit-${it.key}`} value={it.unit} onChange={(e) => updateItem(it.key, { unit: e.target.value })} placeholder="pcs, kg…" /></Field>
-              <Field label="Est. ₹ / unit" htmlFor={`val-${it.key}`} help="Optional"><Input id={`val-${it.key}`} type="number" min={0} value={it.estimatedUnitValue} onChange={(e) => updateItem(it.key, { estimatedUnitValue: e.target.value })} /></Field>
-              <Button variant="ghost" aria-label={`Remove ${it.name || "item"}`} disabled={items.length === 1} onClick={() => setItems((l) => l.filter((x) => x.key !== it.key))} className="h-11 w-11 px-0"><Trash2 className="h-4 w-4" /></Button>
-            </div>
-          ))}
+          <h2 className="text-xl font-semibold">What do you need? <span className="text-base font-normal text-muted">— {category.icon} {category.name}</span></h2>
+          <p className="text-muted">
+            {productTypes.length ? "Pick a product type for each item to fill in its measurements and details. " : ""}
+            Each item is tracked independently, so donors can fulfil part of the request.
+          </p>
+          {items.map((it, idx) => {
+            const fields = itemFields(it);
+            const showDetails = !productTypes.length || !!it.productType;
+            const typeName = findProductType(category.fieldSchema, it.productType)?.name;
+            return (
+              <div key={it.key} className="space-y-3 rounded-2xl border border-line p-4" data-testid="request-item">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {productTypes.length > 0 && (
+                    <Field label="Product type" htmlFor={`type-${it.key}`} required error={errors[`items.${idx}.attributes.${PRODUCT_TYPE_KEY}`]}>
+                      <Select id={`type-${it.key}`} value={it.productType} onChange={(e) => chooseProductType(it, e.target.value)} invalid={!!errors[`items.${idx}.attributes.${PRODUCT_TYPE_KEY}`]}>
+                        <option value="">Choose…</option>
+                        {productTypes.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
+                        <option value={OTHER}>Something else</option>
+                      </Select>
+                    </Field>
+                  )}
+                  <Field label="Item" htmlFor={`name-${it.key}`} error={errors[`items.${idx}.name`]}><Input id={`name-${it.key}`} value={it.name} onChange={(e) => updateItem(it.key, { name: e.target.value })} placeholder="e.g. Notebook" /></Field>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                  <Field label="Quantity" htmlFor={`qty-${it.key}`} error={errors[`items.${idx}.quantity`]}><Input id={`qty-${it.key}`} type="number" min={1} value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: e.target.value })} /></Field>
+                  <Field label="Unit" htmlFor={`unit-${it.key}`}><Input id={`unit-${it.key}`} value={it.unit} onChange={(e) => updateItem(it.key, { unit: e.target.value })} placeholder="pcs, kg…" /></Field>
+                  <Field label="Est. ₹ / unit (optional)" htmlFor={`val-${it.key}`}><Input id={`val-${it.key}`} type="number" min={0} value={it.estimatedUnitValue} onChange={(e) => updateItem(it.key, { estimatedUnitValue: e.target.value })} /></Field>
+                  <Button variant="ghost" aria-label={`Remove ${it.name || "item"}`} disabled={items.length === 1} onClick={() => setItems((l) => l.filter((x) => x.key !== it.key))} className="h-11 w-11 px-0!"><Trash2 className="h-4 w-4" /></Button>
+                </div>
+                {showDetails && fields.length > 0 && (
+                  <fieldset className="rounded-xl bg-surface-2 p-3">
+                    <legend className="float-left mb-3 w-full text-sm font-semibold">{typeName ? `${typeName} details` : "Details"}</legend>
+                    <div className="clear-both grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {fields.map((f) => (
+                        <AttributeField key={`${it.productType}-${f.key}`} field={f} id={`${f.key}-${it.key}`} value={it.attributes[f.key] ?? ""} error={errors[`items.${idx}.attributes.${f.key}`]} onChange={(v) => updateItem(it.key, { attributes: { ...it.attributes, [f.key]: v } })} />
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+              </div>
+            );
+          })}
           {errors.items && <p className="text-sm text-critical" role="alert">{errors.items}</p>}
           <Button variant="outline" icon={<Plus className="h-4 w-4" />} disabled={items.length >= 10} onClick={() => setItems((l) => [...l, blankItem(Math.max(...l.map((x) => x.key)) + 1)])}>Add another item</Button>
         </div>
@@ -212,35 +264,23 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
 
       {step === 3 && category && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Add variants <span className="text-base font-normal text-muted">— {category.icon} {category.name}</span></h2>
-          {category.fieldSchema.fields.length === 0 && <p className="text-muted">No extra details needed for this category.</p>}
-          {items.map((it, idx) => (
-            <div key={it.key} className="rounded-2xl border border-line p-4">
-              <p className="font-semibold">{it.name} <span className="font-normal text-muted">× {it.quantity} {it.unit}</span></p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {category.fieldSchema.fields.map((f) => (
-                  <DynamicField key={f.key} field={f} id={`${f.key}-${it.key}`} value={it.attributes[f.key] ?? ""} error={errors[`items.${idx}.attributes.${f.key}`]} onChange={(v) => updateItem(it.key, { attributes: { ...it.attributes, [f.key]: v } })} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {step === 4 && category && (
-        <div className="space-y-4">
           <h2 className="text-xl font-semibold">Review</h2>
           <div className="rounded-2xl border border-line p-5">
             <p className="text-sm text-muted">{category.icon} {category.name} · {form.district}{form.city ? `, ${form.city}` : ""} · {form.urgency.toLowerCase()} urgency{form.recurrence !== "NONE" ? ` · ${form.recurrence.toLowerCase()}` : ""}</p>
             <p className="mt-2 text-lg font-semibold">{form.title}</p>
             <p className="mt-2 whitespace-pre-line text-muted">{form.description}</p>
             <ul className="mt-4 space-y-1 border-t border-line pt-4">
-              {items.map((i) => (
-                <li key={i.key}>
-                  <span className="font-semibold">{i.quantity} {i.unit !== "pcs" ? i.unit : ""} × {i.name}</span>
-                  {Object.entries(i.attributes).filter(([, v]) => v).length > 0 && <span className="text-sm text-muted"> — {Object.entries(i.attributes).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(", ")}</span>}
-                </li>
-              ))}
+              {items.map((i) => {
+                const details = itemFields(i).filter((f) => i.attributes[f.key]?.trim()).map((f) => `${f.label}: ${formatAttributeValue(i.attributes[f.key])}`);
+                const typeName = findProductType(category.fieldSchema, i.productType)?.name;
+                return (
+                  <li key={i.key}>
+                    <span className="font-semibold">{i.quantity} {i.unit !== "pcs" ? i.unit : ""} × {i.name}</span>
+                    {typeName && typeName !== i.name && <span className="text-sm text-muted"> ({typeName})</span>}
+                    {details.length > 0 && <span className="text-sm text-muted"> — {details.join(", ")}</span>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
           <Callout tone="info" title="What happens next">Your request enters <strong>pending verification</strong>. Once our team approves it, it appears publicly as from a “Verified” organisation — your organisation&apos;s name and contact details are never shown.</Callout>
@@ -261,26 +301,5 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
         )}
       </div>
     </div>
-  );
-}
-
-function DynamicField({ field, id, value, error, onChange }: { field: FieldDef; id: string; value: string; error?: string; onChange: (v: string) => void }) {
-  if (field.type === "select" || (field.type === "ageRange" && field.options?.length)) {
-    return (
-      <Field label={field.label} htmlFor={id} required={field.required} error={error} help={field.help}>
-        <Select id={id} value={value} onChange={(e) => onChange(e.target.value)} invalid={!!error}>
-          <option value="">{field.required ? "Choose…" : "Any / not specified"}</option>
-          {field.options?.map((o) => <option key={o} value={o}>{o}</option>)}
-        </Select>
-      </Field>
-    );
-  }
-  if (field.type === "boolean") {
-    return <Checkbox label={field.label} checked={value === "true"} onChange={(e) => onChange(String(e.target.checked))} />;
-  }
-  return (
-    <Field label={field.label} htmlFor={id} required={field.required} error={error} help={field.help}>
-      <Input id={id} type={field.type === "number" ? "number" : "text"} value={value} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} invalid={!!error} />
-    </Field>
   );
 }

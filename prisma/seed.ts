@@ -118,7 +118,7 @@ interface SeedItem {
   committed?: number;
   unit?: string;
   value?: number;
-  attributes?: Record<string, string>;
+  attributes?: Record<string, string | number | boolean>;
 }
 
 async function createRequest(opts: {
@@ -159,7 +159,7 @@ async function createRequest(opts: {
       popularity: Math.floor(Math.random() * 60),
       items: {
         create: opts.items.map((i, idx) => {
-          const age = parseAgeRange(i.attributes?.ageGroup ?? i.attributes?.ageRange);
+          const age = parseAgeRange(String(i.attributes?.ageGroup ?? i.attributes?.ageRange ?? ""));
           return {
             name: i.name,
             unit: i.unit ?? "pcs",
@@ -306,30 +306,30 @@ async function main() {
     district: "Thrissur", city: "Chalakudy", neededInDays: 15, people: 40, createdDaysAgo: 25,
     description: "These bags are intended for children who are beginning the new academic year and currently do not have suitable school bags. Sturdy bags with two compartments work best.",
     items: [
-      { name: "School bag", quantity: 40, value: 600, attributes: { ageGroup: "8–12", condition: "New or excellent", specification: "Two compartments" } },
-      { name: "Notebook", quantity: 100, value: 45, attributes: { ageGroup: "8–12", specification: "200 pages, ruled", condition: "New" } },
-      { name: "Geometry kit", quantity: 20, value: 120, attributes: { ageGroup: "10–12", condition: "New" } },
+      { name: "School bag", quantity: 40, value: 600, attributes: { productType: "School bag", ageGroup: "8–12", condition: "New or excellent", compartments: 2, height: "40 cm" } },
+      { name: "Notebook", quantity: 100, value: 45, attributes: { productType: "Notebook", ageGroup: "8–12", pages: 200, ruling: "Ruled", paperSize: "Long (king size)", condition: "New" } },
+      { name: "Geometry kit", quantity: 20, value: 120, attributes: { productType: "Geometry box", ageGroup: "10–12", condition: "New" } },
     ],
   });
   const r2 = await createRequest({
     orgId: childrenHome.org.id, category: "clothing", title: "Children's Shirts for Daily Wear", priority: "MEDIUM",
     district: "Ernakulam", city: "Kochi", neededInDays: 30, people: 25, createdDaysAgo: 18,
     description: "Comfortable cotton shirts for children at a residential home. Boys and girls aged 8–10; sizes 28, 30 and 32 are most needed.",
-    items: [{ name: "Children's shirt", quantity: 25, value: 350, attributes: { size: "28, 30, 32", ageGroup: "8–10", gender: "Any", condition: "New or excellent", colour: "Any" } }],
+    items: [{ name: "Children's shirt", quantity: 25, value: 350, attributes: { productType: "Shirt / T-shirt", size: "28, 30, 32", ageGroup: "8–10", sleeve: "Half sleeve", fabric: "Cotton", gender: "Any", condition: "New or excellent", colour: "Any" } }],
   });
   const r3 = await createRequest({
     orgId: elder.org.id, category: "elder-care", title: "Warm Blankets for the Monsoon", priority: "HIGH",
     district: "Palakkad", city: "Ottapalam", neededInDays: 10, people: 15, createdDaysAgo: 12,
     description: "Residents need warm, washable blankets for the cooler monsoon nights. Single-bed size, medium weight, easy to wash and dry.",
-    items: [{ name: "Warm blanket", quantity: 15, value: 700, attributes: { size: "Single", condition: "New", notes: "Washable" } }],
+    items: [{ name: "Warm blanket", quantity: 15, value: 700, attributes: { productType: "Blanket / bedsheet", item: "Blanket", bedSize: "Single", material: "Fleece", condition: "New", notes: "Washable" } }],
   });
   const r4 = await createRequest({
     orgId: play.org.id, category: "children", title: "Educational Toys for the Play Corner", priority: "NORMAL",
     district: "Ernakulam", city: "Kochi", neededInDays: 45, people: 30, createdDaysAgo: 6,
     description: "Our play corner needs educational toys that build early motor and counting skills. Durable, child-safe toys for ages 5 to 8.",
     items: [
-      { name: "Educational toy", quantity: 20, value: 400, attributes: { ageRange: "5–8", purpose: "Educational", condition: "New or excellent", safetyNotes: "No small parts" } },
-      { name: "Picture book", quantity: 30, value: 150, attributes: { ageRange: "5–8", purpose: "Educational", condition: "Good" } },
+      { name: "Educational toy", quantity: 20, value: 400, attributes: { productType: "Toy", toyType: "Building blocks", ageRange: "5–8", purpose: "Educational", condition: "New or excellent", safetyNotes: "No small parts" } },
+      { name: "Picture book", quantity: 30, value: 150, attributes: { productType: "Picture / story book", language: "Malayalam", ageRange: "5–8", purpose: "Educational", condition: "Good" } },
     ],
   });
   const r5 = await createRequest({
@@ -337,23 +337,23 @@ async function main() {
     district: "Kozhikode", city: "Vadakara", neededInDays: 5, people: 120, createdDaysAgo: 4, recurrence: "MONTHLY",
     description: "The community kitchen serves daily lunches to elderly residents and daily-wage workers. Rice and dal stocks run out before month end.",
     items: [
-      { name: "Rice", quantity: 50, unit: "kg", value: 55, attributes: { weight: "5 kg bags", packaging: "Sealed bags", expiry: "At least 3 months", dietary: "Vegetarian" } },
-      { name: "Toor dal", quantity: 20, unit: "kg", value: 140, attributes: { weight: "1 kg packs", expiry: "At least 3 months", dietary: "Vegetarian" } },
+      { name: "Rice", quantity: 50, unit: "kg", value: 55, attributes: { productType: "Rice", variety: "Matta (red)", packSize: "5 kg", packaging: "Sealed bags", expiry: "At least 3 months", dietary: "Vegetarian" } },
+      { name: "Toor dal", quantity: 20, unit: "kg", value: 140, attributes: { productType: "Pulses / dal", pulse: "Toor dal", packSize: "1 kg", expiry: "At least 3 months", dietary: "Vegetarian" } },
     ],
   });
   const r6 = await createRequest({
     orgId: learning.org.id, category: "clothing", title: "School Uniforms for Grade 3 and 4", priority: "MEDIUM",
     district: "Thrissur", city: "Chalakudy", neededInDays: 20, people: 18, createdDaysAgo: 3,
     description: "Uniform sets for children starting in grades 3 and 4 whose families cannot purchase new uniforms this term.",
-    items: [{ name: "Uniform set", quantity: 18, value: 650, attributes: { size: "26, 28", ageGroup: "8–10", gender: "Any", condition: "New", colour: "Blue and white" } }],
+    items: [{ name: "Uniform set", quantity: 18, value: 650, attributes: { productType: "School uniform", size: "26, 28", setIncludes: "Shirt + shorts / pinafore", ageGroup: "8–10", gender: "Any", condition: "New", colour: "Blue and white" } }],
   });
   const r7 = await createRequest({
     orgId: elder.org.id, category: "elder-care", title: "Walking Aids for Residents", priority: "NORMAL",
     district: "Palakkad", city: "Ottapalam", neededInDays: 60, people: 8, createdDaysAgo: 30,
     description: "Several residents need sturdy walking sticks and one adjustable walker to move around safely within the home.",
     items: [
-      { name: "Walking stick", quantity: 6, value: 450, attributes: { condition: "New or excellent", notes: "Adjustable height" } },
-      { name: "Walker", quantity: 2, value: 2200, attributes: { condition: "New or excellent", notes: "Foldable" } },
+      { name: "Walking stick", quantity: 6, value: 450, attributes: { productType: "Walking stick", tip: "Single tip", heightAdjustable: true, condition: "New or excellent" } },
+      { name: "Walker", quantity: 2, value: 2200, attributes: { productType: "Walker", wheels: "No wheels", foldable: true, maxUserWeight: "100 kg", condition: "New or excellent" } },
     ],
   });
   const r8 = await createRequest({
@@ -361,8 +361,8 @@ async function main() {
     district: "Ernakulam", city: "Kochi", neededInDays: 40, people: 22, createdDaysAgo: 2,
     description: "Children at the home started a weekend football club. Balls and shin guards would let everyone play together safely.",
     items: [
-      { name: "Football", quantity: 4, value: 600, attributes: { ageGroup: "10–12", size: "Size 4", condition: "New" } },
-      { name: "Shin guard pair", quantity: 22, value: 250, attributes: { ageGroup: "10–12", size: "Small", condition: "Good" } },
+      { name: "Football", quantity: 4, value: 600, attributes: { productType: "Ball", sport: "Football", size: "Size 4", ageGroup: "10–12", condition: "New" } },
+      { name: "Shin guard pair", quantity: 22, value: 250, attributes: { productType: "Protective gear", gear: "Shin guards", size: "Small", ageGroup: "10–12", condition: "Good" } },
     ],
   });
   await createRequest({
@@ -375,7 +375,7 @@ async function main() {
     orgId: pending.org.id, category: "education", title: "Notebooks for Evening Tuition Batch", priority: "NORMAL",
     district: "Kollam", city: "Karunagappally", neededInDays: 25, people: 35, createdDaysAgo: 1, status: "PENDING_VERIFICATION",
     description: "Ruled notebooks for students who attend the free evening tuition batch and currently share books between siblings.",
-    items: [{ name: "Notebook", quantity: 70, value: 45, attributes: { ageGroup: "10–12", specification: "172 pages", condition: "New" } }],
+    items: [{ name: "Notebook", quantity: 70, value: 45, attributes: { productType: "Notebook", ageGroup: "10–12", pages: 172, ruling: "Ruled", condition: "New" } }],
   });
 
   // ── Donations (spread across months for analytics) ──

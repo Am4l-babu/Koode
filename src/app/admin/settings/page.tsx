@@ -5,7 +5,7 @@ import { requirePageUser } from "@/lib/auth/guards";
 import { effectivePermissions, hasPermission, PERMISSION_LABELS } from "@/lib/permissions";
 import { getSettings } from "@/services/settings";
 import { listCategories } from "@/services/requests";
-import { parseCategorySchema } from "@/lib/categories";
+import { resolveCategorySchema } from "@/lib/categories";
 
 export const metadata = { title: "Settings" };
 
@@ -27,7 +27,7 @@ export default async function SettingsPage() {
           {categories.map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
               <span><span aria-hidden="true">{c.icon}</span> <span className="font-semibold">{c.name}</span> <span className="font-mono text-xs text-subtle">/{c.slug}</span></span>
-              <span className="text-xs text-muted">{parseCategorySchema(c.fieldSchema).fields.map((f) => f.key).join(", ") || "no fields"}{!c.isActive && " · inactive"}</span>
+              <span className="text-xs text-muted">{categorySummary(c.slug, c.fieldSchema)}{!c.isActive && " · inactive"}</span>
             </li>
           ))}
         </ul>
@@ -36,4 +36,10 @@ export default async function SettingsPage() {
       {canEdit && <div className="mt-10"><DataTools /></div>}
     </>
   );
+}
+
+function categorySummary(slug: string, fieldSchema: unknown) {
+  const schema = resolveCategorySchema(slug, fieldSchema);
+  const fields = schema.fields.map((f) => f.key).join(", ") || "no fields";
+  return schema.productTypes?.length ? `${fields} · ${schema.productTypes.length} product types` : fields;
 }

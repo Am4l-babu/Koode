@@ -35,7 +35,7 @@ export interface DonationItemDTO {
   name: string;
   unit: string;
   quantity: number;
-  variant: Record<string, string>;
+  variant: Record<string, string | number | boolean>;
 }
 
 export interface TimelineEntryDTO {
@@ -60,7 +60,7 @@ function mapItems(items: { quantity: number; variant: Prisma.JsonValue; requestI
     name: i.requestItem.name,
     unit: i.requestItem.unit,
     quantity: i.quantity,
-    variant: (i.variant ?? {}) as Record<string, string>,
+    variant: (i.variant ?? {}) as Record<string, string | number | boolean>,
   }));
 }
 

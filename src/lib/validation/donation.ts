@@ -13,7 +13,10 @@ export const donationItemInputSchema = z.object({
     .int("Quantity must be a whole number.")
     .min(1, "Quantity must be at least 1.")
     .max(1000, "Quantity must be 1,000 or fewer per item."),
-  variant: z.record(z.string().max(40)).optional(),
+  /** Condition of this item; the donation's overall condition is the least-new of its items. */
+  condition: z.enum(CONDITIONS).optional(),
+  /** Details of what is given, checked against the item's product type on the server. */
+  variant: z.record(z.union([z.string().max(80), z.number(), z.boolean()])).optional(),
 });
 
 export const createDonationSchema = z

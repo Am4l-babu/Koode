@@ -8,6 +8,7 @@ import { ProgressBar } from "@/components/ui/progress";
 import { Button, buttonClass } from "@/components/ui/button";
 import { PrivacyBadge } from "@/components/brand/badges";
 import { formatNumber } from "@/lib/format";
+import { describeAttributes } from "@/lib/categories";
 import { DonationModal } from "./donation-modal";
 
 type Items = PublicRequestDTO["items"];
@@ -80,12 +81,12 @@ export function DonatePanel({
                 </p>
               </div>
               <ProgressBar value={i.percent} size="sm" className="mt-2" tone={i.remaining === 0 ? "success" : "primary"} label={`${i.name}: ${i.percent}% committed`} />
-              {Object.keys(i.attributes).length > 0 && (
+              {describeAttributes(i.attributes).length > 0 && (
                 <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  {Object.entries(i.attributes).map(([k, v]) => (
-                    <div key={k} className="flex gap-1">
-                      <dt className="text-subtle">{humanize(k)}:</dt>
-                      <dd className="font-medium text-fg">{String(v)}</dd>
+                  {describeAttributes(i.attributes).map((a) => (
+                    <div key={a.key} className="flex gap-1">
+                      <dt className="text-subtle">{a.label}:</dt>
+                      <dd className="font-medium text-fg">{a.value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -159,8 +160,4 @@ export function DonatePanel({
       )}
     </div>
   );
-}
-
-function humanize(key: string) {
-  return key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 }

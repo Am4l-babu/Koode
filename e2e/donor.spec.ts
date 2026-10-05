@@ -26,9 +26,13 @@ test.describe("Donor journey", () => {
 
     const dialog = page.getByRole("dialog", { name: /Commit to a donation/ });
     await expect(dialog).toBeVisible();
-    // Step 1 — choose 2 school bags
+    // Step 1 — choose 2 school bags and describe them
     await dialog.getByRole("button", { name: "More School bag" }).click();
     await expect(dialog.getByLabel(/^\d+ School bag$/)).toHaveText(/\d/);
+    const bag = dialog.getByTestId("item-details");
+    await expect(bag.getByText("Requested: 40 cm")).toBeVisible();
+    await bag.getByLabel("Condition").selectOption("LIKE_NEW");
+    await bag.getByLabel("Height", { exact: true }).fill("38");
     await dialog.getByRole("button", { name: "Continue" }).click();
     // Step 2 — partner drop-off
     await dialog.getByText("Partner drop-off", { exact: true }).click();
@@ -50,6 +54,7 @@ test.describe("Donor journey", () => {
     await success.getByRole("link", { name: "Track Donation" }).click();
     await expect(page).toHaveURL(new RegExp(`/donor/donations/${donationId}`));
     await expect(page.getByRole("list", { name: "Donation status timeline" })).toContainText("Donation confirmed");
+    await expect(page.getByText("Condition: Like new · Height: 38 cm")).toBeVisible();
     await expect(page.getByText("Your identity is protected").first()).toBeVisible();
 
     await page.getByRole("button", { name: "Mark as preparing" }).click();

@@ -56,7 +56,7 @@ export function Dialog({
               <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
               {description && <p id={descId} className="mt-1 text-sm text-muted">{description}</p>}
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close dialog" className="h-10 w-10 shrink-0 px-0">
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close dialog" className="h-10 w-10 shrink-0 px-0!">
               <X className="h-5 w-5" />
             </Button>
           </div>

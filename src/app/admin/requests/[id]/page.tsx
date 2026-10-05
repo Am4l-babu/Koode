@@ -10,6 +10,7 @@ import { requirePagePermission } from "@/lib/auth/guards";
 import { getModerationDetail } from "@/services/admin";
 import { REQUEST_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/descriptors";
 import { formatDate } from "@/lib/format";
+import { describeAttributes } from "@/lib/categories";
 import { AppError } from "@/lib/errors";
 
 export const metadata = { title: "Review request" };
@@ -53,7 +54,7 @@ export default async function ModerationPage({ params }: { params: Promise<{ id:
               {r.items.map((i) => (
                 <li key={i.id} className="rounded-xl bg-surface-2 px-4 py-2.5 text-sm">
                   <span className="font-semibold">{i.quantityRequired} {i.unit !== "pcs" ? i.unit : ""} × {i.name}</span> <span className="text-muted">({i.quantityCommitted} committed)</span>
-                  {Object.keys(i.attributes as object).length > 0 && <p className="text-xs text-muted">{Object.entries(i.attributes as Record<string, string>).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>}
+                  {describeAttributes(i.attributes as Record<string, unknown>).length > 0 && <p className="text-xs text-muted">{describeAttributes(i.attributes as Record<string, unknown>).map((a) => `${a.label}: ${a.value}`).join(" · ")}</p>}
                 </li>
               ))}
             </ul>

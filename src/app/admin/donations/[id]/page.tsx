@@ -12,6 +12,7 @@ import { getDonationAdmin } from "@/services/admin";
 import { AppError } from "@/lib/errors";
 import { CONDITION_LABELS, DELIVERY_METHOD_LABELS, GROUP_LABELS } from "@/lib/descriptors";
 import { formatDate, formatINR } from "@/lib/format";
+import { describeAttributes } from "@/lib/categories";
 
 export const metadata = { title: "Donation" };
 
@@ -43,7 +44,19 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
               <dt className="text-muted">Donor</dt><dd className="font-mono">Donor #{d.donor.publicId}</dd>
               <dt className="text-muted">Recipient</dt><dd className="font-mono">Recipient #{d.organization.publicId} <span className="font-sans text-muted">({d.organization.publicDescriptor})</span></dd>
               <dt className="text-muted">Request</dt><dd>{d.request.title} <span className="font-mono text-xs text-subtle">{d.request.publicId}</span></dd>
-              <dt className="text-muted">Items</dt><dd>{d.items.map((i) => `${i.quantity} × ${i.requestItem.name}`).join(", ")}</dd>
+              <dt className="text-muted">Items</dt><dd>
+                <ul className="space-y-1">
+                  {d.items.map((i, n) => {
+                    const details = describeAttributes(i.variant as Record<string, unknown>);
+                    return (
+                      <li key={n}>
+                        {i.quantity} × {i.requestItem.name}
+                        {details.length > 0 && <span className="block text-xs text-muted">{details.map((a) => `${a.label}: ${a.value}`).join(" · ")}</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </dd>
               <dt className="text-muted">Delivery</dt><dd>{DELIVERY_METHOD_LABELS[d.deliveryMethod]} · {d.delivery?.status.toLowerCase() ?? "—"}</dd>
               <dt className="text-muted">Condition</dt><dd>{CONDITION_LABELS[d.condition]}</dd>
               <dt className="text-muted">Donating as</dt><dd>{GROUP_LABELS[d.groupType]}</dd>

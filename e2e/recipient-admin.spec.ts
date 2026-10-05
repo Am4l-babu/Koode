@@ -18,18 +18,23 @@ test.describe("Recipient → admin approval → published", () => {
     await expect(page.getByText(/please remove a phone number/)).toBeVisible();
     await page.getByLabel("Why is this needed?").fill("Children walk to school through heavy monsoon rain and arrive soaked. Light rain jackets would help.");
     await page.getByRole("button", { name: "Continue" }).click();
-    // Step 3: quantities
+    // Step 3: items — a product type is required, and picking one shows its own fields
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("Choose a product type, or “Something else”.")).toBeVisible();
+    await page.getByLabel("Product type").selectOption("Jacket / raincoat");
+    await expect(page.getByLabel("Item", { exact: true })).toHaveValue("Jacket / raincoat");
+    await expect(page.getByText("Jacket / raincoat details")).toBeVisible();
     await page.getByLabel("Item", { exact: true }).fill("Rain jacket");
     await page.getByLabel("Quantity").fill("15");
     await page.getByRole("button", { name: "Continue" }).click();
-    // Step 4: schema-driven variants (clothing → size is required)
-    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Size is required.")).toBeVisible();
-    await page.getByLabel("Size").fill("Small, Medium");
+    await page.getByLabel(/^Size/).fill("Small, Medium");
+    await page.getByLabel("Type", { exact: true }).selectOption("Rain jacket");
     await page.getByLabel("Age group").selectOption("8–10");
     await page.getByRole("button", { name: "Continue" }).click();
-    // Step 5: review & submit
+    // Step 4: review & submit
     await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByText(/Size: Small, Medium, Type: Rain jacket/)).toBeVisible();
     await page.getByRole("button", { name: "Submit for review" }).click();
     await expect(page.getByText("Request submitted 🎉")).toBeVisible();
     const requestId = page.url().match(/NR-[A-Z0-9]+/)![0];
@@ -52,6 +57,7 @@ test.describe("Recipient → admin approval → published", () => {
     await page.goto(`/needs/${requestId}`);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
     await expect(page.getByText("Verified Learning Center").first()).toBeVisible();
+    await expect(page.getByText("Jacket / raincoat")).toBeVisible();
     await expectNoLeak(page, [...SEED_PII.orgNames, ...SEED_PII.orgContacts, ...SEED_PII.orgAddresses]);
   });
 

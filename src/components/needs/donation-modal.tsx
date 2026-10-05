@@ -10,12 +10,21 @@ import { Checkbox, Field, RadioCard, Select, Textarea, Input } from "@/component
 import { Callout } from "@/components/ui/states";
 import { PrivacyBadge } from "@/components/brand/badges";
 import { MediaPicker, uploadDonationMedia } from "@/components/donations/media-picker";
+import { AttributeField } from "@/components/ui/attribute-field";
+import { formatAttributeValue, listedChoices } from "@/lib/categories";
 import { detectPii, piiMessage } from "@/lib/pii-guard";
 import { api, ApiError } from "@/lib/client-api";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/components/ui/cn";
 
 const STEPS = ["What", "How", "Anonymous", "Review"] as const;
+
+const CONDITIONS = [
+  ["NEW", "New"],
+  ["LIKE_NEW", "Like new"],
+  ["GOOD", "Good"],
+] as const;
+const conditionLabel = (c: string) => CONDITIONS.find(([v]) => v === c)?.[1] ?? "New";
 
 const DELIVERY = {
   PLATFORM_PICKUP: { title: "Platform pickup", description: "A verified volunteer collects from you.", icon: <Truck className="h-5 w-5" /> },
@@ -51,8 +60,9 @@ export function DonationModal({
 }) {
   const [step, setStep] = useState(0);
   const [qty, setQty] = useState<Record<string, number>>({});
-  const [sizes, setSizes] = useState<Record<string, string>>({});
-  const [condition, setCondition] = useState("NEW");
+  // Per requested item: the condition and product details of what the donor gives.
+  const [conditions, setConditions] = useState<Record<string, string>>({});
+  const [details, setDetails] = useState<Record<string, Record<string, string>>>({});
   const [description, setDescription] = useState("");
   const [method, setMethod] = useState(need.deliveryMethods[0] ?? "PLATFORM_PICKUP");
   const [groupType, setGroupType] = useState("INDIVIDUAL");
@@ -73,6 +83,8 @@ export function DonationModal({
     setFieldErrors({});
     setDone(null);
     setFiles([]);
+    setConditions({});
+    setDetails({});
     setDescription("");
     setUploadNote(null);
     setAck(false);
@@ -90,17 +102,17 @@ export function DonationModal({
   const total = lines.reduce((s, l) => s + l.quantity, 0);
   const estimate = lines.reduce((s, l) => s + l.quantity * (l.item.estimatedUnitValue ?? 0), 0);
 
-  function sizeOptions(attr: Record<string, string | number | boolean>): string[] {
-    const raw = attr.size;
-    if (typeof raw !== "string") return [];
-    const parts = raw.split(/[,/]|\s+or\s+/).map((s) => s.trim()).filter(Boolean);
-    return parts.length > 1 ? parts : [];
-  }
 
   function canContinue(): string | null {
     if (step === 0) {
       if (total === 0) return "Select at least one item to donate.";
       for (const l of lines) if (l.quantity > l.item.remaining) return `Only ${l.item.remaining} ${l.item.name.toLowerCase()} remaining.`;
+    }
+    if (step === 0) {
+      for (const l of lines) {
+        const pii = detectPii(Object.values(details[l.item.id] ?? {}).join(" "));
+        if (pii.length) return `${l.item.name}: ${piiMessage(pii)}`;
+      }
     }
     if (step === 0 && description.trim()) {
       const pii = detectPii(description);
@@ -118,6 +130,13 @@ export function DonationModal({
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
+  /** The details filled in for one item, limited to that item's questions. */
+  function givenDetails(itemId: string): Record<string, string> {
+    const item = need.items.find((i) => i.id === itemId);
+    const filled = details[itemId] ?? {};
+    return Object.fromEntries((item?.donorFields ?? []).filter((f) => filled[f.key]?.trim()).map((f) => [f.key, filled[f.key]!.trim()]));
+  }
+
   async function submit() {
     setSubmitting(true);
     setError(null);
@@ -128,9 +147,9 @@ export function DonationModal({
           items: lines.map((l) => ({
             requestItemId: l.item.id,
             quantity: l.quantity,
-            ...(sizes[l.item.id] ? { variant: { size: sizes[l.item.id] } } : {}),
+            condition: conditions[l.item.id] ?? "NEW",
+            variant: givenDetails(l.item.id),
           })),
-          condition,
           deliveryMethod: method,
           groupType,
           description: description.trim() || undefined,
@@ -153,6 +172,7 @@ export function DonationModal({
         setError(e.message);
         setFieldErrors(e.fields);
         const d = e.body.details as { requestItemId?: string; remaining?: number } | undefined;
+        if (Object.keys(e.fields).some((k) => k.startsWith("items."))) setStep(0);
         if (e.body.code === "INSUFFICIENT_QUANTITY" && d?.requestItemId) {
           onQuantityConflict(d.requestItemId, d.remaining ?? 0);
           setQty((q) => ({ ...q, [d.requestItemId!]: Math.min(q[d.requestItemId!] ?? 0, d.remaining ?? 0) }));
@@ -197,7 +217,6 @@ export function DonationModal({
           <ul className="space-y-3">
             {need.items.map((i) => {
               const value = qty[i.id] ?? 0;
-              const opts = sizeOptions(i.attributes);
               return (
                 <li key={i.id} className={cn("rounded-2xl border p-4", value > 0 ? "border-primary bg-primary-soft/50" : "border-line")}>
                   <div className="flex items-center justify-between gap-3">
@@ -215,28 +234,40 @@ export function DonationModal({
                       </button>
                     </div>
                   </div>
-                  {value > 0 && opts.length > 0 && (
-                    <div className="mt-3 max-w-48">
-                      <Field label="Size / variant" htmlFor={`size-${i.id}`}>
-                        <Select id={`size-${i.id}`} value={sizes[i.id] ?? ""} onChange={(e) => setSizes((s) => ({ ...s, [i.id]: e.target.value }))}>
-                          <option value="">Mixed / any listed</option>
-                          {opts.map((o) => <option key={o} value={o}>{o}</option>)}
-                        </Select>
-                      </Field>
+                  {value > 0 && (
+                    <div className="mt-3 border-t border-line pt-3" data-testid="item-details">
+                      <p className="mb-2 text-sm font-semibold">About the {i.name.toLowerCase()} you&apos;re giving</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label="Condition" htmlFor={`cond-${i.id}`}>
+                          <Select id={`cond-${i.id}`} value={conditions[i.id] ?? "NEW"} onChange={(e) => setConditions((c) => ({ ...c, [i.id]: e.target.value }))}>
+                            {CONDITIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                          </Select>
+                        </Field>
+                        {i.donorFields.map((f) => {
+                          const requested = i.attributes[f.key];
+                          const choices = listedChoices(requested);
+                          return (
+                            <AttributeField
+                              key={f.key}
+                              field={f}
+                              id={`give-${i.id}-${f.key}`}
+                              value={details[i.id]?.[f.key] ?? ""}
+                              required={false}
+                              choices={choices}
+                              placeholderOption={choices.length ? "Mixed / any listed" : "Not specified"}
+                              help={requested !== undefined && requested !== "" && !choices.length ? `Requested: ${formatAttributeValue(requested)}` : f.help}
+                              error={fieldErrors[`items.${lines.findIndex((l) => l.item.id === i.id)}.variant.${f.key}`]}
+                              onChange={(v) => setDetails((d) => ({ ...d, [i.id]: { ...d[i.id], [f.key]: v } }))}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </li>
               );
             })}
           </ul>
-          <fieldset>
-            <legend className="mb-2 text-sm font-semibold">Condition</legend>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {[["NEW", "New"], ["LIKE_NEW", "Like new"], ["GOOD", "Good"]].map(([v, l]) => (
-                <RadioCard key={v} name="condition" value={v} checked={condition === v} onChange={setCondition} title={l} />
-              ))}
-            </div>
-          </fieldset>
           <Field label="Description (optional)" htmlFor="donate-description" help="Describe what you're giving — brand, age, condition, anything the recipient should know. Don't include names or contact details.">
             <Textarea id="donate-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={600} placeholder="e.g. Two school bags, lightly used, all zips working." />
           </Field>
@@ -301,7 +332,12 @@ export function DonationModal({
             <ul className="divide-y divide-line">
               {lines.map((l) => (
                 <li key={l.item.id} className="flex justify-between px-4 py-3">
-                  <span>{l.quantity} × {l.item.name}{sizes[l.item.id] ? ` (size ${sizes[l.item.id]})` : ""}</span>
+                  <span>
+                    {l.quantity} × {l.item.name}
+                    <span className="block text-sm text-muted">
+                      {[conditionLabel(conditions[l.item.id] ?? "NEW"), ...l.item.donorFields.filter((f) => givenDetails(l.item.id)[f.key]).map((f) => `${f.label}: ${formatAttributeValue(givenDetails(l.item.id)[f.key])}`)].join(" · ")}
+                    </span>
+                  </span>
                   <span className="text-muted">{l.item.estimatedUnitValue ? formatINR(l.quantity * l.item.estimatedUnitValue) : ""}</span>
                 </li>
               ))}
@@ -311,8 +347,6 @@ export function DonationModal({
               <dd className="text-right font-semibold">{need.recipient.descriptor}</dd>
               <dt className="text-muted">Delivery</dt>
               <dd className="text-right">{DELIVERY[method as keyof typeof DELIVERY]?.title}</dd>
-              <dt className="text-muted">Condition</dt>
-              <dd className="text-right">{condition === "LIKE_NEW" ? "Like new" : condition === "GOOD" ? "Good" : "New"}</dd>
               {estimate > 0 && (
                 <>
                   <dt className="text-muted">Estimated value</dt>

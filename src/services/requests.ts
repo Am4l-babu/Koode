@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { AppError, forbidden, notFound } from "@/lib/errors";
 import { generatePublicId, withUniqueRetry } from "@/lib/ids";
 import { parseSearchQuery } from "@/lib/search";
-import { parseCategorySchema, validateAttributes } from "@/lib/categories";
+import { resolveCategorySchema, validateItemAttributes } from "@/lib/categories";
 import { suggestPriority } from "@/lib/priority";
 import { DISTRICT_TILES, isKeralaDistrict, type KeralaDistrict } from "@/lib/geo";
 import { ownerRequestSelect, publicRequestSelect, toOwnerRequest, toPublicRequest, type PublicRequestDTO } from "@/lib/dto/requests";
@@ -200,7 +200,7 @@ export async function createRequest(actor: SessionUser, input: CreateRequestInpu
   const organizationId = requireOrg(actor);
   const [org, category, settings] = await Promise.all([
     db.recipientOrganization.findUnique({ where: { id: organizationId }, select: { verificationStatus: true } }),
-    db.category.findFirst({ where: { id: input.categoryId, isActive: true }, select: { id: true, fieldSchema: true } }),
+    db.category.findFirst({ where: { id: input.categoryId, isActive: true }, select: { id: true, slug: true, fieldSchema: true } }),
     getSettings(),
   ]);
   if (!org) throw forbidden();
@@ -215,10 +215,10 @@ export async function createRequest(actor: SessionUser, input: CreateRequestInpu
     input.donationTypes = ["ITEM"];
   }
 
-  const schema = parseCategorySchema(category.fieldSchema);
+  const schema = resolveCategorySchema(category.slug, category.fieldSchema);
   const fieldErrors: Record<string, string> = {};
   const items = input.items.map((item, index) => {
-    const result = validateAttributes(schema, item.attributes);
+    const result = validateItemAttributes(schema, item.attributes);
     if (!result.ok) {
       for (const [k, v] of Object.entries(result.errors)) fieldErrors[`items.${index}.attributes.${k}`] = v;
       return null;

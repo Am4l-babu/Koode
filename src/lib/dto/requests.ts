@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { fulfillmentStage, itemPercent, remaining, requestPercent, totals, type FulfillmentStage } from "../fulfillment";
 import { ORG_TYPE_LABELS } from "../descriptors";
+import { donorFieldsFor, resolveCategorySchema, type FieldDef } from "../categories";
 
 /**
  * PUBLIC request projection.
@@ -25,7 +26,7 @@ export const publicRequestSelect = {
   recurrence: true,
   createdAt: true,
   approvedAt: true,
-  category: { select: { slug: true, name: true, icon: true } },
+  category: { select: { slug: true, name: true, icon: true, fieldSchema: true } },
   organization: {
     select: {
       publicId: true,
@@ -62,6 +63,8 @@ export interface PublicRequestItemDTO {
   percent: number;
   attributes: Record<string, string | number | boolean>;
   estimatedUnitValue: number | null;
+  /** What a donor is asked about the items they give (product-type specific). */
+  donorFields: FieldDef[];
 }
 
 export interface PublicRequestDTO {
@@ -93,6 +96,7 @@ export interface PublicRequestDTO {
 
 export function toPublicRequest(row: PublicRequestRow): PublicRequestDTO {
   const t = totals(row.items);
+  const schema = resolveCategorySchema(row.category.slug, row.category.fieldSchema);
   return {
     id: row.publicId,
     title: row.title,
@@ -101,7 +105,7 @@ export function toPublicRequest(row: PublicRequestRow): PublicRequestDTO {
     priority: row.priority,
     neededBy: row.neededBy?.toISOString() ?? null,
     postedAt: (row.approvedAt ?? row.createdAt).toISOString(),
-    category: row.category,
+    category: { slug: row.category.slug, name: row.category.name, icon: row.category.icon },
     recipient: {
       ref: row.organization.publicId,
       descriptor: row.organization.publicDescriptor,
@@ -117,17 +121,21 @@ export function toPublicRequest(row: PublicRequestRow): PublicRequestDTO {
     percent: requestPercent(row.items),
     stage: fulfillmentStage(row.items),
     totals: { required: t.required, committed: t.committed, remaining: t.remaining },
-    items: row.items.map((i) => ({
-      id: i.id,
-      name: i.name,
-      unit: i.unit,
-      required: i.quantityRequired,
-      committed: i.quantityCommitted,
-      remaining: remaining(i),
-      percent: itemPercent(i),
-      attributes: (i.attributes ?? {}) as Record<string, string | number | boolean>,
-      estimatedUnitValue: i.estimatedUnitValue,
-    })),
+    items: row.items.map((i) => {
+      const attributes = (i.attributes ?? {}) as Record<string, string | number | boolean>;
+      return {
+        id: i.id,
+        name: i.name,
+        unit: i.unit,
+        required: i.quantityRequired,
+        committed: i.quantityCommitted,
+        remaining: remaining(i),
+        percent: itemPercent(i),
+        attributes,
+        estimatedUnitValue: i.estimatedUnitValue,
+        donorFields: donorFieldsFor(schema, attributes),
+      };
+    }),
   };
 }
 

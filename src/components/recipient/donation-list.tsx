@@ -2,6 +2,7 @@ import { AnonymousIdentityBadge } from "@/components/brand/badges";
 import { StatusPill } from "@/components/donations/tracker";
 import { DELIVERY_METHOD_LABELS } from "@/lib/descriptors";
 import { formatDate } from "@/lib/format";
+import { describeAttributes } from "@/lib/categories";
 import type { RecipientDonationDTO } from "@/lib/dto/donations";
 import { MediaGallery } from "@/components/donations/media-gallery";
 import { ReceiveButton } from "./receive-button";
@@ -14,7 +15,14 @@ export function RecipientDonationList({ donations }: { donations: RecipientDonat
         <li key={d.id} className="card flex flex-wrap items-center justify-between gap-4 p-5" data-testid="recipient-donation">
           <div className="min-w-0 space-y-2">
             <AnonymousIdentityBadge label={d.donor.displayName} sublabel={`Donation ${d.id} · ${formatDate(d.createdAt)}`} />
-            <p className="font-semibold">{d.items.map((i) => `${i.quantity} × ${i.name}${i.variant.size ? ` (size ${i.variant.size})` : ""}`).join(", ")}</p>
+            <ul className="space-y-0.5">
+              {d.items.map((i) => (
+                <li key={i.requestItemId}>
+                  <span className="font-semibold">{i.quantity} × {i.name}</span>
+                  {describeAttributes(i.variant).length > 0 && <span className="text-sm text-muted"> — {describeAttributes(i.variant).map((a) => `${a.label}: ${a.value}`).join(" · ")}</span>}
+                </li>
+              ))}
+            </ul>
             {d.description && <p className="max-w-md whitespace-pre-line text-sm">{d.description}</p>}
             {d.media.length > 0 && <div className="max-w-md"><MediaGallery media={d.media} /></div>}
             <p className="text-sm text-muted">

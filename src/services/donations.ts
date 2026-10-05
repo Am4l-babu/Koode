@@ -6,7 +6,8 @@ import { encrypt } from "@/lib/crypto";
 import { generatePublicId, withUniqueRetry } from "@/lib/ids";
 import { audit } from "@/lib/audit";
 import { canActorTransition, holdsQuantity } from "@/lib/donation-status";
-import { DONATION_STATUS_LABELS } from "@/lib/descriptors";
+import { CONDITION_LABELS, DONATION_STATUS_LABELS } from "@/lib/descriptors";
+import { donorFieldsFor, resolveCategorySchema, validateAttributes } from "@/lib/categories";
 import { requestPercent } from "@/lib/fulfillment";
 import { publishRequestProgress } from "@/lib/realtime";
 import { templates } from "@/lib/notifications/templates";
@@ -18,7 +19,7 @@ import {
   type DonorDonationDTO,
 } from "@/lib/dto/donations";
 import type { SessionUser } from "@/lib/auth/session";
-import type { CreateDonationInput } from "@/lib/validation/donation";
+import { CONDITIONS, type CreateDonationInput } from "@/lib/validation/donation";
 import { notify, notifyAdmins } from "./notifications";
 import { getSettings } from "./settings";
 
@@ -57,6 +58,11 @@ async function refreshRequestProgress(tx: Tx, requestId: string) {
   };
 }
 
+/** The least-new condition among the items — what the donation as a whole is described as. */
+function leastNew(conditions: (typeof CONDITIONS)[number][]): (typeof CONDITIONS)[number] {
+  return conditions.reduce((worst, c) => (CONDITIONS.indexOf(c) > CONDITIONS.indexOf(worst) ? c : worst));
+}
+
 /**
  * Commit to a donation.
  *
@@ -85,7 +91,8 @@ export async function createDonation(actor: SessionUser, input: CreateDonationIn
       neededBy: true,
       deliveryMethods: true,
       organization: { select: { userId: true } },
-      items: { select: { id: true, name: true, estimatedUnitValue: true, quantityRequired: true, quantityCommitted: true } },
+      category: { select: { slug: true, fieldSchema: true } },
+      items: { select: { id: true, name: true, estimatedUnitValue: true, quantityRequired: true, quantityCommitted: true, attributes: true } },
     },
   });
   if (!request) throw notFound("This request is no longer accepting donations, or it");
@@ -99,6 +106,22 @@ export async function createDonation(actor: SessionUser, input: CreateDonationIn
   for (const line of input.items) {
     if (!itemById.has(line.requestItemId)) throw new AppError("VALIDATION_FAILED", "One of the selected items doesn't belong to this request.");
   }
+
+  // What the donor says about each item is checked against that product's questions.
+  const schema = resolveCategorySchema(request.category.slug, request.category.fieldSchema);
+  const fieldErrors: Record<string, string> = {};
+  const variants = input.items.map((line, index) => {
+    const attributes = (itemById.get(line.requestItemId)!.attributes ?? {}) as Record<string, unknown>;
+    const result = validateAttributes({ fields: donorFieldsFor(schema, attributes) }, line.variant ?? {});
+    if (!result.ok) {
+      for (const [k, v] of Object.entries(result.errors)) fieldErrors[`items.${index}.variant.${k}`] = v;
+      return {};
+    }
+    return line.condition ? { condition: CONDITION_LABELS[line.condition], ...result.attributes } : result.attributes;
+  });
+  if (Object.keys(fieldErrors).length) throw new AppError("VALIDATION_FAILED", "Some item details need attention.", { fields: fieldErrors });
+  const itemConditions = input.items.map((l) => l.condition).filter((c) => c !== undefined);
+  const condition = itemConditions.length ? leastNew(itemConditions) : input.condition;
 
   const estimatedValue = input.items.reduce((sum, l) => sum + l.quantity * (itemById.get(l.requestItemId)!.estimatedUnitValue ?? 0), 0) || null;
   const expectedBy = request.neededBy ?? new Date(Date.now() + 7 * 86_400_000);
@@ -137,13 +160,13 @@ export async function createDonation(actor: SessionUser, input: CreateDonationIn
             organizationId: request.organizationId,
             status: "CONFIRMED",
             deliveryMethod: input.deliveryMethod,
-            condition: input.condition,
+            condition,
             groupType: input.groupType,
             description: input.description ?? null,
             estimatedValue,
             expectedBy,
             items: {
-              create: input.items.map((l) => ({ requestItemId: l.requestItemId, quantity: l.quantity, variant: l.variant ?? {} })),
+              create: input.items.map((l, index) => ({ requestItemId: l.requestItemId, quantity: l.quantity, variant: variants[index]! })),
             },
             events: {
               create: [
