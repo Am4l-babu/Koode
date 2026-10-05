@@ -29,7 +29,8 @@ describe("concurrent donations", () => {
     const failed = results.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
     expect(ok).toHaveLength(1);
     expect(failed).toHaveLength(1);
-    expect((failed[0]!.reason as AppError).code).toBe("INSUFFICIENT_QUANTITY");
+    // The winner can fill the request, flipping it to FULFILLED before the loser looks it up.
+    expect(["INSUFFICIENT_QUANTITY", "NOT_FOUND"]).toContain((failed[0]!.reason as AppError).code);
     const after = await db.requestItem.findUniqueOrThrow({ where: { id: item.id } });
     expect(after.quantityCommitted).toBe(10);
     expect(await db.donation.count({ where: { requestId: req.id } })).toBe(1);

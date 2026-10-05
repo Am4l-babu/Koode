@@ -54,7 +54,7 @@ test.describe("Platform quality", () => {
   test("language switch to Malayalam", async ({ page }) => {
     await page.goto("/");
     await page.getByLabel("Language").first().selectOption("ml");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("പ്രധാനപ്പെട്ടത് നൽകൂ");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("യഥാർത്ഥത്തിൽ ആവശ്യമുള്ളത് നൽകൂ");
     await page.getByLabel("Language").first().selectOption("en");
   });
 

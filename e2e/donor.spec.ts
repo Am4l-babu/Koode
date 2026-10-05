@@ -4,7 +4,7 @@ import { expectNoLeak, login, SEED_PII } from "./helpers";
 test.describe("Donor journey", () => {
   test("homepage → browse → filter education → donate 2 school bags → track", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Give What Matters.");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Give what is truly needed.");
     await page.getByRole("link", { name: "Help Someone" }).click();
     await expect(page).toHaveURL(/\/needs/);
 
@@ -43,7 +43,7 @@ test.describe("Donor journey", () => {
     await dialog.getByRole("button", { name: "Confirm Anonymous Donation" }).click();
 
     const success = page.getByRole("dialog", { name: "Donation Confirmed" });
-    await expect(success.getByText("Donation Confirmed")).toBeVisible();
+    await expect(success.getByRole("heading", { name: "Donation Confirmed", level: 3 })).toBeVisible();
     const donationId = (await success.getByTestId("donation-id").textContent())!.trim();
     expect(donationId).toMatch(/^DN-[23456789A-Z]{6}$/);
 
