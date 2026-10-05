@@ -7,10 +7,11 @@ import { cn } from "@/components/ui/cn";
 
 export const MEDIA_LIMITS = { images: 5, videos: 1, imageBytes: 8 * 1024 * 1024, videoBytes: 25 * 1024 * 1024 } as const;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const VIDEO_TYPES = ["video/mp4", "video/webm"];
-export const MEDIA_ACCEPT = [...IMAGE_TYPES, ...VIDEO_TYPES].join(",");
+const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
+// Some browsers report no type for iPhone .mov clips, so accept the extension too.
+export const MEDIA_ACCEPT = [...IMAGE_TYPES, ...VIDEO_TYPES, ".mov"].join(",");
 
-const isVideo = (f: File) => VIDEO_TYPES.includes(f.type);
+const isVideo = (f: File) => VIDEO_TYPES.includes(f.type) || (!f.type && /\.mov$/i.test(f.name));
 const isImage = (f: File) => IMAGE_TYPES.includes(f.type);
 
 /** First-pass checks for a friendlier experience. The server re-validates everything. */
@@ -28,7 +29,7 @@ export function checkMediaFiles(existing: File[], incoming: File[], alreadyUploa
       if (f.size > MEDIA_LIMITS.videoBytes) problems.push("Videos must be 25 MB or smaller.");
       else if (videos >= MEDIA_LIMITS.videos) problems.push(`You can add ${MEDIA_LIMITS.videos} video.`);
       else (accepted.push(f), videos++);
-    } else problems.push("Use JPEG, PNG or WEBP photos, or MP4 or WEBM videos.");
+    } else problems.push("Use JPEG, PNG or WEBP photos, or MP4, MOV or WEBM videos.");
   }
   return { accepted, problems: [...new Set(problems)] };
 }

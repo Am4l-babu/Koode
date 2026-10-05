@@ -82,4 +82,14 @@ test.describe("Donation description, photos and video", () => {
     await expect(dialog.getByRole("alert")).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
+  test("iPhone .mov clips are accepted by the picker", async ({ page }) => {
+    await login(page, "donor", "/needs?category=education");
+    await page.getByRole("article").filter({ hasText: "School Bags for the New Academic Year" }).getByRole("link", { name: "School Bags for the New Academic Year", exact: true }).click();
+    await page.getByRole("button", { name: /donate|commit/i }).first().click();
+    const dialog = page.getByRole("dialog", { name: /Commit to a donation/ });
+    const mov = Buffer.concat([Buffer.from([0, 0, 0, 20]), Buffer.from("ftypqt  "), Buffer.alloc(300)]);
+    await dialog.locator("input[type=file]").setInputFiles({ name: "IMG_0001.MOV", mimeType: "video/quicktime", buffer: mov });
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: /Remove/ })).toHaveCount(1);
+  });
 });

@@ -50,7 +50,7 @@ export interface ProcessedMedia {
 export async function processMedia(input: Buffer): Promise<ProcessedMedia> {
   if (input.length === 0) throw new AppError("BAD_REQUEST", "The file is empty.");
   const sniff = sniffMedia(input);
-  if (!sniff) throw new AppError("BAD_REQUEST", "Upload a JPEG, PNG or WEBP photo, or an MP4 or WEBM video.");
+  if (!sniff) throw new AppError("BAD_REQUEST", "Upload a JPEG, PNG or WEBP photo, or an MP4, MOV or WEBM video.");
 
   if (sniff.kind === "VIDEO") {
     if (input.length > MAX_VIDEO_BYTES) throw new AppError("BAD_REQUEST", "Videos must be 25 MB or smaller.");

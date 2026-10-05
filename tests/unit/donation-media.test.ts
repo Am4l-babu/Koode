@@ -19,6 +19,13 @@ describe("donation media", () => {
     expect((await getPrivateObject(key)).equals(processed.buffer)).toBe(true);
   });
 
+  it("accepts iPhone QuickTime (.mov) clips as video/quicktime", async () => {
+    const mov = Buffer.concat([Buffer.from([0, 0, 0, 20]), Buffer.from("ftypqt  "), Buffer.alloc(64)]);
+    expect(await processMedia(mov)).toMatchObject({ kind: "VIDEO", ext: "mov", mime: "video/quicktime" });
+    const { key } = await putPrivateObject(mov, "mov");
+    keys.push(key);
+  });
+
   it("re-encodes photos to webp and strips metadata", async () => {
     const jpg = await sharp({ create: { width: 64, height: 64, channels: 3, background: "#369" } }).jpeg().withExif({ IFD0: { Copyright: "secret" } }).toBuffer();
     const out = await processMedia(jpg);
