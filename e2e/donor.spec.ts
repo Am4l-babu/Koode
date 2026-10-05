@@ -43,14 +43,14 @@ test.describe("Donor journey", () => {
     await dialog.getByRole("button", { name: "Confirm Anonymous Donation" }).click();
 
     const success = page.getByRole("dialog", { name: "Donation Confirmed" });
-    await expect(success.getByText("🎉 Donation Confirmed")).toBeVisible();
+    await expect(success.getByText("Donation Confirmed")).toBeVisible();
     const donationId = (await success.getByTestId("donation-id").textContent())!.trim();
     expect(donationId).toMatch(/^DN-[23456789A-Z]{6}$/);
 
     await success.getByRole("link", { name: "Track Donation" }).click();
     await expect(page).toHaveURL(new RegExp(`/donor/donations/${donationId}`));
     await expect(page.getByRole("list", { name: "Donation status timeline" })).toContainText("Donation confirmed");
-    await expect(page.getByText("Identity Protected").first()).toBeVisible();
+    await expect(page.getByText("Your identity is protected").first()).toBeVisible();
 
     await page.getByRole("button", { name: "Mark as preparing" }).click();
     await expect(page.getByText("Current")).toBeVisible();

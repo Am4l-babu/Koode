@@ -33,7 +33,7 @@ export function PrivacyBadge({ note, compact, className }: { note?: string; comp
         <Lock className="h-4 w-4" aria-hidden="true" />
       </span>
       <div>
-        <p className="font-semibold text-primary-ink">🔐 Identity Protected</p>
+        <p className="font-semibold text-primary-ink">Your identity is protected</p>
         {note && <p className="text-sm text-muted">{note}</p>}
       </div>
     </div>

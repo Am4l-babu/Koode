@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 };
 
 const PRINCIPLES = [
-  ["Dignity first", "Requests are presented as community requirements — never as people asking for charity. No rankings of need, no photos of recipients."],
-  ["Specific, not generic", "Donors give exactly what is needed — the right size, the right age group, the right quantity."],
-  ["Private by design", "Neither side ever sees the other. The platform is the trusted intermediary."],
+  ["Dignity first", "Requests are presented as community requirements, never as appeals for charity. There are no rankings of need and no photographs of recipients."],
+  ["Specific, not generic", "Donors give exactly what is needed: the right size, the right age group and the right quantity."],
+  ["Private by design", "Neither side ever sees the other. Koode acts as the trusted intermediary."],
 ];
 
 const CONTROLS = [
@@ -29,8 +29,8 @@ export default function AboutPage() {
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6">
         <PageHeader
           eyebrow="About Koode"
-          title="A trusted digital bridge between genuine community needs and people willing to help"
-          description="“Koode” means together. We built the platform so a donor can say “I know exactly what is needed, and I can help without exposing my identity” — and an organisation can say “we can ask for what we actually need without our private information being exposed.”"
+          title="A trusted bridge between genuine community needs and the people willing to help"
+          description="“Koode” means together. A donor should be able to say “I know exactly what is needed, and I can help without revealing who I am” — and an organisation should be able to say “we can ask for what we need without exposing our private information.”"
         />
         <div className="grid gap-4 md:grid-cols-3">
           {PRINCIPLES.map(([title, body]) => (

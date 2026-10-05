@@ -101,7 +101,7 @@ export function DonatePanel({
           <p className="mt-3 text-muted">This need has been fully committed by the community. Thank you! 🌱</p>
         ) : viewer === "guest" ? (
           <div className="mt-3 space-y-3">
-            <p className="text-muted">Sign in or create a free donor account to commit items. Your identity stays private.</p>
+            <p className="text-muted">Sign in or create a free donor account to donate. Your identity stays private.</p>
             <Link href={`/login?next=${encodeURIComponent(`/needs/${need.id}?donate=1`)}`} className={buttonClass("primary", "lg", "w-full")}>
               Sign in to donate
             </Link>
@@ -145,7 +145,7 @@ export function DonatePanel({
             </Button>
           </div>
         )}
-        <PrivacyBadge className="mt-5" note="Your identity will not be shared with the recipient." compact />
+        <PrivacyBadge className="mt-5" note="Your identity will not be shared with the organisation." compact />
       </section>
 
       {viewer === "donor" && (

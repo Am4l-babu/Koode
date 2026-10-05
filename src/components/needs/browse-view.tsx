@@ -53,7 +53,7 @@ export async function BrowseView({ query, basePath, fixedCategory }: { query: Br
         </div>
       ) : urgentFilter ? (
         <EmptyState
-          title="Nothing urgent right now — but there are still people who need a helping hand."
+          title="There are no urgent needs at the moment, but many organisations would still welcome your support."
           action={<ButtonLink href="/needs">Browse all needs</ButtonLink>}
         />
       ) : (

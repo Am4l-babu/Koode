@@ -41,7 +41,7 @@ export function ReportButton({ requestId }: { requestId: string }) {
       <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 rounded-full px-2 py-1 text-sm text-muted hover:text-critical">
         <Flag className="h-4 w-4" aria-hidden="true" /> Report this request
       </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Report this request" description="Reports go to the platform's trust & safety team. Your identity is not shared." size="sm">
+      <Dialog open={open} onClose={() => setOpen(false)} title="Report this request" description="Reports are reviewed by our trust and safety team. Your identity is not shared." size="sm">
         {state === "sent" ? (
           <Callout tone="success" title="Thank you — we'll review this.">The investigation team has been notified.</Callout>
         ) : (

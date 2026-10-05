@@ -17,7 +17,7 @@ export const templates = {
   donationCreatedDonor: (donationId: string): NotificationTemplate => ({
     type: "DONATION_CREATED",
     title: "Donation confirmed",
-    body: `Your donation ${donationId} is confirmed. Your identity remains private.`,
+    body: `Thank you. Your donation ${donationId} is confirmed, and your identity remains private.`,
     link: `/donor/donations/${donationId}`,
   }),
   donationCommittedRecipient: (requestId: string, items: Qty[]): NotificationTemplate => ({
@@ -59,7 +59,7 @@ export const templates = {
   requestRejected: (requestId: string): NotificationTemplate => ({
     type: "REQUEST_REJECTED",
     title: "Request not approved",
-    body: `Request ${requestId} was not approved. See the reviewer's note for details.`,
+    body: `Request ${requestId} was not approved at this time. Please review the reviewer's note; you are welcome to update and resubmit.`,
     link: `/recipient/requests/${requestId}`,
   }),
   requestNeedsInfo: (requestId: string): NotificationTemplate => ({

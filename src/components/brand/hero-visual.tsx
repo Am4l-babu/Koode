@@ -5,7 +5,7 @@
  */
 export function HeroVisual() {
   return (
-    <div className="relative mx-auto aspect-[5/4] w-full max-w-[520px]" role="img" aria-label="Illustration: a donor's gift travels anonymously through the trusted platform to a verified recipient.">
+    <div className="relative mx-auto aspect-[5/4] w-full max-w-[520px]" role="img" aria-label="Illustration: a donation travels from an anonymous donor, through Koode, to a verified organisation.">
       <svg viewBox="0 0 500 400" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <defs>
           <linearGradient id="hv-path" x1="0" y1="0" x2="1" y2="1">
@@ -40,7 +40,7 @@ export function HeroVisual() {
           <circle cx="250" cy="190" r="50" fill="var(--surface)" stroke="var(--primary)" strokeWidth="2" />
           <path d="M250 158 L276 168 V188 C276 206 264 218 250 223 C236 218 224 206 224 188 V168 Z" fill="var(--primary)" />
           <path d="M240 190 l7 7 l14 -15" fill="none" stroke="var(--primary-fg)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="250" y="262" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--primary-ink)">Trusted platform</text>
+          <text x="250" y="262" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--primary-ink)">Koode coordinates</text>
         </g>
 
         {/* Recipient */}
@@ -50,7 +50,7 @@ export function HeroVisual() {
           <rect x="424" y="318" width="12" height="16" rx="2" fill="var(--secondary)" />
           <circle cx="452" cy="286" r="10" fill="var(--secondary)" />
           <path d="M447 286 l3.5 3.5 l6 -7" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="430" y="372" textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--fg-muted)">Verified Recipient</text>
+          <text x="430" y="372" textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--fg-muted)">Verified organisation</text>
         </g>
 
         {/* Travelling gift — SMIL motion scales with the SVG; hidden for reduced motion */}
@@ -66,7 +66,7 @@ export function HeroVisual() {
       </svg>
 
       <div className="absolute left-1/2 top-[6%] -translate-x-1/2 rounded-full border border-line bg-surface/90 px-3 py-1.5 text-xs font-semibold text-primary-ink shadow-soft backdrop-blur">
-        🔐 Anonymous donation
+        Anonymous donation
       </div>
     </div>
   );

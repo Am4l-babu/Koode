@@ -91,11 +91,11 @@ export function DonationModal({
 
   function canContinue(): string | null {
     if (step === 0) {
-      if (total === 0) return "Choose at least one item.";
+      if (total === 0) return "Select at least one item to donate.";
       for (const l of lines) if (l.quantity > l.item.remaining) return `Only ${l.item.remaining} ${l.item.name.toLowerCase()} remaining.`;
     }
     if (step === 1 && method === "PLATFORM_PICKUP" && pickupAddress.trim().length < 5) return "Add a pickup address so our team can collect the items.";
-    if (step === 2 && !ack) return "Please confirm you understand the donation is anonymous.";
+    if (step === 2 && !ack) return "Please confirm that you understand how anonymous donations work.";
     return null;
   }
 
@@ -254,15 +254,15 @@ export function DonationModal({
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-fg animate-pop">
               <ShieldCheck className="h-8 w-8" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 text-xl font-semibold">Anonymous Donation</h3>
-            <p className="mt-2 max-w-sm text-muted">Your identity will remain hidden from the recipient. They will only see an anonymous reference like &ldquo;Community Donor #D7K2Q&rdquo;.</p>
+            <h3 className="mt-4 text-xl font-semibold">Your donation is anonymous</h3>
+            <p className="mt-2 max-w-sm text-muted">Koode holds your name securely. The organisation will see only a reference such as &ldquo;Community Donor #D7K2Q&rdquo;.</p>
           </div>
           <ul className="space-y-2 text-sm text-muted">
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Your name, phone, email and address are never shared.</li>
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Only the platform&apos;s authorised administrators can link a donation to you, and every access is audited.</li>
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> The recipient&apos;s identity is protected in the same way.</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Your name, phone number, email and address are never shared.</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Only a small number of authorised administrators can link a donation to you, and every access is recorded in a permanent audit log.</li>
+            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> The organisation&apos;s identity is protected in the same way.</li>
           </ul>
-          <Checkbox label="I understand this donation is anonymous and coordinated by the platform." checked={ack} onChange={(e) => setAck(e.target.checked)} />
+          <Checkbox label="I understand that my donation is anonymous and that Koode coordinates the handover." checked={ack} onChange={(e) => setAck(e.target.checked)} />
         </div>
       )}
 
@@ -293,7 +293,7 @@ export function DonationModal({
               )}
             </dl>
           </div>
-          <PrivacyBadge note="Your identity will not be shared with the recipient." compact />
+          <PrivacyBadge note="Your identity will not be shared with the organisation." compact />
         </div>
       )}
 
@@ -334,14 +334,14 @@ function SuccessView({ donationId }: { donationId: string }) {
       <span className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-white animate-pop">
         <Check className="h-10 w-10" strokeWidth={3} aria-hidden="true" />
       </span>
-      <h3 className="mt-5 text-2xl font-semibold">🎉 Donation Confirmed</h3>
-      <p className="mt-2 max-w-sm text-muted">You just helped fulfil part of a real community need.</p>
+      <h3 className="mt-5 text-2xl font-semibold">Donation Confirmed</h3>
+      <p className="mt-2 max-w-sm text-muted">Thank you. Your donation will go directly toward a verified community need.</p>
       <p className="mt-5 text-sm text-muted">Donation ID</p>
       <p className="font-mono text-2xl font-bold tracking-wide text-primary-ink" data-testid="donation-id">{donationId}</p>
-      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary-ink">🔐 Your identity remains private.</p>
+      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary-ink">Your identity remains private.</p>
       <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
         <Link href={`/donor/donations/${donationId}`} className={buttonClass("primary", "md")}>Track Donation</Link>
-        <Link href="/needs" className={buttonClass("outline", "md")}>Explore More Needs</Link>
+        <Link href="/needs" className={buttonClass("outline", "md")}>Browse more needs</Link>
       </div>
     </div>
   );

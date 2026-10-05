@@ -37,14 +37,14 @@ export function HowItWorksSteps({ t, compact }: { t: Dictionary; compact?: boole
 }
 
 export function PrivacyComparison() {
-  const donorSees = ["What is needed, sizes and quantities", "General recipient type, e.g. “Verified Learning Center”", "District / city only", "Urgency and delivery method"];
-  const donorNever = ["Names or contact person", "Phone, email or social media", "Exact address", "Verification documents"];
-  const recipientSees = ["Items, quantity and condition", "Expected delivery", "Anonymous reference — “Community Donor #D7K2Q”"];
-  const recipientNever = ["Donor name or photo", "Phone, email or address", "Any identifying information"];
+  const donorSees = ["Exactly what is needed, including sizes and quantities", "The type of organisation, e.g. “Verified Learning Center”", "District or city only", "Urgency and delivery options"];
+  const donorNever = ["Names or contact persons", "Phone numbers, email addresses or social media", "Exact addresses", "Verification documents"];
+  const recipientSees = ["Items, quantities and condition", "Expected delivery date", "An anonymous reference, e.g. “Community Donor #D7K2Q”"];
+  const recipientNever = ["Donor name or photograph", "Phone number, email address or address", "Any identifying information"];
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Column title="Donors see" accent="primary" sees={donorSees} never={donorNever} />
-      <Column title="Recipients see" accent="secondary" sees={recipientSees} never={recipientNever} />
+      <Column title="What donors see" accent="primary" sees={donorSees} never={donorNever} />
+      <Column title="What recipients see" accent="secondary" sees={recipientSees} never={recipientNever} />
     </div>
   );
 }
@@ -60,7 +60,7 @@ function Column({ title, sees, never, accent }: { title: string; sees: string[];
           </li>
         ))}
       </ul>
-      <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-subtle">Never shown</p>
+      <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-subtle">Never disclosed</p>
       <ul className="mt-2 space-y-2.5">
         {never.map((s) => (
           <li key={s} className="flex gap-2.5 text-sm text-muted">

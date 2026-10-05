@@ -9,9 +9,9 @@ import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
-  title: { default: "Koode — Give what matters. Keep identities private.", template: "%s · Koode" },
+  title: { default: "Koode — Give what is needed. Keep every identity private.", template: "%s · Koode" },
   description:
-    "A trusted community platform where verified needs meet generous people — without exposing personal identities. Donate exactly what verified organisations in Kerala need.",
+    "Koode connects donors with verified organisations across Kerala. Give exactly what is needed, without revealing who you are.",
   applicationName: "Koode",
   openGraph: { type: "website", siteName: "Koode", locale: "en_IN" },
   robots: { index: true, follow: true },

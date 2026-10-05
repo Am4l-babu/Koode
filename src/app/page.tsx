@@ -51,9 +51,9 @@ export default async function HomePage() {
               </ButtonLink>
             </div>
             <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted">
-              <li className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-secondary-ink" aria-hidden="true" /> Every recipient verified</li>
-              <li className="flex items-center gap-2"><Lock className="h-4 w-4 text-primary-ink" aria-hidden="true" /> Identities never shared</li>
-              <li className="flex items-center gap-2"><span aria-hidden="true">🎁</span> Give items, not just money</li>
+              <li className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-secondary-ink" aria-hidden="true" /> Every organisation verified</li>
+              <li className="flex items-center gap-2"><Lock className="h-4 w-4 text-primary-ink" aria-hidden="true" /> Identities kept confidential</li>
+              <li className="flex items-center gap-2"><span aria-hidden="true">🎁</span> Give the items people actually need</li>
             </ul>
           </div>
           <HeroVisual />
@@ -70,7 +70,7 @@ export default async function HomePage() {
       </Section>
 
       {/* Urgent needs */}
-      <Section id="urgent" eyebrow="Right now" title="Needs that are time-sensitive" className="pt-0">
+      <Section id="urgent" eyebrow="Right now" title="Time-sensitive needs" className="pt-0">
         {urgent.items.length ? (
           <>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -82,7 +82,7 @@ export default async function HomePage() {
           </>
         ) : (
           <EmptyState
-            title="Nothing urgent right now — but there are still people who need a helping hand."
+            title="There are no urgent needs at the moment, but many organisations would still welcome your support."
             action={<ButtonLink href="/needs">{t.common.browseAll}</ButtonLink>}
           />
         )}
@@ -96,7 +96,7 @@ export default async function HomePage() {
       </div>
 
       {/* Privacy */}
-      <Section id="privacy" eyebrow="Our core promise" title="Privacy is built in, not bolted on" lead="Identities are separated at the database, API and interface level. Only authorised administrators can link a donation to a person — and every access is audited.">
+      <Section id="privacy" eyebrow="Our commitment" title="Privacy is built into every layer" lead="Personal details are kept separate from donations in the database, the API and the interface. Only a small number of authorised administrators can link a donation to a person, and every such access is recorded in an audit log.">
         <PrivacyComparison />
       </Section>
 
@@ -118,7 +118,7 @@ export default async function HomePage() {
             ))}
           </dl>
           <div className="relative mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/20 pt-8">
-            <p className="max-w-lg text-lg">Run a school, shelter or care home? Request exactly what you need — your organisation&apos;s details stay private.</p>
+            <p className="max-w-lg text-lg">Run a school, shelter or care home? Request exactly what you need. Your organisation&apos;s details remain confidential.</p>
             <Link href="/register?role=recipient" className="inline-flex h-12 items-center gap-2 rounded-full bg-accent px-6 font-semibold text-[#2a1a00] hover:brightness-105">
               {t.hero.ctaRequest} <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
