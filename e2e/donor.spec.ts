@@ -21,7 +21,7 @@ test.describe("Donor journey", () => {
     // Guests are asked to sign in, then come straight back with the modal open.
     await page.getByRole("link", { name: "Sign in to donate" }).click();
     await page.getByLabel("Email").fill("donor@demo.local");
-    await page.getByLabel("Password").fill(process.env.DEMO_PASSWORD || "E2E!DemoPass2026");
+    await page.getByLabel("Password", { exact: true }).fill(process.env.DEMO_PASSWORD || "E2E!DemoPass2026");
     await page.getByRole("button", { name: "Log in" }).click();
 
     const dialog = page.getByRole("dialog", { name: /Commit to a donation/ });

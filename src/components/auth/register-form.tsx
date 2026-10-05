@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Building2, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Callout } from "@/components/ui/states";
 import { cn } from "@/components/ui/cn";
 import { api, ApiError } from "@/lib/client-api";
@@ -106,7 +107,7 @@ export function RegisterForm() {
           <Input id="reg-email" type="email" autoComplete="email" value={values.email ?? ""} onChange={set("email")} invalid={!!err("email")} />
         </Field>
         <Field label="Password" htmlFor="reg-password" required error={err("password")} help="At least 10 characters with a letter and a number.">
-          <Input id="reg-password" type="password" autoComplete="new-password" value={values.password ?? ""} onChange={set("password")} invalid={!!err("password")} />
+          <PasswordInput id="reg-password" autoComplete="new-password" value={values.password ?? ""} onChange={set("password")} invalid={!!err("password")} />
         </Field>
         <Field label={role === "RECIPIENT" ? "Organisation phone" : "Phone (optional)"} htmlFor="phone" required={role === "RECIPIENT"} error={err("phone")}>
           <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={values.phone ?? ""} onChange={set("phone")} invalid={!!err("phone")} />

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Callout } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/client-api";
 
@@ -60,7 +61,7 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       <Field label="New password" htmlFor="new-password" error={fieldError} help="At least 10 characters with a letter and a number.">
-        <Input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} invalid={!!fieldError} />
+        <PasswordInput id="new-password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} invalid={!!fieldError} />
       </Field>
       {error && <Callout tone="danger" title={error} />}
       <Button type="submit" size="lg" className="w-full" loading={loading}>Update password</Button>

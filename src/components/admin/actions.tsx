@@ -6,6 +6,7 @@ import { Eye, Lock, Plus, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Callout } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/client-api";
 import { PERMISSION_LABELS } from "@/lib/permissions";
@@ -283,7 +284,7 @@ export function CreateAdminButton() {
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); run("create", () => api("/api/admin/users", { body: v }), { success: "Administrator created." }); }}>
           <Field label="Full name" htmlFor="ca-name"><Input id="ca-name" value={v.fullName} onChange={(e) => setV({ ...v, fullName: e.target.value })} /></Field>
           <Field label="Email" htmlFor="ca-email"><Input id="ca-email" type="email" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} /></Field>
-          <Field label="Temporary password" htmlFor="ca-pass"><Input id="ca-pass" type="password" autoComplete="new-password" value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} /></Field>
+          <Field label="Temporary password" htmlFor="ca-pass"><PasswordInput id="ca-pass" autoComplete="new-password" value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} /></Field>
           <Field label="Role" htmlFor="ca-role"><Select id="ca-role" value={v.role} onChange={(e) => setV({ ...v, role: e.target.value })}><option value="ADMIN">Administrator</option><option value="SUPER_ADMIN">Super Admin</option></Select></Field>
           <Button type="submit" loading={busy === "create"}>Create</Button>
           {feedback}

@@ -21,7 +21,7 @@ export const SEED_PII = {
 export async function login(page: Page, who: keyof typeof ACCOUNTS, next?: string) {
   await page.goto(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.getByLabel("Email").fill(ACCOUNTS[who].email);
-  await page.getByLabel("Password").fill(ACCOUNTS[who].password);
+  await page.getByLabel("Password", { exact: true }).fill(ACCOUNTS[who].password);
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).not.toHaveURL(/\/login/);
 }
