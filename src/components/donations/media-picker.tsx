@@ -24,11 +24,17 @@ export function checkMediaFiles(existing: File[], incoming: File[], alreadyUploa
     if (isImage(f)) {
       if (f.size > MEDIA_LIMITS.imageBytes) problems.push("Photos must be 8 MB or smaller.");
       else if (images >= MEDIA_LIMITS.images) problems.push(`You can add up to ${MEDIA_LIMITS.images} photos.`);
-      else (accepted.push(f), images++);
+      else {
+        accepted.push(f);
+        images++;
+      }
     } else if (isVideo(f)) {
       if (f.size > MEDIA_LIMITS.videoBytes) problems.push("Videos must be 25 MB or smaller.");
       else if (videos >= MEDIA_LIMITS.videos) problems.push(`You can add ${MEDIA_LIMITS.videos} video.`);
-      else (accepted.push(f), videos++);
+      else {
+        accepted.push(f);
+        videos++;
+      }
     } else problems.push("Use JPEG, PNG or WEBP photos, or MP4, MOV or WEBM videos.");
   }
   return { accepted, problems: [...new Set(problems)] };

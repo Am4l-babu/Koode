@@ -225,8 +225,9 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
             const showDetails = !productTypes.length || !!it.productType;
             const typeName = findProductType(category.fieldSchema, it.productType)?.name;
             return (
-              <div key={it.key} className="space-y-3 rounded-2xl border border-line p-4" data-testid="request-item">
-                <div className="grid gap-3 sm:grid-cols-2">
+              <div key={it.key} className="relative space-y-3 rounded-2xl border border-line p-4" data-testid="request-item">
+                <Button variant="ghost" aria-label={`Remove ${it.name || "item"}`} disabled={items.length === 1} onClick={() => setItems((l) => l.filter((x) => x.key !== it.key))} className="absolute right-2 top-2 h-10 w-10 px-0!"><Trash2 className="h-4 w-4" /></Button>
+                <div className="grid gap-3 pr-10 sm:grid-cols-2">
                   {productTypes.length > 0 && (
                     <Field label="Product type" htmlFor={`type-${it.key}`} required error={errors[`items.${idx}.attributes.${PRODUCT_TYPE_KEY}`]}>
                       <Select id={`type-${it.key}`} value={it.productType} onChange={(e) => chooseProductType(it, e.target.value)} invalid={!!errors[`items.${idx}.attributes.${PRODUCT_TYPE_KEY}`]}>
@@ -238,11 +239,10 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
                   )}
                   <Field label="Item" htmlFor={`name-${it.key}`} error={errors[`items.${idx}.name`]}><Input id={`name-${it.key}`} value={it.name} onChange={(e) => updateItem(it.key, { name: e.target.value })} placeholder="e.g. Notebook" /></Field>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <Field label="Quantity" htmlFor={`qty-${it.key}`} error={errors[`items.${idx}.quantity`]}><Input id={`qty-${it.key}`} type="number" min={1} value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: e.target.value })} /></Field>
                   <Field label="Unit" htmlFor={`unit-${it.key}`}><Input id={`unit-${it.key}`} value={it.unit} onChange={(e) => updateItem(it.key, { unit: e.target.value })} placeholder="pcs, kg…" /></Field>
-                  <Field label="Est. ₹ / unit (optional)" htmlFor={`val-${it.key}`}><Input id={`val-${it.key}`} type="number" min={0} value={it.estimatedUnitValue} onChange={(e) => updateItem(it.key, { estimatedUnitValue: e.target.value })} /></Field>
-                  <Button variant="ghost" aria-label={`Remove ${it.name || "item"}`} disabled={items.length === 1} onClick={() => setItems((l) => l.filter((x) => x.key !== it.key))} className="h-11 w-11 px-0!"><Trash2 className="h-4 w-4" /></Button>
+                  <Field label="Est. ₹ / unit (optional)" htmlFor={`val-${it.key}`} className="col-span-2 sm:col-span-1"><Input id={`val-${it.key}`} type="number" min={0} value={it.estimatedUnitValue} onChange={(e) => updateItem(it.key, { estimatedUnitValue: e.target.value })} /></Field>
                 </div>
                 {showDetails && fields.length > 0 && (
                   <fieldset className="rounded-xl bg-surface-2 p-3">
