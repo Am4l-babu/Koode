@@ -29,7 +29,7 @@ const conditionLabel = (c: string) => CONDITIONS.find(([v]) => v === c)?.[1] ?? 
 const DELIVERY = {
   PLATFORM_PICKUP: { title: "Platform pickup", description: "A verified volunteer collects from you.", icon: <Truck className="h-5 w-5" /> },
   PARTNER_DROPOFF: { title: "Partner drop-off", description: "Drop items at a nearby partner collection point.", icon: <Warehouse className="h-5 w-5" /> },
-  DELIVERY: { title: "Delivery", description: "Send by courier to the platform hub.", icon: <Package className="h-5 w-5" /> },
+  DELIVERY: { title: "Delivery", description: "Send by courier to the platform hub, then add the tracking number.", icon: <Package className="h-5 w-5" /> },
 } as const;
 
 const GROUPS = [

@@ -13,6 +13,8 @@ import { AppError } from "@/lib/errors";
 import { CONDITION_LABELS, DELIVERY_METHOD_LABELS, GROUP_LABELS } from "@/lib/descriptors";
 import { formatDate, formatINR } from "@/lib/format";
 import { describeAttributes } from "@/lib/categories";
+import { trackingInfo } from "@/lib/couriers";
+import { TrackingSummary } from "@/components/donations/courier-tracking";
 
 export const metadata = { title: "Donation" };
 
@@ -58,6 +60,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
                 </ul>
               </dd>
               <dt className="text-muted">Delivery</dt><dd>{DELIVERY_METHOD_LABELS[d.deliveryMethod]} · {d.delivery?.status.toLowerCase() ?? "—"}</dd>
+              {d.delivery && trackingInfo(d.delivery) && <><dt className="text-muted">Courier</dt><dd><TrackingSummary tracking={trackingInfo(d.delivery)!} compact /></dd></>}
               <dt className="text-muted">Condition</dt><dd>{CONDITION_LABELS[d.condition]}</dd>
               <dt className="text-muted">Donating as</dt><dd>{GROUP_LABELS[d.groupType]}</dd>
               {d.description && <><dt className="text-muted">Description</dt><dd className="whitespace-pre-line">{d.description}</dd></>}

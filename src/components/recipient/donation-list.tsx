@@ -6,6 +6,7 @@ import { describeAttributes } from "@/lib/categories";
 import type { RecipientDonationDTO } from "@/lib/dto/donations";
 import { MediaGallery } from "@/components/donations/media-gallery";
 import { ReceiveButton } from "./receive-button";
+import { TrackingSummary } from "@/components/donations/courier-tracking";
 
 /** Recipient's view of donations — the donor is only ever an anonymous alias. */
 export function RecipientDonationList({ donations }: { donations: RecipientDonationDTO[] }) {
@@ -24,6 +25,7 @@ export function RecipientDonationList({ donations }: { donations: RecipientDonat
               ))}
             </ul>
             {d.description && <p className="max-w-md whitespace-pre-line text-sm">{d.description}</p>}
+            {d.tracking && <div className="rounded-xl bg-surface-2 px-3 py-2"><TrackingSummary tracking={d.tracking} compact /></div>}
             {d.media.length > 0 && <div className="max-w-md"><MediaGallery media={d.media} /></div>}
             <p className="text-sm text-muted">
               For “{d.request.title}” · {DELIVERY_METHOD_LABELS[d.deliveryMethod as keyof typeof DELIVERY_METHOD_LABELS]} · expected {formatDate(d.expectedBy)}

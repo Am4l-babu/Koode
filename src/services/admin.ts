@@ -375,7 +375,7 @@ export async function getDonationAdmin(donationId: string) {
       request: { select: { publicId: true, title: true, district: true } },
       items: { select: { quantity: true, variant: true, requestItem: { select: { name: true, unit: true } } } },
       events: { orderBy: { createdAt: "asc" }, select: { status: true, actorRole: true, note: true, createdAt: true } },
-      delivery: { select: { status: true, assigneeLabel: true, pickupScheduledAt: true, deliveredAt: true } },
+      delivery: { select: { status: true, assigneeLabel: true, pickupScheduledAt: true, deliveredAt: true, courier: true, courierName: true, trackingNumber: true, trackingAddedAt: true } },
     },
   });
   if (!d) throw notFound("This donation");
@@ -444,6 +444,10 @@ export async function listDeliveries(status?: string) {
       notes: true,
       proofNote: true,
       createdAt: true,
+      courier: true,
+      courierName: true,
+      trackingNumber: true,
+      trackingAddedAt: true,
       donation: {
         select: {
           publicId: true,

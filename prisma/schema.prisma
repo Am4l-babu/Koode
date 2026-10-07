@@ -504,6 +504,11 @@ model Delivery {
   notes              String?
   proofNote          String?
   deliveredAt        DateTime?
+  /// Courier the donor sent it with (see lib/couriers.ts), "OTHER" plus courierName otherwise.
+  courier            String?
+  courierName        String?
+  trackingNumber     String?
+  trackingAddedAt    DateTime?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 

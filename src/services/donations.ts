@@ -20,6 +20,7 @@ import {
 } from "@/lib/dto/donations";
 import type { SessionUser } from "@/lib/auth/session";
 import { CONDITIONS, type CreateDonationInput } from "@/lib/validation/donation";
+import { findCourier, type CourierTrackingInput } from "@/lib/couriers";
 import { notify, notifyAdmins } from "./notifications";
 import { getSettings } from "./settings";
 
@@ -317,6 +318,37 @@ export async function donorUpdateDonation(actor: SessionUser, publicId: string, 
   if (progress) publishRequestProgress(progress.event);
   if (to === "CANCELLED") await notify(donation.organization.userId, templates.donationCancelledRecipient(publicId));
   else await notify(donation.organization.userId, templates.donationStatusRecipient(publicId, DONATION_STATUS_LABELS[to]));
+  return getDonorDonation(actor, publicId);
+}
+
+/** Donation statuses in which a donor may add or correct courier tracking. */
+const TRACKABLE: DonationStatus[] = ["CONFIRMED", "PREPARING", "IN_TRANSIT"];
+
+/**
+ * The donor records the courier and tracking number for a courier donation.
+ * Adding it marks the donation as sent (in transit); later saves correct it.
+ */
+export async function donorSetTracking(actor: SessionUser, publicId: string, input: CourierTrackingInput) {
+  if (actor.role !== "DONOR") throw forbidden();
+  const donation = await db.donation.findFirst({
+    where: { publicId, donorId: actor.id },
+    select: { id: true, status: true, requestId: true, deliveryMethod: true, organization: { select: { userId: true } }, delivery: { select: { trackingNumber: true } } },
+  });
+  if (!donation) throw notFound("This donation");
+  if (donation.deliveryMethod !== "DELIVERY") throw new AppError("CONFLICT", "Courier tracking is only for donations sent by courier.");
+  if (!TRACKABLE.includes(donation.status)) throw new AppError("CONFLICT", "Tracking can only be added or changed until the items are received.");
+
+  const courier = findCourier(input.courier);
+  const courierName = courier?.name ?? input.courierName!;
+  const tracking = { courier: input.courier, courierName: courier ? null : courierName, trackingNumber: input.trackingNumber, trackingAddedAt: new Date() };
+  await db.delivery.upsert({
+    where: { donationId: donation.id },
+    create: { donationId: donation.id, status: "PICKED_UP", ...tracking },
+    update: { status: "PICKED_UP", ...tracking },
+  });
+  const updated = !!donation.delivery?.trackingNumber;
+  if (donation.status !== "IN_TRANSIT") await transition("DONOR", donation, "IN_TRANSIT", `Sent by ${courierName}.`);
+  await notify(donation.organization.userId, templates.donationShippedRecipient(publicId, courierName, updated));
   return getDonorDonation(actor, publicId);
 }
 

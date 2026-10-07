@@ -7,6 +7,7 @@ import { requirePagePermission } from "@/lib/auth/guards";
 import { listDeliveries } from "@/services/admin";
 import { DELIVERY_METHOD_LABELS } from "@/lib/descriptors";
 import { formatDateTime } from "@/lib/format";
+import { trackingInfo } from "@/lib/couriers";
 
 export const metadata = { title: "Delivery" };
 const STATUSES = ["UNASSIGNED", "SCHEDULED", "PICKED_UP", "DELIVERED", "FAILED"] as const;
@@ -27,7 +28,7 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
             <Td>{r.donation.items.map((i) => `${i.quantity} × ${i.requestItem.name}`).join(", ")}</Td>
             <Td className="text-xs">{DELIVERY_METHOD_LABELS[r.donation.deliveryMethod]}</Td>
             <Td>{r.donation.request.district}</Td>
-            <Td><Badge tone={r.status === "DELIVERED" ? "success" : r.status === "FAILED" ? "critical" : r.status === "UNASSIGNED" ? "accent" : "info"}>{r.status.replace("_", " ").toLowerCase()}</Badge>{r.assigneeLabel && <div className="text-xs text-muted">{r.assigneeLabel}</div>}</Td>
+            <Td><Badge tone={r.status === "DELIVERED" ? "success" : r.status === "FAILED" ? "critical" : r.status === "UNASSIGNED" ? "accent" : "info"}>{r.status.replace("_", " ").toLowerCase()}</Badge>{r.assigneeLabel && <div className="text-xs text-muted">{r.assigneeLabel}</div>}{trackingInfo(r) && <div className="text-xs text-muted">{trackingInfo(r)!.courierName} · <span className="font-mono">{r.trackingNumber}</span></div>}</Td>
             <Td><StatusPill status={r.donation.status} /></Td>
             <Td className="text-xs">{formatDateTime(r.pickupScheduledAt)}</Td>
             <Td><DeliveryEditor delivery={r} /></Td>

@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { donorAliasFor } from "../anonymity";
 import { donorDisplayName } from "../descriptors";
 import type { MediaKind, MediaStatus } from "@prisma/client";
+import { trackingInfo, type TrackingInfo } from "../couriers";
 
 const timelineSelect = {
   orderBy: { createdAt: "asc" },
@@ -18,6 +19,7 @@ const itemsSelect = {
 } satisfies Prisma.Donation$itemsArgs;
 
 const mediaFields = { id: true, kind: true, status: true, createdAt: true } as const;
+const trackingFields = { courier: true, courierName: true, trackingNumber: true, trackingAddedAt: true } as const;
 
 export interface DonationMediaDTO {
   id: string;
@@ -84,7 +86,7 @@ export const donorDonationSelect = {
   items: itemsSelect,
   events: timelineSelect,
   media: { orderBy: { createdAt: "asc" }, select: mediaFields },
-  delivery: { select: { status: true, pickupScheduledAt: true, deliveredAt: true } },
+  delivery: { select: { status: true, pickupScheduledAt: true, deliveredAt: true, ...trackingFields } },
   request: {
     select: {
       publicId: true,
@@ -113,6 +115,8 @@ export interface DonorDonationDTO {
   media: DonationMediaDTO[];
   timeline: TimelineEntryDTO[];
   delivery: { status: string; scheduledAt: string | null; deliveredAt: string | null } | null;
+  /** Courier tracking, when the donor sent it by courier and added it. */
+  tracking: TrackingInfo | null;
   request: { id: string; title: string; category: { slug: string; name: string; icon: string } };
   recipient: { ref: string; descriptor: string; district: string };
 }
@@ -139,6 +143,7 @@ export function toDonorDonation(row: DonorDonationRow): DonorDonationDTO {
           deliveredAt: row.delivery.deliveredAt?.toISOString() ?? null,
         }
       : null,
+    tracking: row.delivery ? trackingInfo(row.delivery) : null,
     request: { id: row.request.publicId, title: row.request.title, category: row.request.category },
     recipient: {
       ref: row.request.organization.publicId,
@@ -170,6 +175,7 @@ export const recipientDonationSelect = {
   events: timelineSelect,
   // Recipients only ever receive media a moderator/auto-check has approved.
   media: { where: { status: "APPROVED" }, orderBy: { createdAt: "asc" }, select: mediaFields },
+  delivery: { select: trackingFields },
   request: { select: { publicId: true, title: true } },
 } satisfies Prisma.DonationSelect;
 
@@ -186,6 +192,7 @@ export interface RecipientDonationDTO {
   createdAt: string;
   items: DonationItemDTO[];
   media: DonationMediaDTO[];
+  tracking: TrackingInfo | null;
   timeline: TimelineEntryDTO[];
   request: { id: string; title: string };
   donor: { alias: string; displayName: string };
@@ -204,6 +211,7 @@ export function toRecipientDonation(row: RecipientDonationRow): RecipientDonatio
     createdAt: row.createdAt.toISOString(),
     items: mapItems(row.items),
     media: mapMedia(row.media),
+    tracking: row.delivery ? trackingInfo(row.delivery) : null,
     timeline: mapTimeline(row.events),
     request: { id: row.request.publicId, title: row.request.title },
     donor: { alias, displayName: donorDisplayName(alias, row.groupType) },

@@ -38,6 +38,14 @@ export const templates = {
     body: `Your donation ${donationId} has been received. Thank you for supporting a verified community need.`,
     link: `/donor/donations/${donationId}`,
   }),
+  donationShippedRecipient: (donationId: string, courierName: string, updated: boolean): NotificationTemplate => ({
+    type: "DONATION_STATUS",
+    title: updated ? "Tracking details updated" : "Donation sent by courier",
+    body: updated
+      ? `The donor updated the courier tracking for donation ${donationId}.`
+      : `Donation ${donationId} is on its way with ${courierName}. You can follow it from your donations page.`,
+    link: `/recipient/donations`,
+  }),
   donationStatusRecipient: (donationId: string, statusLabel: string): NotificationTemplate => ({
     type: "DONATION_STATUS",
     title: `Donation ${statusLabel.toLowerCase()}`,

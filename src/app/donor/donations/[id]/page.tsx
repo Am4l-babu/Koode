@@ -6,6 +6,7 @@ import { AnonymousIdentityBadge, PrivacyBadge } from "@/components/brand/badges"
 import { DonationTracker, StatusPill } from "@/components/donations/tracker";
 import { DonorDonationActions } from "@/components/donations/donor-actions";
 import { DonationMediaManager } from "@/components/donations/media-manager";
+import { CourierTrackingCard } from "@/components/donations/courier-tracking";
 import { requirePageUser } from "@/lib/auth/guards";
 import { getDonorDonation } from "@/services/donations";
 import { AppError } from "@/lib/errors";
@@ -53,6 +54,12 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
               {d.estimatedValue ? <><dt className="text-muted">Estimated value</dt><dd className="text-right">{formatINR(d.estimatedValue)}</dd></> : null}
             </dl>
           </section>
+          {d.deliveryMethod === "DELIVERY" && (
+            <section className="card p-6" aria-labelledby="courier-heading">
+              <h2 id="courier-heading" className="mb-4 text-lg font-semibold">Courier tracking</h2>
+              <CourierTrackingCard donationId={d.id} status={d.status} tracking={d.tracking} />
+            </section>
+          )}
           {d.description && (
             <section className="card p-6" aria-labelledby="desc">
               <h2 id="desc" className="mb-2 text-lg font-semibold">Description</h2>
