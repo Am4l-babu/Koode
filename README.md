@@ -4,13 +4,9 @@
 
 ### 👉 [**Try the interactive preview**](https://am4l-babu.github.io/Koode/)
 
-[![Koode interactive preview](docs/preview.png)](https://am4l-babu.github.io/Koode/)
+[![Koode interactive preview: need cards with product details, the donation form with condition, pack size, best-before date and photos, and a courier donation in transit with DTDC tracking](docs/preview-app.png)](https://am4l-babu.github.io/Koode/)
 
 A click-through demo with sample data: search needs in plain language, make an anonymous donation — describing each item's condition, size or pack, with a description and photos — then send it by courier, add the tracking number and watch it travel. Switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations, and nothing you enter or attach leaves the page. Source: [`docs/index.html`](docs/index.html).
-
-| Describe what you give | Follow it by courier |
-|---|---|
-| [![Donation form with per-item condition, pack size, best-before date, description and photos](docs/preview-donate.png)](https://am4l-babu.github.io/Koode/) | [![A courier donation in transit with DTDC tracking](docs/preview-tracking.png)](https://am4l-babu.github.io/Koode/) |
 
 A privacy-first donation platform that connects people who want to donate specific items with **verified** schools, children's homes, elder-care homes, shelters and community organisations — without either side ever seeing the other's identity. The platform (and only authorised administrators) act as the trusted intermediary.
 
