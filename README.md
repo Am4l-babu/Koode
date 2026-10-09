@@ -6,7 +6,11 @@
 
 [![Koode interactive preview](docs/preview.png)](https://am4l-babu.github.io/Koode/)
 
-A click-through demo with sample data: search needs in plain language, make an anonymous donation and watch it travel, switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations. Source: [`docs/index.html`](docs/index.html).
+A click-through demo with sample data: search needs in plain language, make an anonymous donation — describing each item's condition, size or pack, with a description and photos — then send it by courier, add the tracking number and watch it travel. Switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations, and nothing you enter or attach leaves the page. Source: [`docs/index.html`](docs/index.html).
+
+| Describe what you give | Follow it by courier |
+|---|---|
+| [![Donation form with per-item condition, pack size, best-before date, description and photos](docs/preview-donate.png)](https://am4l-babu.github.io/Koode/) | [![A courier donation in transit with DTDC tracking](docs/preview-tracking.png)](https://am4l-babu.github.io/Koode/) |
 
 A privacy-first donation platform that connects people who want to donate specific items with **verified** schools, children's homes, elder-care homes, shelters and community organisations — without either side ever seeing the other's identity. The platform (and only authorised administrators) act as the trusted intermediary.
 
@@ -14,7 +18,7 @@ A privacy-first donation platform that connects people who want to donate specif
 |---|---|
 | **Stack** | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Prisma 6 · PostgreSQL 16 |
 | **Auth** | Database-backed sessions, Argon2id passwords, httpOnly `SameSite=Lax` cookies (`__Host-` + `Secure` in production) |
-| **Tests** | 157 Vitest unit/integration/security tests · 16 Playwright E2E tests (desktop + mobile) |
+| **Tests** | 221 Vitest unit/integration/security tests · 21 Playwright E2E tests (desktop + mobile) |
 | **i18n** | English · Malayalam · Hindi |
 
 ---
@@ -37,15 +41,15 @@ A privacy-first donation platform that connects people who want to donate specif
 
 ## Features
 
-**Donors** — browse/search/filter verified needs (natural-language search such as *"shirts size 30"*, *"food near Thrissur"*, *"toys for 5 year old children"*), guided 4-step anonymous donation modal, live fulfilment counters (Server-Sent Events), animated donation tracking timeline, personal impact + private milestones, "Needs you can fulfil" recommendations, account deletion.
+**Donors** — browse/search/filter verified needs (natural-language search such as *"shirts size 30"*, *"food near Thrissur"*, *"toys for 5 year old children"*), guided 4-step anonymous donation modal, **per-item details** (condition for each item plus the product's own questions — actual size, pack size, best-before date, height…, with the recipient's requirement shown alongside), a description and **photos / a short video** of the items, **courier tracking** (pick from 14 courier services used in Kerala and enter the tracking number; the donation moves to *in transit* and the organisation can follow it), live fulfilment counters (Server-Sent Events), animated donation tracking timeline, personal impact + private milestones, "Needs you can fulfil" recommendations, account deletion.
 
-**Recipients** — organisation registration with encrypted private details, document upload to private storage, verification workflow, **schema-driven Smart Request Builder** (category fields come from the database, so admins can add categories without code), per-item fulfilment tracking, recurring requests, confirm receipt, anonymous donor references.
+**Recipients** — organisation registration with encrypted private details, document upload to private storage, verification workflow, **schema-driven Smart Request Builder** (category fields come from the database, so admins can add categories without code) with **product types**: choosing e.g. *Footwear*, *Saree*, *Table / desk* or *Wheelchair* shows that product's own measurements (cm/in, kg/g, L/ml), required fields and default unit — 64 product types across the built-in categories in [`src/lib/product-types.ts`](src/lib/product-types.ts). Per-item fulfilment tracking, recurring requests, donors' photos/descriptions/courier tracking on each donation, confirm receipt, anonymous donor references.
 
-**Administrators** — operations dashboard (KPIs, line/donut/bar charts, district tile-map, fulfilment ring, monthly impact), request moderation with automatic quality checks (PII in text, duplicates, quantity sanity, documents) and a priority engine, verification dossier with signed document links, donation management, **audited identity resolution**, user/role management, least-privilege delivery coordination, report/investigation queue, analytics, append-only audit log, platform settings, dynamic categories, data export and retention purge.
+**Administrators** — operations dashboard (KPIs, line/donut/bar charts, district tile-map, fulfilment ring, monthly impact), request moderation with automatic quality checks (PII in text, duplicates, quantity sanity, documents) and a priority engine, verification dossier with signed document links, donation management with **photo/video moderation**, **audited identity resolution**, user/role management, least-privilege delivery coordination (including donors' courier and tracking numbers), report/investigation queue, analytics, append-only audit log, platform settings, dynamic categories, data export and retention purge.
 
 **Super admins** — create/manage admins, grant granular permissions, system settings, export.
 
-**Platform** — light + true dark mode (selected palettes, not inverted), WCAG 2.2 AA-minded components (skip link, native accessible dialogs, focus rings, 44px targets, reduced-motion support, table views for every chart), mobile-first layouts, SEO-friendly public pages (`/needs/education`, JSON-LD, canonical URLs), friendly error states with reference IDs and no stack traces.
+**Platform** — light + true dark mode (selected palettes, not inverted), WCAG 2.2 AA-minded components (skip link, native accessible dialogs, focus rings, 44px targets, reduced-motion support, table views for every chart), mobile-first layouts, SEO-friendly public pages (`/needs/education`, JSON-LD, canonical URLs), friendly error states with reference IDs and no stack traces, show/hide toggle on every password field.
 
 ## Privacy architecture
 
@@ -56,7 +60,8 @@ Privacy is enforced in **four layers**, not just hidden in the UI:
 | **Database** | PII lives in separate tables (`private_profiles`, `organization_private`, `delivery_private`) encrypted with **AES-256-GCM**. Public tables hold only random references (`D-7KQ9XM`, `R-4HT2WP`, `NR-…`, `DN-…`) — never row counts. Audit logs are append-only (DB trigger). Quantity bounds are DB `CHECK` constraints. |
 | **API** | Every non-admin response is built from an explicit Prisma `select` + mapper (`src/lib/dto/*`) that physically cannot reach PII tables. Ownership is part of each query (another user's record is a 404, not a 403). Roles and permissions are always resolved from the database session — client claims are ignored. |
 | **Identity resolution** | Exactly one code path links a donor to a recipient (`getDonationIdentity`). It requires the `VIEW_PRIVATE_IDENTITY` permission and writes an audit record (with encrypted IP) before returning. Email lookups of users are gated by the same permission. |
-| **Interface** | Donors see "Verified Learning Center · Partner #R-…, Thrissur". Recipients see "Community Donor #D7K2Q" — an HMAC alias that is **different for every organisation**, so donors cannot be correlated across recipients. Notifications are built from templates that accept references only. Logistics staff get one leg of a delivery at a time (donor → hub, hub → recipient) and never names. |
+| **Media** | Donor photos are decoded and re-encoded (EXIF, GPS and XMP dropped). MP4/MOV videos have their metadata boxes (location, device, XMP) wiped in place, then wait for a moderator before the organisation can see them. Files live in private storage under random keys and are served only through a permission check, streamed by byte range. |
+| **Interface** | Donors see "Verified Learning Center · Partner #R-…, Thrissur". Recipients see "Community Donor #D7K2Q" — an HMAC alias that is **different for every organisation**, so donors cannot be correlated across recipients. Notifications are built from templates that accept references only. Logistics staff get one leg of a delivery at a time (donor → hub, hub → recipient) and never names. Free text donors and recipients write (descriptions, item details, courier names) is checked for phone numbers, emails, links and addresses. |
 
 The core promise is covered by automated tests — see `tests/integration/privacy.test.ts` (*Donor A → Recipient B: DENIED; Recipient B → Donor A: DENIED; authorised admin: ALLOWED + audited*). The full review is in [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md).
 
@@ -83,6 +88,8 @@ npm run db:seed
 npm run dev            # http://localhost:3000
 ```
 
+> 💡 `npm run test:e2e` builds into the same `.next` folder as `npm run dev` — stop the dev server first, or it will serve pages without styles until restarted.
+
 > ⚠️ `DATA_ENCRYPTION_KEY` encrypts all personal data. Back it up securely — data encrypted with a lost key cannot be recovered. Never commit `.env`.
 
 ## Demo accounts
@@ -98,7 +105,7 @@ Created by `npm run db:seed` (refuses to run with `NODE_ENV=production`). Passwo
 | Recipient (verified) | `learning@demo.local` | `DEMO_PASSWORD` | "Verified Learning Center", Thrissur |
 | Recipient (pending) | `pending@demo.local` | `DEMO_PASSWORD` | Awaiting verification |
 
-Seed data includes the four requests from the brief (school bags in Thrissur, children's shirts in Ernakulam, blankets in Palakkad, educational toys in Kochi) plus food, uniforms, walking aids and sports kit, with donations spread over six months for analytics.
+Seed data includes the four requests from the brief (school bags in Thrissur, children's shirts in Ernakulam, blankets in Palakkad, educational toys in Kochi) plus food, uniforms, walking aids and sports kit — each item with its product type and details — and donations spread over six months for analytics.
 
 ## Scripts
 
@@ -121,8 +128,8 @@ Seed data includes the four requests from the brief (school bags in Thrissur, ch
 createdb donation_test
 createdb donation_e2e
 
-npm test            # 157 tests, ~10s — uses TEST_DATABASE_URL (default: localhost/donation_test)
-npm run test:e2e    # 16 tests — uses E2E_DATABASE_URL (default: localhost/donation_e2e)
+npm test            # 221 tests, ~10s — uses TEST_DATABASE_URL (default: localhost/donation_test)
+npm run test:e2e    # 21 tests — uses E2E_DATABASE_URL (default: localhost/donation_e2e)
 ```
 
 | Suite | Covers |
@@ -132,11 +139,14 @@ npm run test:e2e    # 16 tests — uses E2E_DATABASE_URL (default: localhost/don
 | `tests/unit/permissions` | RBAC, super-admin-only grants, donation state machine |
 | `tests/unit/priority-search` | Priority engine, natural-language search parser |
 | `tests/unit/security-primitives` | AES-GCM tamper detection, random IDs, donor aliases, rate limiting, magic-byte upload checks, signed URLs |
+| `tests/unit/product-types` · `couriers` | Product-type catalogue integrity, per-type fields, measurement/date validation, donor questions; courier list, tracking-number formats, tracking links |
+| `tests/unit/donation-media` · `media-privacy` | Photo re-encoding, MP4/MOV metadata wiping (GPS, device, XMP), AVIF/HEIC detection, storage round-trip |
 | `tests/integration/privacy` | **Critical privacy invariant**, encryption at rest, audited identity resolution, logistics legs, back-door linkage |
 | `tests/integration/api-security` | Admin APIs vs anonymous/donor/recipient (36 cases), role tampering, cross-user access, CSRF, enumeration, suspension, signed documents |
 | `tests/integration/flows` | Recipient → verification → request → approval; donor → donate → track → receive; password reset; email verification |
 | `tests/integration/concurrency` | Racing donors never over-commit (2 vs 2 for last 2; 30 vs 7); all-or-nothing multi-item; DB constraints |
-| `e2e/*` | Full browser journeys for donor, recipient, admin approval, identity reveal, keyboard/a11y, i18n, dark mode, mobile flow, security headers |
+| `tests/integration/product-types` · `courier-tracking` · `review-fixes` | Requests with product types, donor details per item, new-only items, courier tracking and status changes, media upload limits, byte ranges and moderation |
+| `e2e/*` | Full browser journeys for donor, recipient, admin approval, identity reveal, keyboard/a11y, i18n, dark mode, mobile flow, security headers, photos/videos with moderation, courier tracking, password visibility |
 
 Route handlers are tested by invoking them directly with real `NextRequest` objects against a real PostgreSQL database — the same authorization middleware, validation and SQL that production uses.
 
@@ -157,8 +167,10 @@ src/
     crypto.ts              # AES-256-GCM, HMAC
     permissions.ts         # roles & granular admin permissions
     fulfillment.ts priority.ts search.ts pii-guard.ts categories.ts donation-status.ts
+    product-types.ts       # built-in product types and their measurements
+    couriers.ts            # Kerala courier services, tracking links, number validation
     notifications/         # templates (references only) + email/SMS/WhatsApp drivers
-    storage/               # private document storage + signed URLs
+    storage/               # private document + donation media storage, signed URLs, media sanitising
     realtime.ts            # SSE pub/sub
     i18n/                  # en / ml / hi dictionaries
   services/                # business logic (auth, requests, donations, organizations, admin, impact)
@@ -175,9 +187,10 @@ All endpoints return `{ data }` or `{ error: { code, message, details?, errorId?
 |---|---|
 | Public | `GET /api/requests` (filters: `q, category, district, urgency, stage, donationType, sort, near, page`) · `GET /api/requests/:id` · `GET /api/requests/:id/stream` (SSE) · `POST /api/requests/:id/report` · `GET /api/categories` · `GET /api/impact` |
 | Auth | `POST /api/auth/{register,login,logout,forgot-password,reset-password,verify-email}` · `POST /api/auth/phone/{send,verify}` · `GET/DELETE /api/me` · `GET/PATCH /api/notifications` · `GET /api/notifications/stream` |
-| Donor | `POST /api/donations` · `GET /api/my-donations` · `GET/PATCH /api/my-donations/:id` · `GET /api/recommendations` |
+| Donor | `POST /api/donations` · `GET /api/my-donations` · `GET/PATCH /api/my-donations/:id` · `GET/POST /api/my-donations/:id/media` · `DELETE /api/my-donations/:id/media/:mediaId` · `PUT /api/my-donations/:id/tracking` · `GET /api/recommendations` |
+| Media | `GET /api/media/:id` — donor, addressed organisation (approved files only) or moderating admin; supports byte ranges |
 | Recipient | `POST /api/requests` · `GET /api/my-requests` · `GET/PATCH /api/my-requests/:id` · `GET /api/recipient/donations` · `POST /api/recipient/donations/:id/receive` · `GET /api/organization` · `POST /api/organization/documents` · `POST /api/organization/verification` |
-| Admin (per permission) | `/api/admin/stats` · `analytics` · `users[/:id[/identity]]` · `requests[/:id]` · `reports[/:id]` · `donations[/:id[/identity]]` · `verifications[/:id]` · `documents/:id` · `deliveries[/:id[/packet?leg=]]` · `audit` · `categories` · `settings` · `export` · `retention` |
+| Admin (per permission) | `/api/admin/stats` · `analytics` · `users[/:id[/identity]]` · `requests[/:id]` · `reports[/:id]` · `donations[/:id[/identity]]` · `verifications[/:id]` · `documents/:id` · `deliveries[/:id[/packet?leg=]]` · `media/:id` · `audit` · `categories` · `settings` · `export` · `retention` |
 
 ## Deployment
 
@@ -219,4 +232,7 @@ See [`.env.example`](.env.example). Runtime platform settings (verification poli
 - **Object storage:** only the local private-disk driver is implemented; an S3/R2 adapter fits behind `src/lib/storage`.
 - **Monetary donations** are architecture-only (feature flag + `DonationType`); integrate a compliant provider (e.g. Razorpay/UPI) before enabling.
 - **Translations** cover navigation, hero, CTAs and common labels; deeper pages still use English copy and need translator review for Malayalam/Hindi.
+- **Courier tracking** links to each courier's own tracking page; there is no live status feed (courier APIs need business accounts). Blue Dart, Delhivery, Ekart and XpressBees links include the number, but whether their sites fill it in automatically wasn't confirmed. KSRTC Courier has no link. The organisation sees the tracking number, and courier pages can show the town a parcel was booked from — donors are told this before saving.
+- **Media formats:** HEIC photos aren't accepted yet (iPhones can save "Most Compatible" JPEGs); WebM videos keep their metadata (only MP4/MOV are cleaned) — phones record MP4/MOV, so this mainly affects desktop recordings.
+- **Product types** for built-in categories are defined in code; the admin category editor edits only the category-wide fields.
 - The Docker image was written for this project but could not be built in the authoring environment (no Docker daemon); the standalone Next.js output it packages was built and E2E-tested.

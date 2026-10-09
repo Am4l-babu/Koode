@@ -206,6 +206,22 @@ dialog::backdrop{background:rgb(5 20 18/.55);backdrop-filter:blur(4px)}
 .opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft)}
 .opt input{margin-top:4px;accent-color:var(--primary)}
 .opt b{display:block}.opt span{color:var(--fg-muted);font-size:.88rem}
+.mfield textarea{width:100%;min-height:80px;border-radius:14px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);padding:10px 14px;font:inherit;resize:vertical}
+.mfield textarea:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
+.give{border:1.5px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px;background:var(--surface-2)}
+.give h4{margin:0 0 10px;font-size:.92rem}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:520px){.mgrid{grid-template-columns:1fr}}
+.measure{display:flex;gap:8px}.measure input{flex:1;min-width:0}.mfield .measure select{width:84px;flex:none}
+.hint{display:block;color:var(--fg-subtle);font-size:.78rem;margin-top:4px}
+.drop{display:block;position:relative;border:1.5px dashed var(--border-strong);border-radius:14px;padding:14px;text-align:center;cursor:pointer;color:var(--fg-muted);font-size:.9rem}
+.drop:focus-within{border-color:var(--primary);box-shadow:var(--ring)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.thumbs img,.thumbs video{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+.specs{display:flex;flex-wrap:wrap;gap:6px}.specs span{font-size:.78rem;color:var(--fg-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:3px 8px}
+.track{margin-top:14px;padding:14px;border-radius:14px;background:var(--surface-2);font-size:.9rem;display:grid;gap:8px}
+.track form{display:grid;gap:8px}.track input,.track select{height:44px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);padding:0 12px;font:inherit}
+.track .num{font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.03em}
+.track a{color:var(--primary-ink);font-weight:650}
 .shield{display:flex;gap:12px;align-items:center;background:var(--primary-soft);color:var(--primary-ink);padding:12px 14px;border-radius:14px;font-size:.9rem;font-weight:550;margin-top:6px}
 .shield svg{width:26px;height:26px;flex:none}
 .success{text-align:center;padding:6px 0}
@@ -328,8 +344,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   <div class="steps">
     <div class="step reveal"><h3>Verified request</h3><p>Organisations post specific requirements, and our team confirms they are genuine.</p></div>
     <div class="step reveal"><h3>Choose</h3><p>Browse current needs and select an item you are able to provide.</p></div>
-    <div class="step reveal"><h3>Give</h3><p>Confirm items and quantities. We reserve them, so a need is never over-committed.</p></div>
-    <div class="step reveal"><h3>Deliver</h3><p>Our team coordinates every leg of the handover; no names are exchanged.</p></div>
+    <div class="step reveal"><h3>Give</h3><p>Confirm items and quantities, and describe what you're giving — condition, size or pack, a photo. We reserve the quantity, so a need is never over-committed.</p></div>
+    <div class="step reveal"><h3>Deliver</h3><p>Our team coordinates every leg of the handover; no names are exchanged. Sending by courier? Add the tracking number and the organisation can follow it.</p></div>
   </div>
 </div></section>
 
@@ -354,16 +370,28 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <script>
 "use strict";
 /* ───────── data (mirrors prisma/seed.ts) ───────── */
+/* Each item: [name, required, committed, details]. Details mirror src/lib/product-types.ts:
+   the product type, what the organisation asked for, and what donors are asked about it. */
+const LEN={t:"measure",u:["cm","in"]}, KG={t:"measure",u:["kg","g"]}, BEST={k:"bb",l:"Best before",t:"date"};
 const NEEDS=[
- {id:"NR-4HT2WP",cat:"education",title:"School Bags for the New Academic Year",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"HIGH",days:15,people:40,items:[["School bags",40,22]],kw:"bag bags school backpack"},
- {id:"NR-8KQ2DX",cat:"clothing",title:"Children's Shirts for Daily Wear",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"MEDIUM",days:30,people:25,items:[["Shirts (size 28)",10,4],["Shirts (size 30)",15,6]],kw:"shirt shirts clothes size children"},
- {id:"NR-3ZP7MA",cat:"elder-care",title:"Warm Blankets for the Monsoon",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"HIGH",days:10,people:15,items:[["Wool blankets",30,19]],kw:"blanket blankets warm monsoon bedding"},
- {id:"NR-6WC9TE",cat:"children",title:"Educational Toys for the Play Corner",org:"Verified Early-Childhood Centre",ref:"R-6WC9TE",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:45,people:30,items:[["Building blocks",12,3],["Puzzle sets (age 4–6)",18,5]],kw:"toy toys play puzzle blocks age 5 year old children"},
- {id:"NR-M23N3C",cat:"food",title:"Monthly Rice & Groceries for the Community Kitchen",org:"Verified Community Kitchen",ref:"R-M23N3C",district:"Kozhikode",city:"Vadakara",urg:"CRITICAL",days:5,people:120,items:[["Rice (kg)",200,140],["Pulses (kg)",60,21]],kw:"food rice grocery groceries pulses kitchen meal",rec:"Monthly"},
- {id:"NR-5UV1LB",cat:"clothing",title:"School Uniforms for Grade 3 and 4",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"MEDIUM",days:20,people:18,items:[["Uniform sets",18,7]],kw:"uniform uniforms clothes school"},
- {id:"NR-2RD4NH",cat:"elder-care",title:"Walking Aids for Residents",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"NORMAL",days:60,people:8,items:[["Walking sticks",8,5],["Walkers",4,1]],kw:"walking aid stick walker mobility"},
- {id:"NR-9FB6KS",cat:"sports",title:"Football Kit for the Weekend Club",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:40,people:22,items:[["Footballs",6,2],["Boots (UK 3–5)",22,4]],kw:"football soccer sports boots kit ball"}
+ {id:"NR-4HT2WP",cat:"education",title:"School Bags for the New Academic Year",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"HIGH",days:15,people:40,items:[["School bags",40,22,{type:"School bag",req:{"Height":"40 cm","Compartments":"2"},ask:[{k:"h",l:"Height",...LEN}]}]],kw:"bag bags school backpack"},
+ {id:"NR-8KQ2DX",cat:"clothing",title:"Children's Shirts for Daily Wear",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"MEDIUM",days:30,people:25,items:[["Shirts (size 28)",10,4,{type:"Shirt / T-shirt",req:{"Size":"28","Sleeve":"Half sleeve"},ask:[{k:"chest",l:"Chest",...LEN}]}],["Shirts (size 30)",15,6,{type:"Shirt / T-shirt",req:{"Size":"30","Sleeve":"Half sleeve"},ask:[{k:"chest",l:"Chest",...LEN}]}]],kw:"shirt shirts clothes size children"},
+ {id:"NR-3ZP7MA",cat:"elder-care",title:"Warm Blankets for the Monsoon",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"HIGH",days:10,people:15,items:[["Wool blankets",30,19,{type:"Blanket / bedsheet",req:{"Bed size":"Single","Material":"Wool"},ask:[{k:"bed",l:"Bed size",t:"choice",o:["Single","Double","Queen","King"]}]}]],kw:"blanket blankets warm monsoon bedding"},
+ {id:"NR-6WC9TE",cat:"children",title:"Educational Toys for the Play Corner",org:"Verified Early-Childhood Centre",ref:"R-6WC9TE",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:45,people:30,items:[["Building blocks",12,3,{type:"Toy",req:{"Age range":"5–8","Toy type":"Building blocks"},ask:[{k:"bat",l:"Battery operated",t:"choice",o:["No","Yes"]}]}],["Puzzle sets (age 4–6)",18,5,{type:"Board game / puzzle",req:{"Age range":"4–6"},ask:[{k:"pcs",l:"Pieces",t:"number"}]}]],kw:"toy toys play puzzle blocks age 5 year old children"},
+ {id:"NR-M23N3C",cat:"food",title:"Monthly Rice & Groceries for the Community Kitchen",org:"Verified Community Kitchen",ref:"R-M23N3C",district:"Kozhikode",city:"Vadakara",urg:"CRITICAL",days:5,people:120,items:[["Rice (kg)",200,140,{type:"Rice",req:{"Variety":"Matta (red)","Pack size":"5 kg"},ask:[{k:"pack",l:"Pack size",...KG},BEST]}],["Pulses (kg)",60,21,{type:"Pulses / dal",req:{"Pulse":"Toor dal","Pack size":"1 kg"},ask:[{k:"pack",l:"Pack size",...KG},BEST]}]],kw:"food rice grocery groceries pulses kitchen meal",rec:"Monthly"},
+ {id:"NR-5UV1LB",cat:"clothing",title:"School Uniforms for Grade 3 and 4",org:"Verified Learning Center",ref:"R-4HT2WP",district:"Thrissur",city:"Chalakudy",urg:"MEDIUM",days:20,people:18,items:[["Uniform sets",18,7,{type:"School uniform",req:{"Size":"26, 28","Colour":"Blue and white"},ask:[{k:"size",l:"Size",t:"choice",o:["26","28"]}]}]],kw:"uniform uniforms clothes school"},
+ {id:"NR-2RD4NH",cat:"elder-care",title:"Walking Aids for Residents",org:"Verified Elder-care Home",ref:"R-3ZP7MA",district:"Palakkad",city:"Ottapalam",urg:"NORMAL",days:60,people:8,items:[["Walking sticks",8,5,{type:"Walking stick",req:{"Height adjustable":"Yes"},ask:[{k:"h",l:"Height",...LEN}]}],["Walkers",4,1,{type:"Walker",req:{"Foldable":"Yes","Max user weight":"100 kg"},ask:[{k:"w",l:"Max user weight",t:"measure",u:["kg"]}]}]],kw:"walking aid stick walker mobility"},
+ {id:"NR-9FB6KS",cat:"sports",title:"Football Kit for the Weekend Club",org:"Verified Children's Home",ref:"R-8KQ2DX",district:"Ernakulam",city:"Kochi",urg:"NORMAL",days:40,people:22,items:[["Footballs",6,2,{type:"Ball",req:{"Sport":"Football","Ball size":"Size 4"},ask:[{k:"size",l:"Ball size",t:"choice",o:["Size 3","Size 4","Size 5"]}]}],["Boots (UK 3–5)",22,4,{type:"Sports shoes",req:{"Shoe size (UK)":"UK 3, UK 4, UK 5"},ask:[{k:"size",l:"Shoe size (UK)",t:"choice",o:["UK 3","UK 4","UK 5"]}]}]],kw:"football soccer sports boots kit ball"}
 ];
+/* Courier services used in Kerala (mirrors src/lib/couriers.ts). link(n) puts the number in the URL where supported. */
+const COURIERS=[
+ ["India Post (Speed Post)","https://www.indiapost.gov.in/"],["DTDC","https://www.dtdc.com/track-your-shipment/"],["The Professional Couriers","https://www.tpcindia.com/"],
+ ["Blue Dart",n=>"https://www.bluedart.com/web/guest/trackdartresult?trackFor=0&trackNo="+encodeURIComponent(n)],["Delhivery",n=>"https://www.delhivery.com/track-v2/package/"+encodeURIComponent(n)],
+ ["Ekart",n=>"https://ekartlogistics.com/shipmenttrack/"+encodeURIComponent(n)],["XpressBees",n=>"https://www.xpressbees.com/shipment/tracking?awbNo="+encodeURIComponent(n)],
+ ["ST Courier","https://stcourier.com/track/shipment"],["Trackon","https://trackon.in/data/SingleShipment/"],["Shree Maruti Courier","https://www.shreemaruti.com/"],
+ ["Franch Express","https://franchexpress.com/"],["Shadowfax","https://www.shadowfax.in/"],["Gati (Allcargo)","https://www.allcargologistics.com/"],["KSRTC Courier & Logistics",null]
+];
+const CONDS=["New","Like new","Good"];
 const CATS={all:["All","✨"],education:["Education","📚"],clothing:["Clothing","👕"],"elder-care":["Elder care","🧓"],children:["Children","🧸"],food:["Food","🍚"],sports:["Sports","⚽"]};
 const URGW={CRITICAL:4,HIGH:3,MEDIUM:2,NORMAL:1};
 const URGC={CRITICAL:"crit",HIGH:"high",MEDIUM:"med",NORMAL:""};
@@ -432,6 +460,7 @@ function card(n){
    <div class="tags"><span class="chip ${URGC[n.urg]}">${n.urg==="CRITICAL"?"🔥":""} ${n.urg[0]+n.urg.slice(1).toLowerCase()}</span><span class="chip">${CATS[n.cat][1]} ${CATS[n.cat][0]}</span>${n.rec?`<span class="chip amber">↻ ${n.rec}</span>`:""}</div>
    <h3>${esc(n.title)}</h3>
    <div class="org"><span class="chip ok">✔ Verified</span> ${esc(n.org)} · Partner #${n.ref} · ${n.city}, ${n.district}</div>
+   <div class="specs">${n.items.map(i=>`<span title="${esc(i[0])}">${esc(i[3].type)} · ${esc(Object.entries(i[3].req).map(([k,v])=>k+" "+v).join(", "))}</span>`).join("")}</div>
    <div><div class="bar-track" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Fulfilment"><div class="bar-fill" style="width:${p}%"></div></div>
    <div class="meta" style="margin-top:6px"><span><b data-got>${got(n)}</b> / ${tot(n)} items</span><span><b data-pct>${p}%</b> fulfilled</span></div></div>
    <div class="meta"><span>👥 ${n.people} people</span><span>⏳ needed in ${n.days} days</span></div>
@@ -471,10 +500,17 @@ setInterval(()=>{if(!document.hidden&&!$("#dlg").open)liveTick()},6500);
 const dlg=$("#dlg"); let dn=null, step=0, form={};
 function openDonate(id){
   dn=NEEDS.find(n=>n.id===id); step=0; const first=dn.items.findIndex(i=>i[2]<i[1]);
-  form={item:first,qty:1,method:"hub",name:"",agree:false};
+  form={item:first,qty:1,method:"hub",name:"",agree:false,cond:"New",det:{},desc:"",files:[]};
   render(); dlg.showModal();
 }
 function remaining(){const it=dn.items[form.item];return it[1]-it[2]}
+function askField(a){
+  const req=dn.items[form.item][3].req[a.l], val=form.det[a.k]||"", hint=req?`<span class="hint">Requested: ${esc(req)}</span>`:"";
+  if(a.t==="choice")return `<div class="mfield"><label for="ask-${a.k}">${esc(a.l)}</label><select id="ask-${a.k}" data-ask="${a.k}"><option value="">Not specified</option>${a.o.map(o=>`<option ${o===val?"selected":""}>${esc(o)}</option>`).join("")}</select>${hint}</div>`;
+  if(a.t==="measure"){const [num="",unit=a.u[0]]=val.split(" ");return `<div class="mfield"><label for="ask-${a.k}">${esc(a.l)}</label><div class="measure"><input id="ask-${a.k}" data-ask="${a.k}" type="number" min="0" step="any" inputmode="decimal" value="${esc(num)}">${a.u.length>1?`<select data-unit="${a.k}" aria-label="${esc(a.l)} unit">${a.u.map(u=>`<option ${u===unit?"selected":""}>${u}</option>`).join("")}</select>`:`<span style="align-self:center;color:var(--fg-muted)">${a.u[0]}</span>`}</div>${hint}</div>`}
+  return `<div class="mfield"><label for="ask-${a.k}">${esc(a.l)}</label><input id="ask-${a.k}" data-ask="${a.k}" type="${a.t==="date"?"date":"number"}" min="0" value="${esc(val)}">${hint}</div>`;
+}
+const thumbs=fs=>fs.map(f=>f.video?`<video src="${f.url}" muted playsinline aria-label="Video preview"></video>`:`<img src="${f.url}" alt="Photo preview">`).join("");
 function render(){
   $("#dtitle").textContent=step<4?"Make an anonymous donation":"Thank you";
   $("#dsub").textContent=dn.title;
@@ -484,13 +520,26 @@ function render(){
   if(step===0){
     b.innerHTML=`<div class="mfield"><label for="mi">What would you like to give?</label><select id="mi">${dn.items.map((i,x)=>`<option value="${x}" ${i[2]>=i[1]?"disabled":""} ${x===form.item?"selected":""}>${esc(i[0])} — ${i[1]-i[2]} still needed</option>`).join("")}</select></div>
      <div class="mfield"><label>How many?</label><div class="qty"><button id="dec" aria-label="Fewer">−</button><output id="qv" aria-live="polite">${form.qty}</output><button id="inc" aria-label="More">+</button><span style="color:var(--fg-muted)">of ${remaining()} needed</span></div></div>`;
-    $("#mi").onchange=e=>{form.item=+e.target.value;form.qty=Math.min(form.qty,remaining());render()};
+    const d=dn.items[form.item][3];
+    b.insertAdjacentHTML("beforeend",`<div class="give"><h4>About the ${esc(d.type.toLowerCase())} you're giving</h4><div class="mgrid">
+       <div class="mfield"><label for="cond">Condition</label><select id="cond">${CONDS.map(c=>`<option ${c===form.cond?"selected":""}>${c}</option>`).join("")}</select></div>
+       ${d.ask.map(askField).join("")}</div></div>
+     <div class="mfield"><label for="desc">Description (optional)</label><textarea id="desc" maxlength="600" placeholder="e.g. Two school bags, lightly used, all zips working.">${esc(form.desc)}</textarea><span class="hint">Brand, age, condition — anything the organisation should know. No names or contact details.</span></div>
+     <div class="mfield"><span style="display:block;font-weight:650;font-size:.9rem;margin-bottom:6px">Photos or video of the items (optional)</span>
+      <label class="drop">📷 🎞️ Add photos or a short video<input id="files" type="file" accept="image/*,video/*" multiple><span class="hint">Location data is removed in the real app. Here, files stay in your browser.</span></label>
+      <div class="thumbs" id="thumbs">${thumbs(form.files)}</div></div>`);
+    $("#mi").onchange=e=>{form.item=+e.target.value;form.qty=Math.min(form.qty,remaining());form.det={};render()};
     $("#dec").onclick=()=>{form.qty=Math.max(1,form.qty-1);$("#qv").textContent=form.qty};
     $("#inc").onclick=()=>{form.qty=Math.min(remaining(),form.qty+1);$("#qv").textContent=form.qty};
+    $("#cond").onchange=e=>form.cond=e.target.value;
+    $("#desc").oninput=e=>form.desc=e.target.value;
+    $$("[data-ask]").forEach(el=>el.oninput=el.onchange=()=>{const k=el.dataset.ask,a=$(`[data-ask="${k}"]`),u=$(`[data-unit="${k}"]`);form.det[k]=a.value?(u?a.value+" "+u.value:a.value):""});
+    $$("[data-unit]").forEach(el=>el.onchange=()=>{const a=$(`[data-ask="${el.dataset.unit}"]`);if(a.value)form.det[el.dataset.unit]=a.value+" "+el.value});
+    $("#files").onchange=e=>{for(const f of e.target.files){if(form.files.length<6&&/^(image|video)\//.test(f.type))form.files.push({url:URL.createObjectURL(f),video:f.type.startsWith("video/")})}$("#thumbs").innerHTML=thumbs(form.files);e.target.value=""};
   }else if(step===1){
     b.innerHTML=`<label class="opt"><input type="radio" name="m" value="hub" ${form.method==="hub"?"checked":""}><div><b>Drop off at a Koode hub</b><span>Nearest hub in your district. We complete the delivery.</span></div></label>
      <label class="opt"><input type="radio" name="m" value="pickup" ${form.method==="pickup"?"checked":""}><div><b>Arrange a pickup</b><span>A coordinator sees only the pickup leg, never the recipient.</span></div></label>
-     <label class="opt"><input type="radio" name="m" value="ship" ${form.method==="ship"?"checked":""}><div><b>Courier to the hub</b><span>Send it to our hub; we handle the final leg.</span></div></label>`;
+     <label class="opt"><input type="radio" name="m" value="ship" ${form.method==="ship"?"checked":""}><div><b>Courier to the hub</b><span>Send it with India Post, DTDC, Professional or another courier, then add the tracking number so the organisation can follow it.</span></div></label>`;
     $$("[name=m]").forEach(r=>r.onchange=()=>form.method=r.value);
   }else if(step===2){
     b.innerHTML=`<div class="mfield"><label for="nm">Name for your receipt (optional, kept confidential)</label><input id="nm" placeholder="Never shown to the organisation" value="${esc(form.name)}"></div>
@@ -499,7 +548,9 @@ function render(){
     $("#nm").oninput=e=>form.name=e.target.value;
   }else if(step===3){
     const it=dn.items[form.item];
-    b.innerHTML=`<div class="row"><span><small>Giving</small><b>${form.qty} × ${esc(it[0])}</b></span><span class="chip">${CATS[dn.cat][1]} ${CATS[dn.cat][0]}</span></div>
+    const given=[form.cond,...it[3].ask.filter(a=>form.det[a.k]).map(a=>a.l+": "+form.det[a.k])].join(" · ");
+    b.innerHTML=`<div class="row"><span><small>Giving</small><b>${form.qty} × ${esc(it[0])}</b><br><span style="color:var(--fg-muted);font-size:.88rem">${esc(given)}</span></span><span class="chip">${CATS[dn.cat][1]} ${CATS[dn.cat][0]}</span></div>
+     ${form.desc.trim()||form.files.length?`<div class="row"><span><small>Description & photos</small>${esc(form.desc.trim()||"—")}${form.files.length?` · ${form.files.length} file${form.files.length>1?"s":""}`:""}</span></div>`:""}
      <div class="row"><span><small>To</small>${esc(dn.org)} · Partner #${dn.ref}, ${dn.district}</span></div>
      <div class="row"><span><small>Delivery</small>${{hub:"Drop at hub",pickup:"Arranged pickup",ship:"Courier to hub"}[form.method]}</span></div>
      <div class="row"><span><small>Visible to the organisation</small>Community Donor #<span id="alias">${donorAliases[Math.random()*6|0]}</span></span><span class="chip ok">🔒 Anonymous</span></div>`;
@@ -512,7 +563,7 @@ function render(){
 $("#next").onclick=()=>{
   if(step===3){
     const it=dn.items[form.item]; const q=Math.min(form.qty,remaining()); it[2]+=q;
-    form.ref=rid("DN"); mine.unshift({ref:form.ref,need:dn,item:it[0],qty:q,stage:0,method:form.method});
+    form.ref=rid("DN"); mine.unshift({ref:form.ref,need:dn,item:it[0],qty:q,stage:0,method:form.method,given:[form.cond,...it[3].ask.filter(a=>form.det[a.k]).map(a=>a.l+": "+form.det[a.k])].join(" · "),desc:form.desc.trim(),files:form.files,track:null});
     refreshNeed(dn,true); renderMine(); advance(mine[0]); confetti(); step=4; render(); return;
   }
   if(step===4){dlg.close();location.hash="#mine";return}
@@ -526,11 +577,20 @@ dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
 const STAGES=["Committed","Collected","In transit","Delivered","Received"];
 function renderMine(){
   if(!mine.length)return;
-  $("#mineList").innerHTML=mine.map(m=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><span class="ref" style="font-family:ui-monospace,monospace;font-weight:700;color:var(--primary-ink)">${m.ref}</span><div style="font-weight:650;margin-top:2px">${m.qty} × ${esc(m.item)}</div><div style="color:var(--fg-muted);font-size:.9rem">to ${esc(m.need.org)} · Partner #${m.need.ref}</div></div><span class="chip ${m.stage>=4?"ok":"amber"}">${STAGES[m.stage]}</span></div>
-   <div class="timeline">${STAGES.map((s,i)=>`<div class="tl ${i<=m.stage?"done":""} ${i===m.stage?"now":""}"><div class="dot">${i<=m.stage?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>':""}</div>${s}</div>`).join("")}</div></div>`).join("");
+  $("#mineList").innerHTML=mine.map(m=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><div><span class="ref" style="font-family:ui-monospace,monospace;font-weight:700;color:var(--primary-ink)">${m.ref}</span><div style="font-weight:650;margin-top:2px">${m.qty} × ${esc(m.item)}</div><div style="color:var(--fg-muted);font-size:.9rem">${esc(m.given)}</div><div style="color:var(--fg-muted);font-size:.9rem">to ${esc(m.need.org)} · Partner #${m.need.ref}</div>${m.desc?`<div style="font-size:.9rem;margin-top:4px">“${esc(m.desc)}”</div>`:""}${m.files.length?`<div class="thumbs">${thumbs(m.files)}</div>`:""}</div><span class="chip ${m.stage>=4?"ok":"amber"}">${STAGES[m.stage]}</span></div>
+   <div class="timeline">${STAGES.map((s,i)=>`<div class="tl ${i<=m.stage?"done":""} ${i===m.stage?"now":""}"><div class="dot">${i<=m.stage?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>':""}</div>${s}</div>`).join("")}</div>${m.method==="ship"?trackBox(m):""}</div>`).join("");
+  $$("[data-track]").forEach(f=>f.onsubmit=e=>{e.preventDefault();const m=mine.find(x=>x.ref===f.dataset.track),c=COURIERS[+$("select",f).value],n=$("input",f).value.toUpperCase().replace(/[^A-Z0-9-]/g,"");
+    if(n.length<6){$("input",f).setCustomValidity("Enter the tracking number from your receipt (6+ letters or digits).");$("input",f).reportValidity();return}
+    m.track={name:c[0],num:n,url:typeof c[1]==="function"?c[1](n):c[1]};m.stage=Math.max(m.stage,2);renderMine();advance(m)});
+}
+function trackBox(m){
+  if(m.track)return `<div class="track"><div>🚚 Sent by <b>${esc(m.track.name)}</b> · Tracking no. <span class="num">${esc(m.track.num)}</span></div>${m.track.url?`<a href="${esc(m.track.url)}" target="_blank" rel="noopener noreferrer">Track on ${esc(m.track.name.split(" (")[0])} ↗</a>`:`<span style="color:var(--fg-muted)">Use the number on the courier's website or app.</span>`}<span style="color:var(--fg-muted);font-size:.84rem">The organisation sees the same tracking line.</span></div>`;
+  return `<div class="track"><b>Courier tracking</b><span style="color:var(--fg-muted)">Sent it? Add the courier and the tracking number from your receipt.</span>
+   <form data-track="${m.ref}"><select aria-label="Courier service">${COURIERS.map((c,i)=>`<option value="${i}">${esc(c[0])}</option>`).join("")}</select><input aria-label="Tracking number" placeholder="Tracking number, e.g. D12345678" autocomplete="off" oninput="this.setCustomValidity('')"><button class="btn primary sm">Save and mark as sent</button></form></div>`;
 }
 function advance(m){
-  const t=setInterval(()=>{if(m.stage>=4){clearInterval(t);return}m.stage++;renderMine()},2600);
+  // Courier donations wait at "Committed" until the donor adds tracking.
+  const t=setInterval(()=>{if(m.stage>=4||(m.method==="ship"&&!m.track)){clearInterval(t);return}m.stage++;renderMine()},2600);
 }
 function confetti(){
   if(reducedMotion)return; const c=document.createElement("div");c.className="confetti";
