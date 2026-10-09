@@ -147,7 +147,7 @@ export function DonationModal({
           items: lines.map((l) => ({
             requestItemId: l.item.id,
             quantity: l.quantity,
-            condition: conditions[l.item.id] ?? "NEW",
+            condition: l.item.newOnly ? "NEW" : (conditions[l.item.id] ?? "NEW"),
             variant: givenDetails(l.item.id),
           })),
           deliveryMethod: method,
@@ -238,14 +238,15 @@ export function DonationModal({
                     <div className="mt-3 border-t border-line pt-3" data-testid="item-details">
                       <p className="mb-2 text-sm font-semibold">About the {i.name.toLowerCase()} you&apos;re giving</p>
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <Field label="Condition" htmlFor={`cond-${i.id}`}>
-                          <Select id={`cond-${i.id}`} value={conditions[i.id] ?? "NEW"} onChange={(e) => setConditions((c) => ({ ...c, [i.id]: e.target.value }))}>
-                            {CONDITIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        <Field label="Condition" htmlFor={`cond-${i.id}`} help={i.newOnly ? "Only new items can be accepted for this." : undefined} error={fieldErrors[`items.${lines.findIndex((l) => l.item.id === i.id)}.condition`]}>
+                          <Select id={`cond-${i.id}`} value={i.newOnly ? "NEW" : (conditions[i.id] ?? "NEW")} disabled={i.newOnly} onChange={(e) => setConditions((c) => ({ ...c, [i.id]: e.target.value }))}>
+                            {CONDITIONS.filter(([v]) => !i.newOnly || v === "NEW").map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                           </Select>
                         </Field>
                         {i.donorFields.map((f) => {
                           const requested = i.attributes[f.key];
-                          const choices = listedChoices(requested);
+                          // Only free-text answers can list several values ("28, 30"); a dropdown value is one option.
+                          const choices = f.type === "text" ? listedChoices(requested) : [];
                           return (
                             <AttributeField
                               key={f.key}

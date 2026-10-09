@@ -1,5 +1,6 @@
 import { route } from "@/lib/api";
 import { uuidSchema } from "@/lib/validation/common";
+import { streamPrivateObject } from "@/lib/storage";
 import { getMediaFile } from "@/services/donation-media";
 
 const HEADERS = {
@@ -19,8 +20,7 @@ const HEADERS = {
  * Supports byte ranges so videos can be scrubbed.
  */
 export const GET = route<{ id: string }>({ auth: true }, async (req, { user, params }) => {
-  const { buffer, mimeType } = await getMediaFile(user!, uuidSchema.parse(params.id));
-  const total = buffer.length;
+  const { storageKey, size: total, mimeType } = await getMediaFile(user!, uuidSchema.parse(params.id));
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get("range") ?? "");
   if (range && (range[1] || range[2])) {
     let start = range[1] ? Number(range[1]) : Math.max(0, total - Number(range[2]));
@@ -30,10 +30,11 @@ export const GET = route<{ id: string }>({ auth: true }, async (req, { user, par
       return new Response(null, { status: 416, headers: { ...HEADERS, "Content-Range": `bytes */${total}` } });
     }
     start = Math.max(0, start);
-    return new Response(new Uint8Array(buffer.subarray(start, end + 1)), {
+    return new Response(streamPrivateObject(storageKey, start, end), {
       status: 206,
       headers: { ...HEADERS, "Content-Type": mimeType, "Content-Range": `bytes ${start}-${end}/${total}`, "Content-Length": String(end - start + 1) },
     });
   }
-  return new Response(new Uint8Array(buffer), { headers: { ...HEADERS, "Content-Type": mimeType, "Content-Length": String(total) } });
+  if (total === 0) return new Response(null, { headers: { ...HEADERS, "Content-Type": mimeType, "Content-Length": "0" } });
+  return new Response(streamPrivateObject(storageKey, 0, total - 1), { headers: { ...HEADERS, "Content-Type": mimeType, "Content-Length": String(total) } });
 });

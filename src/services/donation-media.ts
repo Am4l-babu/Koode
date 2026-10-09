@@ -5,7 +5,7 @@ import { AppError, forbidden, notFound } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { hasPermission } from "@/lib/permissions";
 import { templates } from "@/lib/notifications/templates";
-import { deletePrivateObject, getPrivateObject, putPrivateObject } from "@/lib/storage";
+import { deletePrivateObject, putPrivateObject, statPrivateObject } from "@/lib/storage";
 import { MAX_IMAGES_PER_DONATION, MAX_VIDEOS_PER_DONATION, processMedia } from "@/lib/storage/media";
 import type { SessionUser } from "@/lib/auth/session";
 import { notify, notifyAdmins } from "./notifications";
@@ -43,8 +43,9 @@ export async function addDonationMedia(actor: SessionUser, donationPublicId: str
 
   const processed = await processMedia(input);
   const stored = await putPrivateObject(processed.buffer, processed.ext);
+  let row;
   try {
-    const row = await db.$transaction(async (tx) => {
+    row = await db.$transaction(async (tx) => {
       // Serialise concurrent uploads for the same donation so the limits cannot be raced.
       await tx.$queryRaw`SELECT "id" FROM "donations" WHERE "id" = ${donation.id}::uuid FOR UPDATE`;
       const existing = await tx.donationMedia.groupBy({
@@ -73,12 +74,16 @@ export async function addDonationMedia(actor: SessionUser, donationPublicId: str
         select: mediaSelect,
       });
     });
-    if (processed.kind === "VIDEO") await notifyAdmins("DONATION_MANAGEMENT", templates.adminMediaAwaiting(donation.publicId));
-    return toMediaDTO(row);
   } catch (error) {
+    // Nothing was recorded, so the stored file would be an orphan.
     await deletePrivateObject(stored.key);
     throw error;
   }
+  // The upload is saved; a failed alert must not undo it.
+  if (processed.kind === "VIDEO") {
+    await notifyAdmins("DONATION_MANAGEMENT", templates.adminMediaAwaiting(donation.publicId)).catch((error) => console.error("media review alert failed", error));
+  }
+  return toMediaDTO(row);
 }
 
 export async function deleteDonationMedia(actor: SessionUser, donationPublicId: string, mediaId: string) {
@@ -130,9 +135,9 @@ export async function getMediaFile(actor: SessionUser, mediaId: string) {
     (actor.role === "RECIPIENT" && actor.organizationId === media.donation.organizationId && media.status === "APPROVED") ||
     ((actor.role === "ADMIN" || actor.role === "SUPER_ADMIN") && hasPermission(actor, "DONATION_MANAGEMENT"));
   if (!allowed) throw notFound("This file");
-  const buffer = await getPrivateObject(media.storageKey).catch(() => null);
-  if (!buffer) throw notFound("This file");
-  return { buffer, mimeType: media.mimeType };
+  const size = await statPrivateObject(media.storageKey);
+  if (size === null) throw notFound("This file");
+  return { storageKey: media.storageKey, size, mimeType: media.mimeType };
 }
 
 // ───────────────────────── Admin ─────────────────────────
@@ -149,10 +154,23 @@ export async function listMediaForAdmin(donationId: string) {
 export async function moderateMedia(actor: SessionUser, mediaId: string, decision: "APPROVED" | "REJECTED", ip?: string) {
   const media = await db.donationMedia.findUnique({
     where: { id: mediaId },
-    select: { id: true, kind: true, donation: { select: { publicId: true, donorId: true } } },
+    select: { id: true, kind: true, status: true, donationId: true, donation: { select: { publicId: true, donorId: true } } },
   });
   if (!media) throw notFound("This file");
-  await db.donationMedia.update({ where: { id: media.id }, data: { status: decision, reviewedAt: new Date() } });
+  if (media.status === decision) return; // already decided — no duplicate notice
+
+  await db.$transaction(async (tx) => {
+    if (decision === "APPROVED" && media.status === "REJECTED") {
+      // A rejected file doesn't count toward the limits, so the donor may have replaced it since.
+      await tx.$queryRaw`SELECT "id" FROM "donations" WHERE "id" = ${media.donationId}::uuid FOR UPDATE`;
+      const others = await tx.donationMedia.count({ where: { donationId: media.donationId, kind: media.kind, status: { not: "REJECTED" }, id: { not: media.id } } });
+      const limit = media.kind === "VIDEO" ? MAX_VIDEOS_PER_DONATION : MAX_IMAGES_PER_DONATION;
+      if (others >= limit) {
+        throw new AppError("CONFLICT", `The donor has since added other ${media.kind === "VIDEO" ? "videos" : "photos"}, so this one can't be approved without going over the limit.`);
+      }
+    }
+    await tx.donationMedia.update({ where: { id: media.id }, data: { status: decision, reviewedAt: new Date() } });
+  });
   await audit(actor, "MEDIA_MODERATED", { type: "donation", id: media.donation.publicId }, { mediaKind: media.kind, decision }, ip);
-  await notify(media.donation.donorId, templates.mediaDecisionDonor(media.donation.publicId, decision === "APPROVED"));
+  await notify(media.donation.donorId, templates.mediaDecisionDonor(media.donation.publicId, decision === "APPROVED", media.kind === "VIDEO" ? "video" : "photo"));
 }

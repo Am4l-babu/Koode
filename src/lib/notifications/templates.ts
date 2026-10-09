@@ -91,12 +91,12 @@ export const templates = {
         : `Your verification status is now: ${status.replace("_", " ").toLowerCase()}.`,
     link: `/recipient/verification`,
   }),
-  mediaDecisionDonor: (donationId: string, approved: boolean): NotificationTemplate => ({
+  mediaDecisionDonor: (donationId: string, approved: boolean, kind: "photo" | "video"): NotificationTemplate => ({
     type: "MEDIA_DECISION",
-    title: approved ? "Your video was approved" : "A file was not approved",
+    title: approved ? `Your ${kind} was approved` : `A ${kind} was not approved`,
     body: approved
-      ? `The video you added to donation ${donationId} was approved and is now visible to the organisation.`
-      : `A photo or video on donation ${donationId} could not be approved, so the organisation will not see it. You can upload a different one.`,
+      ? `The ${kind} you added to donation ${donationId} was approved and is now visible to the organisation.`
+      : `A ${kind} on donation ${donationId} could not be approved, so the organisation will not see it. You can upload a different one.`,
     link: `/donor/donations/${donationId}`,
   }),
   adminMediaAwaiting: (donationId: string): NotificationTemplate => ({

@@ -7,7 +7,7 @@ import { generatePublicId, withUniqueRetry } from "@/lib/ids";
 import { audit } from "@/lib/audit";
 import { canActorTransition, holdsQuantity } from "@/lib/donation-status";
 import { CONDITION_LABELS, DONATION_STATUS_LABELS } from "@/lib/descriptors";
-import { donorFieldsFor, resolveCategorySchema, validateAttributes } from "@/lib/categories";
+import { donorFieldsFor, requiresNew, resolveCategorySchema, validateAttributes } from "@/lib/categories";
 import { requestPercent } from "@/lib/fulfillment";
 import { publishRequestProgress } from "@/lib/realtime";
 import { templates } from "@/lib/notifications/templates";
@@ -113,6 +113,9 @@ export async function createDonation(actor: SessionUser, input: CreateDonationIn
   const fieldErrors: Record<string, string> = {};
   const variants = input.items.map((line, index) => {
     const attributes = (itemById.get(line.requestItemId)!.attributes ?? {}) as Record<string, unknown>;
+    if (requiresNew(schema, attributes) && (line.condition ?? input.condition) !== "NEW") {
+      fieldErrors[`items.${index}.condition`] = `Only new ${itemById.get(line.requestItemId)!.name.toLowerCase()} can be accepted.`;
+    }
     const result = validateAttributes({ fields: donorFieldsFor(schema, attributes) }, line.variant ?? {});
     if (!result.ok) {
       for (const [k, v] of Object.entries(result.errors)) fieldErrors[`items.${index}.variant.${k}`] = v;
@@ -275,34 +278,43 @@ async function transition(
   to: DonationStatus,
   note?: string,
 ) {
+  return db.$transaction((tx) => applyTransition(tx, actorRole, donation, to, note));
+}
+
+/** The body of `transition`, for callers that need it inside a larger transaction. */
+async function applyTransition(
+  tx: Tx,
+  actorRole: Role,
+  donation: { id: string; status: DonationStatus; requestId: string },
+  to: DonationStatus,
+  note?: string,
+) {
   if (!canActorTransition(actorRole, donation.status, to)) {
     throw new AppError(
       "CONFLICT",
       `A donation that is "${DONATION_STATUS_LABELS[donation.status].toLowerCase()}" can't be moved to "${DONATION_STATUS_LABELS[to].toLowerCase()}".`,
     );
   }
-  return db.$transaction(async (tx) => {
-    // Optimistic guard against concurrent transitions.
-    const updated = await tx.donation.updateMany({ where: { id: donation.id, status: donation.status }, data: { status: to } });
-    if (updated.count !== 1) throw new AppError("CONFLICT", "This donation was just updated by someone else. Please refresh.");
-    await tx.donationEvent.create({ data: { donationId: donation.id, status: to, actorRole, note: note ?? null } });
-    let progress = null;
-    if (to === "CANCELLED" && holdsQuantity(donation.status)) {
-      await releaseQuantities(tx, donation.id);
-      progress = await refreshRequestProgress(tx, donation.requestId);
+  // Optimistic guard against concurrent transitions.
+  const updated = await tx.donation.updateMany({ where: { id: donation.id, status: donation.status }, data: { status: to } });
+  if (updated.count !== 1) throw new AppError("CONFLICT", "This donation was just updated by someone else. Please refresh.");
+  await tx.donationEvent.create({ data: { donationId: donation.id, status: to, actorRole, note: note ?? null } });
+  let progress = null;
+  if (to === "CANCELLED" && holdsQuantity(donation.status)) {
+    await releaseQuantities(tx, donation.id);
+    progress = await refreshRequestProgress(tx, donation.requestId);
+  }
+  if (to === "RECEIVED") {
+    const items = await tx.donationItem.findMany({ where: { donationId: donation.id }, select: { requestItemId: true, quantity: true } });
+    for (const item of items) {
+      await tx.$executeRaw`
+        UPDATE "request_items"
+           SET "quantityReceived" = LEAST("quantityRequired", "quantityReceived" + ${item.quantity})
+         WHERE "id" = ${item.requestItemId}::uuid`;
     }
-    if (to === "RECEIVED") {
-      const items = await tx.donationItem.findMany({ where: { donationId: donation.id }, select: { requestItemId: true, quantity: true } });
-      for (const item of items) {
-        await tx.$executeRaw`
-          UPDATE "request_items"
-             SET "quantityReceived" = LEAST("quantityRequired", "quantityReceived" + ${item.quantity})
-           WHERE "id" = ${item.requestItemId}::uuid`;
-      }
-      await tx.delivery.updateMany({ where: { donationId: donation.id, status: { not: "DELIVERED" } }, data: { status: "DELIVERED", deliveredAt: new Date() } });
-    }
-    return progress;
-  });
+    await tx.delivery.updateMany({ where: { donationId: donation.id, status: { not: "DELIVERED" } }, data: { status: "DELIVERED", deliveredAt: new Date() } });
+  }
+  return progress;
 }
 
 export async function donorUpdateDonation(actor: SessionUser, publicId: string, action: "PREPARING" | "HANDED_OVER" | "CANCEL") {
@@ -341,13 +353,19 @@ export async function donorSetTracking(actor: SessionUser, publicId: string, inp
   const courier = findCourier(input.courier);
   const courierName = courier?.name ?? input.courierName!;
   const tracking = { courier: input.courier, courierName: courier ? null : courierName, trackingNumber: input.trackingNumber, trackingAddedAt: new Date() };
-  await db.delivery.upsert({
-    where: { donationId: donation.id },
-    create: { donationId: donation.id, status: "PICKED_UP", ...tracking },
-    update: { status: "PICKED_UP", ...tracking },
-  });
   const updated = !!donation.delivery?.trackingNumber;
-  if (donation.status !== "IN_TRANSIT") await transition("DONOR", donation, "IN_TRANSIT", `Sent by ${courierName}.`);
+  await db.$transaction(async (tx) => {
+    // Only while the donation is still in a trackable state — it may have changed since it was read.
+    const saved = await tx.delivery.updateMany({ where: { donationId: donation.id, donation: { status: { in: TRACKABLE } } }, data: tracking });
+    if (saved.count === 0) {
+      const exists = await tx.delivery.count({ where: { donationId: donation.id } });
+      if (exists) throw new AppError("CONFLICT", "This donation was just updated by someone else. Please refresh.");
+      await tx.delivery.create({ data: { donationId: donation.id, ...tracking } });
+    }
+    // The courier has it now — but never undo a delivered/failed outcome an admin recorded.
+    await tx.delivery.updateMany({ where: { donationId: donation.id, status: { in: ["UNASSIGNED", "SCHEDULED"] } }, data: { status: "PICKED_UP" } });
+    if (donation.status !== "IN_TRANSIT") await applyTransition(tx, "DONOR", donation, "IN_TRANSIT", `Sent by ${courierName}.`);
+  });
   await notify(donation.organization.userId, templates.donationShippedRecipient(publicId, courierName, updated));
   return getDonorDonation(actor, publicId);
 }

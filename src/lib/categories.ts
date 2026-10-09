@@ -228,15 +228,25 @@ export function fieldsFor(schema: CategorySchema, productType: unknown, audience
 }
 
 /**
- * What a donor is asked about one requested item. Requests made before product
- * types existed still get a size question when the recipient listed sizes.
+ * What a donor is asked about one requested item. Every answer is optional for
+ * donors — `required` describes what the recipient must specify. Requests made
+ * before product types existed still get a size question when sizes were listed.
  */
 export function donorFieldsFor(schema: CategorySchema, attributes: Record<string, unknown>): FieldDef[] {
-  const fields = fieldsFor(schema, attributes[PRODUCT_TYPE_KEY], "donor");
+  const fields: FieldDef[] = fieldsFor(schema, attributes[PRODUCT_TYPE_KEY], "donor").map((f) => ({ ...f, required: false }));
   if (typeof attributes.size === "string" && attributes.size.trim() && !fields.some((f) => f.key === "size")) {
     fields.unshift({ key: "size", label: "Size", type: "text", ask: "donor" });
   }
   return fields;
+}
+
+/**
+ * Whether only new items can be given (e.g. diapers, innerwear, medical
+ * supplies): the item's condition field allows nothing but "New".
+ */
+export function requiresNew(schema: CategorySchema, attributes: Record<string, unknown>): boolean {
+  const condition = fieldsFor(schema, attributes[PRODUCT_TYPE_KEY], "recipient").find((f) => f.key === "condition");
+  return condition?.type === "select" && condition.options?.length === 1 && condition.options[0] === "New";
 }
 
 /** Split a recipient's "28, 30 or 32" style list into choices; a single value gives none. */

@@ -135,7 +135,7 @@ export function MediaPicker({
       <p className="flex gap-2 text-xs text-muted">
         <ImagePlus className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
-          Show the items only. Please avoid faces, name labels, addresses or documents in the frame. Location data is removed from photos automatically, and videos are checked by our team before the organisation sees them.
+          Show the items only. Please avoid faces, name labels, addresses or documents in the frame. Location and device details are removed from photos and phone videos automatically, and videos are checked by our team before the organisation sees them.
         </span>
       </p>
     </div>

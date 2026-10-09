@@ -1,5 +1,7 @@
 import "server-only";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { Readable } from "node:stream";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { env } from "../env";
@@ -60,6 +62,16 @@ export async function putPrivateObject(buffer: Buffer, ext: string) {
 
 export async function getPrivateObject(key: string): Promise<Buffer> {
   return readFile(resolveKey(key));
+}
+
+/** Size in bytes, or null if the object doesn't exist. */
+export async function statPrivateObject(key: string): Promise<number | null> {
+  return stat(resolveKey(key)).then((s) => s.size).catch(() => null);
+}
+
+/** Stream a byte range (inclusive) without loading the whole object into memory. */
+export function streamPrivateObject(key: string, start: number, end: number): ReadableStream<Uint8Array> {
+  return Readable.toWeb(createReadStream(resolveKey(key), { start, end })) as ReadableStream<Uint8Array>;
 }
 
 export async function deletePrivateObject(key: string) {

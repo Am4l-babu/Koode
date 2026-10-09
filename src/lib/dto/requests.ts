@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { fulfillmentStage, itemPercent, remaining, requestPercent, totals, type FulfillmentStage } from "../fulfillment";
 import { ORG_TYPE_LABELS } from "../descriptors";
-import { donorFieldsFor, resolveCategorySchema, type FieldDef } from "../categories";
+import { donorFieldsFor, requiresNew, resolveCategorySchema, type FieldDef } from "../categories";
 
 /**
  * PUBLIC request projection.
@@ -65,6 +65,8 @@ export interface PublicRequestItemDTO {
   estimatedUnitValue: number | null;
   /** What a donor is asked about the items they give (product-type specific). */
   donorFields: FieldDef[];
+  /** Only new items can be given (hygiene items, medical supplies). */
+  newOnly: boolean;
 }
 
 export interface PublicRequestDTO {
@@ -134,6 +136,7 @@ export function toPublicRequest(row: PublicRequestRow): PublicRequestDTO {
         attributes,
         estimatedUnitValue: i.estimatedUnitValue,
         donorFields: donorFieldsFor(schema, attributes),
+        newOnly: requiresNew(schema, attributes),
       };
     }),
   };
