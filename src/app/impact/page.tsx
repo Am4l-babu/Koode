@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryIcon } from "@/components/brand/category-visual";
 import { CountUp } from "@/components/marketing/count-up";
 import { DistrictTileMap } from "@/components/charts/tile-map";
 import { publicImpact } from "@/services/impact";
@@ -19,7 +20,7 @@ export default async function ImpactPage() {
   ] as const;
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <PageHeader eyebrow="Impact" title="Small, specific gifts — adding up" description="All figures are aggregates. We never publish who gave or who received." />
+      <PageHeader title="Small, specific gifts — adding up" description="All figures are aggregates. We never publish who gave or who received." />
       <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map(([v, s, l], i) => (
           <div key={l} className="card animate-rise p-6" style={{ animationDelay: `${i * 80}ms` }}>
@@ -35,7 +36,7 @@ export default async function ImpactPage() {
           <ul className="mt-6 space-y-4">
             {impact.byCategory.map((c) => (
               <li key={c.slug} className="grid grid-cols-[8rem_1fr_3rem] items-center gap-3 text-sm sm:grid-cols-[10rem_1fr_4rem]">
-                <span className="flex items-center gap-2 font-semibold"><span aria-hidden="true" className="text-lg">{c.icon}</span>{c.name}</span>
+                <span className="flex items-center gap-2 font-semibold"><CategoryIcon slug={c.slug} emoji={c.icon} className="h-7 w-7 rounded-lg" iconClassName="h-4 w-4" />{c.name}</span>
                 <span className="h-3 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
                   <span className="progress-fill block h-full rounded-full bg-primary" style={{ width: `${(c.items / max) * 100}%` }} />
                 </span>

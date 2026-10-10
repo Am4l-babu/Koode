@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryIcon } from "@/components/brand/category-visual";
 import { Badge } from "@/components/ui/badge";
 import { CategoryCreator, DataTools, SettingsForm } from "@/components/admin/actions";
 import { requirePageUser } from "@/lib/auth/guards";
@@ -16,7 +17,7 @@ export default async function SettingsPage() {
   const canEdit = hasPermission(user, "SYSTEM_SETTINGS");
   return (
     <>
-      <PageHeader eyebrow="Settings" title="Platform settings" />
+      <PageHeader title="Platform settings" />
       <section className="card mb-6 p-5">
         <p className="font-semibold">Your permissions</p>
         <div className="mt-3 flex flex-wrap gap-1.5">{[...effectivePermissions(user)].map((p) => <Badge key={p} tone="primary">{PERMISSION_LABELS[p]}</Badge>)}</div>
@@ -27,7 +28,7 @@ export default async function SettingsPage() {
         <ul className="card divide-y divide-line">
           {categories.map((c) => (
             <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3 text-sm">
-              <span><span aria-hidden="true">{c.icon}</span> <span className="font-semibold">{c.name}</span> <span className="font-mono text-xs text-subtle">/{c.slug}</span></span>
+              <span className="flex items-center gap-2"><CategoryIcon slug={c.slug} emoji={c.icon} className="h-8 w-8 rounded-lg" iconClassName="h-4 w-4" /><span className="font-semibold">{c.name}</span> <span className="font-mono text-xs text-subtle">/{c.slug}</span></span>
               <span className="flex items-center gap-3">
                 <span className="text-xs text-muted">{categorySummary(c.slug, c.fieldSchema)}{!c.isActive && " · inactive"}</span>
                 {canEdit && <Link href={`/admin/settings/categories/${c.slug}`} className="shrink-0 font-semibold text-primary-ink hover:underline" aria-label={`Edit ${c.name} product types`}>Product types →</Link>}

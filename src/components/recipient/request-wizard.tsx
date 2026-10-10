@@ -215,7 +215,7 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
 
       {step === 2 && category && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">What do you need? <span className="text-base font-normal text-muted">— {category.icon} {category.name}</span></h2>
+          <h2 className="text-xl font-semibold">What do you need? <span className="text-base font-normal text-muted">— {category.name}</span></h2>
           <p className="text-muted">
             {productTypes.length ? "Pick a product type for each item to fill in its measurements and details. " : ""}
             Each item is tracked independently, so donors can fulfil part of the request.
@@ -266,7 +266,7 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Review</h2>
           <div className="rounded-2xl border border-line p-5">
-            <p className="text-sm text-muted">{category.icon} {category.name} · {form.district}{form.city ? `, ${form.city}` : ""} · {form.urgency.toLowerCase()} urgency{form.recurrence !== "NONE" ? ` · ${form.recurrence.toLowerCase()}` : ""}</p>
+            <p className="text-sm text-muted">{category.name} · {form.district}{form.city ? `, ${form.city}` : ""} · {form.urgency.toLowerCase()} urgency{form.recurrence !== "NONE" ? ` · ${form.recurrence.toLowerCase()}` : ""}</p>
             <p className="mt-2 text-lg font-semibold">{form.title}</p>
             <p className="mt-2 whitespace-pre-line text-muted">{form.description}</p>
             <ul className="mt-4 space-y-1 border-t border-line pt-4">

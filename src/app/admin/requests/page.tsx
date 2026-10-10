@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryIcon } from "@/components/brand/category-visual";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { UrgencyBadge } from "@/components/brand/badges";
@@ -28,7 +29,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
     const reports = await listReports();
     return (
       <>
-        <PageHeader eyebrow="Trust & safety" title="Investigation queue" description="Reports submitted by the community." />
+        <PageHeader title="Investigation queue" description="Reports submitted by the community." />
         <Tabs tabs={tabs} active="reports" />
         <AdminTable columns={["Request", "Reason", "Details", "Status", "Reported", "Actions"]} empty={!reports.length}>
           {reports.map((r) => (
@@ -51,7 +52,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
   const data = await listRequestsForModeration(status, page);
   return (
     <>
-      <PageHeader eyebrow="Moderation" title="Requests" description="Approve, reject or request more information. Organisation identities remain private here." />
+      <PageHeader title="Requests" description="Approve, reject or request more information. Organisation identities remain private here." />
       <Tabs tabs={tabs} active={tab} />
       <AdminTable columns={["Request", "Category", "Partner", "Priority", "Progress", "Created", ""]} empty={!data.rows.length}>
         {data.rows.map((r) => (
@@ -60,7 +61,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
               <p className="font-semibold">{r.title}</p>
               <p className="font-mono text-xs text-subtle">{r.publicId}{r.recurrence !== "NONE" ? ` · recurring ${r.recurrence.toLowerCase()}` : ""}{r._count.reports ? ` · 🚩 ${r._count.reports}` : ""}</p>
             </Td>
-            <Td>{r.category.icon} {r.category.name}</Td>
+            <Td><span className="flex items-center gap-2 whitespace-nowrap"><CategoryIcon slug={r.category.slug} emoji={r.category.icon} className="h-7 w-7 rounded-lg" iconClassName="h-4 w-4" />{r.category.name}</span></Td>
             <Td><span className="font-mono text-xs">#{r.organization.publicId}</span><div><Badge tone={r.organization.verificationStatus === "VERIFIED" ? "success" : "accent"}>{r.organization.verificationStatus.toLowerCase()}</Badge></div></Td>
             <Td><UrgencyBadge priority={r.priority} /></Td>
             <Td>{r.percentFulfilled}%</Td>

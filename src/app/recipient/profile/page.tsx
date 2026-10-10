@@ -14,7 +14,7 @@ export default async function RecipientProfilePage() {
   const [org, priv] = await Promise.all([getOwnOrganization(user), db.userPrivate.findUnique({ where: { userId: user.id }, select: { phoneVerifiedAt: true, phoneEnc: true } })]);
   return (
     <>
-      <PageHeader eyebrow="Profile" title="Organisation profile" />
+      <PageHeader title="Organisation profile" />
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-6" aria-labelledby="pub">
           <h2 id="pub" className="text-lg font-semibold">Public view <span className="text-sm font-normal text-muted">(what donors see)</span></h2>

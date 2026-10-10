@@ -19,7 +19,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Pr
   const data = await listAuditLogs({ action, page });
   return (
     <>
-      <PageHeader eyebrow="Accountability" title="Audit log" description="Append-only record of sensitive actions. IP addresses are stored encrypted." />
+      <PageHeader title="Audit log" description="Append-only record of sensitive actions. IP addresses are stored encrypted." />
       <form className="mb-4 flex flex-wrap items-end gap-2">
         <label className="flex flex-col gap-1 text-sm font-semibold" htmlFor="aa">Action
           <select id="aa" name="action" defaultValue={action ?? ""} className="h-11 rounded-xl border border-line-strong bg-surface px-3 font-normal">

@@ -18,7 +18,7 @@ export default async function VerificationPage({ searchParams }: { searchParams:
   const idx = STATES.indexOf(org.verificationStatus as (typeof STATES)[number]);
   return (
     <>
-      <PageHeader eyebrow="Verification" title="Organisation verification" description="Verification protects donors and keeps the community trustworthy. Documents are visible only to the verification team." />
+      <PageHeader title="Organisation verification" description="Verification protects donors and keeps the community trustworthy. Documents are visible only to the verification team." />
       {sp.welcome && <div className="mb-6"><Callout tone="success" title="Welcome! Your application has been received.">Upload at least one supporting document so we can verify your organisation.</Callout></div>}
       <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
         <section className="card p-6" aria-labelledby="st">

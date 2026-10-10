@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryIcon } from "@/components/brand/category-visual";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/states";
 import { UrgencyBadge } from "@/components/brand/badges";
@@ -35,7 +36,7 @@ export default async function ModerationPage({ params }: { params: Promise<{ id:
   return (
     <>
       <Link href="/admin/requests" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-fg"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> Requests</Link>
-      <PageHeader eyebrow={`${r.category.icon} ${r.category.name} · ${r.publicId}`} title={r.title} actions={<><Badge tone="primary">{REQUEST_STATUS_LABELS[r.status]}</Badge><UrgencyBadge priority={r.priority} /></>} />
+      <PageHeader eyebrow={<><CategoryIcon slug={r.category.slug} emoji={r.category.icon} className="h-7 w-7 rounded-lg" iconClassName="h-4 w-4" />{r.category.name}<span className="font-mono text-xs text-subtle">{r.publicId}</span></>} title={r.title} actions={<><Badge tone="primary">{REQUEST_STATUS_LABELS[r.status]}</Badge><UrgencyBadge priority={r.priority} /></>} />
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <div className="space-y-6">
           <section className="card p-6">

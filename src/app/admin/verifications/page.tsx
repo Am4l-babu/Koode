@@ -18,7 +18,7 @@ export default async function VerificationsPage({ searchParams }: { searchParams
   const rows = await listVerificationQueue(status);
   return (
     <>
-      <PageHeader eyebrow="Trust" title="Recipient verification" description="Review organisations before they can publish requests." />
+      <PageHeader title="Recipient verification" description="Review organisations before they can publish requests." />
       <Tabs active={status} tabs={STATUSES.map((s) => ({ key: s, label: VERIFICATION_STATUS_LABELS[s], href: `/admin/verifications?status=${s}` }))} />
       <AdminTable columns={["Partner", "Type", "Area", "Documents", "Status", "Submitted", ""]} empty={!rows.length}>
         {rows.map((o) => (

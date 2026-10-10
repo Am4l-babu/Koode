@@ -32,7 +32,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
   return (
     <>
       <Link href="/admin/donations" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-fg"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> Donations</Link>
-      <PageHeader eyebrow="Donation" title={<span className="font-mono">Donation #{d.publicId}</span>} actions={<StatusPill status={d.status} />} />
+      <PageHeader title={<span className="font-mono">Donation #{d.publicId}</span>} actions={<StatusPill status={d.status} />} />
       <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
         <section className="card p-6">
           <h2 className="mb-5 font-semibold">Timeline</h2>

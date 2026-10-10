@@ -19,12 +19,12 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
   const rows = await listDeliveries(status);
   return (
     <>
-      <PageHeader eyebrow="Logistics" title="Delivery coordination" description="Least privilege: logistics staff see only the addresses needed to move items — never names." />
+      <PageHeader title="Delivery coordination" description="Least privilege: logistics staff see only the addresses needed to move items — never names." />
       <Tabs active={status ?? "OPEN"} tabs={[{ key: "OPEN", label: "Open", href: "/admin/deliveries" }, ...STATUSES.map((s) => ({ key: s, label: s.replace("_", " ").toLowerCase(), href: `/admin/deliveries?status=${s}` }))]} />
       <AdminTable columns={["Donation", "Items", "Method", "District", "Delivery", "Donation status", "Scheduled", ""]} empty={!rows.length}>
         {rows.map((r) => (
           <tr key={r.id}>
-            <Td className="font-mono font-semibold">{r.donation.publicId}</Td>
+            <Td className="whitespace-nowrap font-mono font-semibold">{r.donation.publicId}</Td>
             <Td>{r.donation.items.map((i) => `${i.quantity} × ${i.requestItem.name}`).join(", ")}</Td>
             <Td className="text-xs">{DELIVERY_METHOD_LABELS[r.donation.deliveryMethod]}</Td>
             <Td>{r.donation.request.district}</Td>

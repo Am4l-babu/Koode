@@ -18,7 +18,7 @@ export default async function DonorProfilePage() {
   ]);
   return (
     <>
-      <PageHeader eyebrow="Profile" title="Your profile" />
+      <PageHeader title="Your profile" />
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-6" aria-labelledby="public">
           <h2 id="public" className="text-lg font-semibold">What others can see</h2>

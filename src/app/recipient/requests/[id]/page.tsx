@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryIcon } from "@/components/brand/category-visual";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
 import { Callout, EmptyState } from "@/components/ui/states";
@@ -33,7 +34,7 @@ export default async function OwnRequestPage({ params, searchParams }: { params:
     <>
       <Link href="/recipient/requests" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-fg"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> My requests</Link>
       <PageHeader
-        eyebrow={`${r.category.icon} ${r.category.name} · ${r.id}`}
+        eyebrow={<><CategoryIcon slug={r.category.slug} emoji={r.category.icon} className="h-7 w-7 rounded-lg" iconClassName="h-4 w-4" />{r.category.name}<span className="font-mono text-xs text-subtle">{r.id}</span></>}
         title={r.title}
         actions={<RecipientRequestActions id={r.id} status={r.status} />}
       />

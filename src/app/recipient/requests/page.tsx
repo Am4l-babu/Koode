@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/card";
+import { CategoryArt } from "@/components/brand/category-visual";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
@@ -21,7 +22,7 @@ export default async function MyRequestsPage() {
   const requests = await listOwnRequests(user);
   return (
     <>
-      <PageHeader eyebrow="Requests" title="My requests" actions={<ButtonLink href="/recipient/requests/new">Create request</ButtonLink>} />
+      <PageHeader title="My Requests" actions={<ButtonLink href="/recipient/requests/new">Create request</ButtonLink>} />
       {requests.length === 0 ? (
         <EmptyState title="No requests yet" description="Tell donors exactly what you need — sizes, ages and quantities." action={<ButtonLink href="/recipient/requests/new">Create your first request</ButtonLink>} />
       ) : (
@@ -29,12 +30,17 @@ export default async function MyRequestsPage() {
           {requests.map((r) => (
             <li key={r.id}>
               <Link href={`/recipient/requests/${r.id}`} className="card card-hover block p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={TONE[r.status] ?? "neutral"}>{REQUEST_STATUS_LABELS[r.status as keyof typeof REQUEST_STATUS_LABELS]}</Badge>
-                  <UrgencyBadge priority={r.priority} />
-                  <span className="ml-auto font-mono text-xs text-subtle">{r.id}</span>
+                <div className="flex gap-4">
+                  <CategoryArt slug={r.category.slug} emoji={r.category.icon} size="sm" className="h-16 w-16 shrink-0 rounded-2xl" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={TONE[r.status] ?? "neutral"}>{REQUEST_STATUS_LABELS[r.status as keyof typeof REQUEST_STATUS_LABELS]}</Badge>
+                      <UrgencyBadge priority={r.priority} />
+                      <span className="ml-auto font-mono text-xs text-subtle">{r.id}</span>
+                    </div>
+                    <p className="mt-2 text-lg font-semibold leading-snug">{r.title}</p>
+                  </div>
                 </div>
-                <p className="mt-3 text-lg font-semibold">{r.category.icon} {r.title}</p>
                 <ul className="mt-3 space-y-2">
                   {r.items.map((i) => (
                     <li key={i.id} className="text-sm">

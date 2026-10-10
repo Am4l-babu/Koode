@@ -28,7 +28,6 @@ export default function AboutPage() {
     <>
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6">
         <PageHeader
-          eyebrow="About Koode"
           title="A trusted bridge between genuine community needs and the people willing to help"
           description="“Koode” means together. A donor should be able to say “I know exactly what is needed, and I can help without revealing who I am” — and an organisation should be able to say “we can ask for what we need without exposing our private information.”"
         />

@@ -57,7 +57,7 @@ export default async function NeedPage({ params, searchParams }: Params) {
   if (category) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <PageHeader eyebrow={`${category.icon} ${category.name}`} title={`${category.name} needs`} description={category.description ?? undefined} />
+        <PageHeader eyebrow={<><CategoryIcon slug={category.slug} emoji={category.icon} className="h-7 w-7 rounded-lg" iconClassName="h-4 w-4" />Browse needs</>} title={`${category.name} needs`} description={category.description ?? undefined} />
         <BrowseView query={parseBrowseParams(sp)} basePath={`/needs/${category.slug}`} fixedCategory={category.slug} />
       </div>
     );

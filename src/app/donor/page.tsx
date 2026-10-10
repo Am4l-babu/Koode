@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Building2, HandHeart } from "lucide-react";
+import { Award, Boxes, Building2, Circle, HandHeart } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
 import { MetricCard } from "@/components/ui/metric";
 import { ButtonLink } from "@/components/ui/button";
@@ -92,8 +92,10 @@ export default async function DonorDashboard({ searchParams }: { searchParams: P
           <h3 className="mt-6 text-sm font-semibold">Milestones</h3>
           <ul className="relative z-10 mt-2 grid grid-cols-2 gap-2">
             {impact.milestones.map((m) => (
-              <li key={m.key} className={cn("rounded-xl border px-3 py-2 text-sm", m.achieved ? "border-secondary/40 bg-secondary-soft font-semibold text-secondary-ink" : "border-line text-subtle")}>
-                {m.achieved ? "🏅 " : "○ "}{m.label}
+              <li key={m.key} className={cn("flex items-center gap-2 rounded-xl border px-3 py-2 text-sm", m.achieved ? "border-secondary/40 bg-secondary-soft font-semibold text-secondary-ink" : "border-line text-subtle")}>
+                {m.achieved ? <Award className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Circle className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                {m.label}
+                <span className="sr-only">{m.achieved ? "(achieved)" : "(not yet)"}</span>
               </li>
             ))}
           </ul>

@@ -232,9 +232,11 @@ dialog::backdrop{background:rgb(5 20 18/.55);backdrop-filter:blur(4px)}
 .mhead h3{font-size:1.2rem}.mhead p{margin:4px 0 0;color:var(--fg-muted);font-size:.9rem}
 .mbody{padding:20px 24px;min-height:250px}
 .mfoot{padding:14px 24px 20px;display:flex;justify-content:space-between;gap:10px}
-.dots{display:flex;gap:6px;padding:12px 24px 0}
-.dots i{flex:1;height:5px;border-radius:9px;background:var(--surface-3);transition:background .3s}
-.dots i.on{background:var(--primary)}
+.dots{display:flex;padding:14px 24px 0}
+.dots i{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;font-style:normal;font-size:.74rem;font-weight:650;color:var(--fg-subtle)}
+.dots i::before{content:attr(data-n);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg-muted);font-size:.8rem;position:relative;z-index:1;transition:all .3s}
+.dots i+i::after{content:"";position:absolute;top:13px;right:calc(50% + 18px);width:calc(100% - 36px);height:2px;border-radius:2px;background:var(--border)}
+.dots i.on{color:var(--fg)}.dots i.on::before{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}.dots i.on::after{background:var(--primary)}
 .mfield{margin-bottom:14px}.mfield label{display:block;font-weight:650;font-size:.9rem;margin-bottom:6px}
 .qty{display:flex;align-items:center;gap:12px}
 .qty button{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);font-size:1.3rem;font-weight:700}
@@ -431,7 +433,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <dialog id="dlg" aria-labelledby="dtitle">
   <div class="mhead"><div><h3 id="dtitle">Donate</h3><p id="dsub"></p></div><button class="iconbtn" id="dclose" aria-label="Close">✕</button></div>
-  <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+  <div class="dots" id="dots" aria-hidden="true"><i data-n="1">Items</i><i data-n="2">Shipping</i><i data-n="3">Confirm</i><i data-n="4">Review</i></div>
   <div class="mbody" id="mbody"></div>
   <div class="mfoot"><button class="btn ghost" id="back">Back</button><button class="btn primary" id="next">Continue</button></div>
 </dialog>
