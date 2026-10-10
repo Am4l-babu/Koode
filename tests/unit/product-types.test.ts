@@ -5,8 +5,10 @@ import {
   donorFieldsFor,
   fieldsFor,
   listedChoices,
+  productTypeProblems,
   productTypeSchema,
   resolveCategorySchema,
+  toFieldKey,
   validateAttributes,
   validateItemAttributes,
 } from "@/lib/categories";
@@ -129,5 +131,38 @@ describe("showing stored details", () => {
       { key: "maxUserWeight", label: "Max user weight", value: "100 kg" },
       { key: "foldable", label: "Foldable", value: "Yes" },
     ]);
+  });
+});
+
+describe("admin-edited product types", () => {
+  it("every built-in list can be saved unchanged", () => {
+    for (const c of DEFAULT_CATEGORIES) {
+      expect(productTypeProblems(c.fieldSchema.fields, DEFAULT_PRODUCT_TYPES[c.slug] ?? []), c.slug).toEqual({});
+    }
+  });
+
+  it("flags duplicate names, missing choices and units, reserved or repeated keys and unknown hidden fields", () => {
+    const fields = DEFAULT_CATEGORIES.find((c) => c.slug === "medical-support")!.fieldSchema.fields;
+    expect(
+      productTypeProblems(fields, [
+        { name: "Hearing aid", hide: ["specification", "colour"], fields: [{ key: "fit", label: "Fit", type: "select" }, { key: "productType", label: "Type", type: "text" }] },
+        { name: " hearing AID ", fields: [{ key: "range", label: "Range", type: "measure" }, { key: "range", label: "Range again", type: "text" }] },
+      ]),
+    ).toEqual({
+      "productTypes.0.hide.1": `"colour" isn't one of this category's fields.`,
+      "productTypes.0.fields.0.options": "List at least one choice.",
+      "productTypes.0.fields.1.key": `"productType" is reserved.`,
+      "productTypes.1.name": `"hearing AID" is listed twice.`,
+      "productTypes.1.fields.0.units": "Pick at least one unit.",
+      "productTypes.1.fields.1.key": `Two details share the key "range". Rename one.`,
+    });
+  });
+
+  it("turns labels into stable keys", () => {
+    expect(toFieldKey("Battery size (mAh)")).toBe("batterySizeMah");
+    expect(toFieldKey("  Ear  side ")).toBe("earSide");
+    expect(toFieldKey("Café hours")).toBe("cafeHours");
+    expect(toFieldKey("2 pin plug")).toBe("");
+    expect(toFieldKey("x".repeat(50))).toHaveLength(31);
   });
 });

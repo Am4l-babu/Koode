@@ -14,6 +14,8 @@ import { templates } from "@/lib/notifications/templates";
 import { deletePrivateObject } from "@/lib/storage";
 import { suggestPriority } from "@/lib/priority";
 import type { z } from "zod";
+import { categorySchemaSchema, parseCategorySchema, PRODUCT_TYPE_KEY, productTypeProblems, resolveCategorySchema, type CategorySchema, type ProductType } from "@/lib/categories";
+import { DEFAULT_PRODUCT_TYPES } from "@/lib/product-types";
 import type { categoryUpsertSchema, createAdminSchema, deliveryUpdateSchema, requestDecisionSchema, userUpdateSchema } from "@/lib/validation/admin";
 import { notify } from "./notifications";
 import { requestPasswordReset } from "./auth";
@@ -723,10 +725,90 @@ export async function listAuditLogs(filters: { action?: string; page?: number })
 }
 
 export async function upsertCategory(actor: SessionUser, input: z.infer<typeof categoryUpsertSchema>, ip?: string) {
-  const data = { ...input, description: input.description ?? null, fieldSchema: input.fieldSchema as Prisma.InputJsonObject };
+  // The quick category form only sends category-wide fields; keep any product types set up in the product-type editor.
+  const existing = input.fieldSchema.productTypes ? null : await db.category.findUnique({ where: { slug: input.slug }, select: { fieldSchema: true } });
+  const kept = existing ? parseCategorySchema(existing.fieldSchema).productTypes : undefined;
+  const fieldSchema = kept ? { ...input.fieldSchema, productTypes: kept } : input.fieldSchema;
+  const data = { ...input, description: input.description ?? null, fieldSchema: fieldSchema as Prisma.InputJsonObject };
   const category = await db.category.upsert({ where: { slug: input.slug }, create: data, update: data, select: { id: true, slug: true } });
   await audit(actor, "CATEGORY_CHANGED", { type: "category", id: category.slug }, { isActive: input.isActive }, ip);
   return category;
+}
+
+const OPEN_REQUEST: RequestStatus[] = ["DRAFT", "PENDING_VERIFICATION", "NEEDS_INFO", "ACTIVE"];
+
+/**
+ * A category as the product-type editor needs it: its fields, its effective
+ * product types, and how many open requests use each type (so admins can see
+ * what a rename or removal touches).
+ */
+export async function getCategoryForEditing(slug: string) {
+  const category = await db.category.findUnique({ where: { slug }, select: { id: true, slug: true, name: true, icon: true, isActive: true, fieldSchema: true } });
+  if (!category) return null;
+  const stored = parseCategorySchema(category.fieldSchema);
+  const items = await db.requestItem.findMany({
+    where: { request: { categoryId: category.id, status: { in: OPEN_REQUEST } } },
+    select: { requestId: true, attributes: true },
+    take: 5000,
+  });
+  const usage = new Map<string, Set<string>>();
+  for (const item of items) {
+    const type = (item.attributes as Record<string, unknown> | null)?.[PRODUCT_TYPE_KEY];
+    if (typeof type !== "string") continue;
+    if (!usage.has(type)) usage.set(type, new Set());
+    usage.get(type)!.add(item.requestId);
+  }
+  return {
+    slug: category.slug,
+    name: category.name,
+    icon: category.icon,
+    isActive: category.isActive,
+    fields: stored.fields,
+    productTypes: resolveCategorySchema(category.slug, category.fieldSchema).productTypes ?? [],
+    /** True once an admin has saved this category's product types; false while it uses the built-in list. */
+    customised: stored.productTypes !== undefined,
+    hasBuiltIn: Boolean(DEFAULT_PRODUCT_TYPES[category.slug]?.length),
+    usage: Object.fromEntries([...usage].map(([name, ids]) => [name, ids.size])),
+  };
+}
+
+/** Drop settings that don't apply to a field's type and blank optional text. */
+function tidyProductType(type: ProductType): ProductType {
+  return {
+    name: type.name.trim(),
+    ...(type.unit?.trim() ? { unit: type.unit.trim() } : {}),
+    ...(type.hide?.length ? { hide: type.hide } : {}),
+    fields: type.fields.map(({ options, units, placeholder, help, required, ask, ...field }) => ({
+      ...field,
+      ...((field.type === "select" || field.type === "ageRange") && options?.length ? { options } : {}),
+      ...(field.type === "measure" && units?.length ? { units } : {}),
+      ...(placeholder?.trim() ? { placeholder: placeholder.trim() } : {}),
+      ...(help?.trim() ? { help: help.trim() } : {}),
+      ...(required ? { required } : {}),
+      ...(ask && ask !== "recipient" ? { ask } : {}),
+    })),
+  };
+}
+
+/**
+ * Replace a category's product types, or pass `null` to go back to the
+ * built-in list. Requests already made keep the details they were given.
+ */
+export async function setCategoryProductTypes(actor: SessionUser, slug: string, productTypes: ProductType[] | null, ip?: string) {
+  const category = await db.category.findUnique({ where: { slug }, select: { id: true, fieldSchema: true } });
+  if (!category) throw notFound("This category");
+  const stored = categorySchemaSchema.safeParse(category.fieldSchema);
+  if (!stored.success) throw new AppError("CONFLICT", "This category's saved fields are invalid. Fix them before editing product types.");
+  const fields = stored.data.fields;
+  const next = productTypes?.map(tidyProductType) ?? null;
+  if (next) {
+    const problems = productTypeProblems(fields, next);
+    if (Object.keys(problems).length) throw new AppError("VALIDATION_FAILED", "Some product types need attention.", { fields: problems });
+  }
+  const fieldSchema: CategorySchema = next ? { fields, productTypes: next } : { fields };
+  await db.category.update({ where: { id: category.id }, data: { fieldSchema: fieldSchema as Prisma.InputJsonObject } });
+  await audit(actor, "CATEGORY_CHANGED", { type: "category", id: slug }, { productTypes: next ? next.length : "built-in" }, ip);
+  return { productTypes: resolveCategorySchema(slug, fieldSchema).productTypes ?? [], customised: next !== null };
 }
 
 /** Operational export without PII. Identity data is never included in exports. */

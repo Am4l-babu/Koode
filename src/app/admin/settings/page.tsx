@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CategoryCreator, DataTools, SettingsForm } from "@/components/admin/actions";
@@ -25,9 +26,12 @@ export default async function SettingsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <ul className="card divide-y divide-line">
           {categories.map((c) => (
-            <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+            <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3 text-sm">
               <span><span aria-hidden="true">{c.icon}</span> <span className="font-semibold">{c.name}</span> <span className="font-mono text-xs text-subtle">/{c.slug}</span></span>
-              <span className="text-xs text-muted">{categorySummary(c.slug, c.fieldSchema)}{!c.isActive && " · inactive"}</span>
+              <span className="flex items-center gap-3">
+                <span className="text-xs text-muted">{categorySummary(c.slug, c.fieldSchema)}{!c.isActive && " · inactive"}</span>
+                {canEdit && <Link href={`/admin/settings/categories/${c.slug}`} className="shrink-0 font-semibold text-primary-ink hover:underline" aria-label={`Edit ${c.name} product types`}>Product types →</Link>}
+              </span>
             </li>
           ))}
         </ul>

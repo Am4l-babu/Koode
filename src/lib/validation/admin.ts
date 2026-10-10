@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ALL_PERMISSIONS } from "../permissions";
 import { emailSchema, passwordSchema, trimmed } from "./common";
-import { categorySchemaSchema } from "../categories";
+import { categorySchemaSchema, productTypeSchema } from "../categories";
 import { PRIORITIES } from "./request";
 
 export const requestDecisionSchema = z.discriminatedUnion("decision", [
@@ -67,6 +67,11 @@ export const categoryUpsertSchema = z.object({
   fieldSchema: categorySchemaSchema,
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().min(0).max(1000).default(100),
+});
+
+/** A category's product types as edited by an admin; `null` goes back to the built-in list. */
+export const productTypesUpdateSchema = z.object({
+  productTypes: z.array(productTypeSchema).max(30, "A category can have up to 30 product types.").nullable(),
 });
 
 export const settingsSchema = z.object({

@@ -17,7 +17,7 @@ export const FIELD_TYPES = ["text", "number", "select", "boolean", "ageRange", "
 
 export const fieldDefSchema = z.object({
   key: z.string().regex(/^[a-zA-Z][a-zA-Z0-9]{0,30}$/),
-  label: z.string().min(1).max(60),
+  label: z.string().trim().min(1, "Give this detail a label.").max(60),
   type: z.enum(FIELD_TYPES),
   options: z.array(z.string().min(1).max(40)).max(20).optional(),
   /** For `measure`: the units a value may be given in, e.g. ["cm", "in"]. */
@@ -30,7 +30,7 @@ export const fieldDefSchema = z.object({
 });
 
 export const productTypeSchema = z.object({
-  name: z.string().min(1).max(40),
+  name: z.string().trim().min(1, "Give the product type a name.").max(40),
   /** Default quantity unit, e.g. "kg" or "pairs". */
   unit: z.string().min(1).max(16).optional(),
   /** Category-wide fields that don't apply to this product. */
@@ -207,6 +207,44 @@ export function parseCategorySchema(value: unknown): CategorySchema {
 export function resolveCategorySchema(slug: string, value: unknown): CategorySchema {
   const schema = parseCategorySchema(value);
   return { ...schema, productTypes: schema.productTypes ?? DEFAULT_PRODUCT_TYPES[slug] ?? [] };
+}
+
+/** "Battery size (mAh)" → "batterySizeMah": a stable attribute key for a new field. */
+export function toFieldKey(label: string): string {
+  const words = label.normalize("NFKD").replace(/[^A-Za-z0-9 ]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  const key = words.map((w, i) => (i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join("");
+  return /^[a-zA-Z]/.test(key) ? key.slice(0, 31) : "";
+}
+
+/**
+ * Problems with an admin-edited list of product types that the field schema
+ * alone can't catch, keyed like `productTypes.2.fields.0.options`. Empty when
+ * the list is usable as-is.
+ */
+export function productTypeProblems(categoryFields: FieldDef[], productTypes: ProductType[]): Record<string, string> {
+  const problems: Record<string, string> = {};
+  const categoryKeys = new Set(categoryFields.map((f) => f.key));
+  const names = new Set<string>();
+  productTypes.forEach((type, t) => {
+    const at = `productTypes.${t}`;
+    const name = type.name.trim().toLowerCase();
+    if (!name) problems[`${at}.name`] = "Give the product type a name.";
+    else if (names.has(name)) problems[`${at}.name`] = `"${type.name.trim()}" is listed twice.`;
+    names.add(name);
+    (type.hide ?? []).forEach((key, h) => {
+      if (!categoryKeys.has(key)) problems[`${at}.hide.${h}`] = `"${key}" isn't one of this category's fields.`;
+    });
+    const keys = new Set<string>();
+    type.fields.forEach((field, i) => {
+      const f = `${at}.fields.${i}`;
+      if (field.key === PRODUCT_TYPE_KEY) problems[`${f}.key`] = `"${PRODUCT_TYPE_KEY}" is reserved.`;
+      else if (keys.has(field.key)) problems[`${f}.key`] = `Two details share the key "${field.key}". Rename one.`;
+      keys.add(field.key);
+      if (field.type === "select" && !field.options?.length) problems[`${f}.options`] = "List at least one choice.";
+      if (field.type === "measure" && !field.units?.length) problems[`${f}.units`] = "Pick at least one unit.";
+    });
+  });
+  return problems;
 }
 
 export function findProductType(schema: CategorySchema, name: unknown): ProductType | undefined {

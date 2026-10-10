@@ -177,6 +177,26 @@ section{padding:64px 0}
 .live i{width:9px;height:9px;border-radius:50%;background:var(--critical);animation:pulse2 1.4s infinite;flex:none}
 @keyframes pulse2{50%{opacity:.25}}
 
+/* product-type admin */
+.pt{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:start}
+@media(max-width:900px){.pt{grid-template-columns:1fr}}
+.pt .card{padding:20px}
+.pt h3{font-size:1.05rem;margin-bottom:10px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.ptlist{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.ptlist button{width:100%;display:flex;justify-content:space-between;gap:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--fg);border-radius:12px;padding:10px 12px;font:inherit;font-size:.92rem;text-align:left}
+.ptlist button[aria-current=true]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-ink);font-weight:650}
+.ptlist small{color:var(--fg-subtle)}
+.ptform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ptform .full{grid-column:1/-1}
+@media(max-width:520px){.ptform{grid-template-columns:1fr}}
+.ptform label{display:block;font-weight:650;font-size:.86rem;margin-bottom:4px}
+.ptform input:not([type=checkbox]),.ptform select,.ptpre input,.ptpre select{width:100%;height:44px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg);padding:0 12px;font:inherit}
+.ptpre{margin-top:16px;padding:16px;border-radius:16px;background:var(--surface-2)}
+.ptpre>small{display:block;color:var(--fg-subtle);font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.ptpre .pf{margin-bottom:10px}.ptpre .pf label{display:block;font-weight:650;font-size:.86rem;margin-bottom:4px}
+.ptpre .req{color:var(--critical)}
+.ptpre .unit{display:grid;grid-template-columns:1fr 90px;gap:8px}
+
 /* my donations */
 #mine .card{padding:22px;margin-bottom:14px}
 .timeline{display:flex;gap:0;margin:16px 0 4px;position:relative}
@@ -349,6 +369,30 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="step reveal"><h3>Choose</h3><p>Browse current needs and select an item you are able to provide.</p></div>
     <div class="step reveal"><h3>Give</h3><p>Confirm items and quantities, and describe what you're giving — condition, size or pack, a photo. We reserve the quantity, so a need is never over-committed.</p></div>
     <div class="step reveal"><h3>Deliver</h3><p>Our team coordinates every leg of the handover; no names are exchanged. Sending by courier? Add the tracking number and the organisation can follow it.</p></div>
+  </div>
+</div></section>
+
+<section id="types"><div class="wrap">
+  <div class="sec-head reveal"><h2>Product types, edited by admins</h2><p>Each category offers product types with their own measurements and details. Admins add or change them in Settings with no code change, and organisations see them in the request form straight away.</p></div>
+  <div class="pt">
+    <div class="card">
+      <h3>Product types <span class="chip" id="ptBadge">Built-in</span></h3>
+      <div class="field"><select id="ptCat" aria-label="Category"></select></div>
+      <ul class="ptlist" id="ptList"></ul>
+    </div>
+    <div class="card">
+      <h3>Add a product type</h3>
+      <form class="ptform" id="ptForm">
+        <div><label for="ptName">Name</label><input id="ptName" maxlength="40" placeholder="e.g. Hearing aid" required></div>
+        <div><label for="ptUnit">Default unit</label><input id="ptUnit" maxlength="16" placeholder="e.g. pieces"></div>
+        <div><label for="ptLabel">Detail to ask</label><input id="ptLabel" maxlength="60" placeholder="e.g. Which ear" required></div>
+        <div><label for="ptType">Answer type</label><select id="ptType"><option value="choice">Pick from a list</option><option value="text">Short text</option><option value="number">Number</option><option value="measure">Measurement (cm / in)</option></select></div>
+        <div class="full" id="ptChoicesBox"><label for="ptChoices">Choices (comma-separated)</label><input id="ptChoices" placeholder="Left, Right, Both"></div>
+        <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="ptReq" checked> Organisations must fill this in</label>
+        <div class="full"><button class="btn primary sm" type="submit">Save product type</button></div>
+      </form>
+      <div class="ptpre" id="ptPre" aria-live="polite"></div>
+    </div>
   </div>
 </div></section>
 
@@ -643,6 +687,43 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 $$(".reveal").forEach(e=>io.observe(e));
 const cio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;cio.unobserve(e.target);const el=$("[data-count]",e.target)||e.target;$$("[data-count]").forEach(c=>{const to=+c.dataset.count,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400);c.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString();if(k<1&&!reducedMotion)requestAnimationFrame(f);else c.textContent=to.toLocaleString()})(t0)})}),{threshold:.4});
 cio.observe($("#stats"));
+
+/* ───────── admin: product types (mirrors /admin/settings/categories/[slug]) ───────── */
+const PT={
+ "medical-support":{name:"Medical support",custom:false,types:[{n:"First-aid kit",f:[{l:"Contents",t:"text"}]},{n:"Hygiene kit",f:[{l:"For",t:"choice",o:["Adults","Children","Women"]},{l:"Contents",t:"text"}]},{n:"Sanitary pads",f:[{l:"Size",t:"choice",o:["Regular","Large","XL"],r:1},{l:"Pads per pack",t:"number"}]},{n:"Crutches",f:[{l:"Type",t:"choice",o:["Underarm","Elbow (forearm)"],r:1},{l:"User height",t:"measure",r:1},{l:"Adjustable",t:"choice",o:["Yes","No"]}]},{n:"Health monitor",f:[{l:"Monitor",t:"choice",o:["BP monitor","Glucometer","Pulse oximeter","Thermometer"],r:1}]}]},
+ "elder-care":{name:"Elder care",custom:false,types:[{n:"Walking stick",f:[{l:"Height",t:"measure"},{l:"Height adjustable",t:"choice",o:["Yes","No"]}]},{n:"Walker",f:[{l:"Foldable",t:"choice",o:["Yes","No"]},{l:"Max user weight",t:"number"}]},{n:"Wheelchair",f:[{l:"Seat width",t:"measure",r:1},{l:"Foldable",t:"choice",o:["Yes","No"]}]},{n:"Blanket / bedsheet",f:[{l:"Bed size",t:"choice",o:["Single","Double","Queen","King"],r:1}]}]},
+ "household":{name:"Household",custom:false,types:[{n:"Chair",f:[{l:"Material",t:"choice",o:["Plastic","Wood","Steel"]}]},{n:"Table / desk",f:[{l:"Length",t:"measure",r:1},{l:"Height",t:"measure"}]},{n:"Fan",f:[{l:"Fan type",t:"choice",o:["Ceiling","Table","Pedestal","Wall"],r:1}]}]}
+};
+let ptCat="medical-support", ptSel=PT[ptCat].types[3].n;
+$("#ptCat").innerHTML=Object.entries(PT).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("");
+function ptField(f,i){
+  const id="ptp"+i, lab=`<label for="${id}">${esc(f.l)}${f.r?' <span class="req">*</span>':""}</label>`;
+  if(f.t==="choice")return `<div class="pf">${lab}<select id="${id}"><option>${f.r?"Choose…":"Any / not specified"}</option>${f.o.map(o=>`<option>${esc(o)}</option>`).join("")}</select></div>`;
+  if(f.t==="measure")return `<div class="pf">${lab}<div class="unit"><input id="${id}" type="number" min="0" placeholder="e.g. 160"><select aria-label="${esc(f.l)} unit"><option>cm</option><option>in</option></select></div></div>`;
+  return `<div class="pf">${lab}<input id="${id}" type="${f.t==="number"?"number":"text"}"></div>`;
+}
+function renderPT(){
+  const c=PT[ptCat], t=c.types.find(x=>x.n===ptSel)||c.types[0];
+  $("#ptBadge").textContent=c.custom?"Customised":"Built-in";
+  $("#ptList").innerHTML=c.types.map(x=>`<li><button type="button" aria-current="${x===t}" data-pt="${esc(x.n)}"><span>${esc(x.n)}</span><small>${x.f.length} detail${x.f.length===1?"":"s"}</small></button></li>`).join("");
+  $$("#ptList button").forEach(b=>b.onclick=()=>{ptSel=b.dataset.pt;renderPT()});
+  $("#ptPre").innerHTML=`<small>What organisations fill in · ${esc(t.n)}${t.u?` · unit: ${esc(t.u)}`:""}</small>`+t.f.map(ptField).join("");
+}
+$("#ptCat").onchange=e=>{ptCat=e.target.value;ptSel=PT[ptCat].types[0].n;renderPT()};
+$("#ptType").onchange=e=>{$("#ptChoicesBox").hidden=e.target.value!=="choice"};
+function ptInvalid(el,msg){el.setCustomValidity(msg);el.reportValidity();el.addEventListener("input",()=>el.setCustomValidity(""),{once:true})}
+$("#ptForm").onsubmit=e=>{
+  e.preventDefault();
+  const c=PT[ptCat], n=$("#ptName").value.trim(), l=$("#ptLabel").value.trim(), t=$("#ptType").value;
+  const o=$("#ptChoices").value.split(",").map(x=>x.trim()).filter(Boolean);
+  if(!n||!l)return;
+  if(c.types.some(x=>x.n.toLowerCase()===n.toLowerCase()))return ptInvalid($("#ptName"),`"${n}" is listed already.`);
+  if(t==="choice"&&!o.length)return ptInvalid($("#ptChoices"),"List at least one choice.");
+  c.types.push({n,u:$("#ptUnit").value.trim(),f:[{l,t,o,r:$("#ptReq").checked}]});c.custom=true;ptSel=n;
+  audit(`CATEGORY_CHANGED · super.admin · ${ptCat} · product type "${n}" added`,true);
+  e.target.reset();$("#ptChoicesBox").hidden=false;renderPT();
+};
+renderPT();
 
 renderCats();renderGrid();lens();audit("seed · demo data loaded");
 </script>

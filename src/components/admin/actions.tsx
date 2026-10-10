@@ -461,7 +461,7 @@ export function CategoryCreator() {
         <Field label="Icon (emoji)" htmlFor="c-icon"><Input id="c-icon" value={v.icon} onChange={(e) => setV({ ...v, icon: e.target.value })} /></Field>
       </div>
       <Field label="Description" htmlFor="c-desc"><Input id="c-desc" value={v.description} onChange={(e) => setV({ ...v, description: e.target.value })} /></Field>
-      <Field label="Fields (one per line: key:type[:opt1|opt2])" htmlFor="c-fields" help="Types: text, number, select, boolean, ageRange. This drives the schema-driven request form.">
+      <Field label="Fields (one per line: key:type[:opt1|opt2])" htmlFor="c-fields" help="Types: text, number, select, boolean, ageRange, measure, date. These are asked for every item in the category; edit product types with “Product types →” in the list.">
         <Textarea id="c-fields" rows={4} className="font-mono text-sm" value={v.fields} onChange={(e) => setV({ ...v, fields: e.target.value })} />
       </Field>
       <Button type="submit" loading={busy === "cat"}>Save category</Button>
