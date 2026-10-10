@@ -15,10 +15,15 @@ interface Option {
 export function FilterBar({
   categories,
   districts,
+  productTypes = [],
+  categoryName,
   interpreted,
 }: {
   categories: Option[];
   districts: string[];
+  /** Product types with open needs in the selected category. */
+  productTypes?: { name: string; count: number }[];
+  categoryName?: string;
   interpreted?: string | null;
 }) {
   const router = useRouter();
@@ -38,7 +43,8 @@ export function FilterBar({
     startTransition(() => router.push(`${pathname}?${sp.toString()}`, { scroll: false }));
   }
 
-  const active = ["category", "district", "urgency", "stage", "donationType"].filter((k) => params.get(k)).length;
+  const active = ["category", "product", "district", "urgency", "stage", "donationType"].filter((k) => params.get(k)).length;
+  const product = params.get("product");
 
   return (
     <div className="space-y-4">
@@ -70,9 +76,9 @@ export function FilterBar({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Chip active={!params.get("category")} onClick={() => update({ category: null })}>All</Chip>
+        <Chip active={!params.get("category")} onClick={() => update({ category: null, product: null })}>All</Chip>
         {categories.map((c) => (
-          <Chip key={c.value} active={params.get("category") === c.value} onClick={() => update({ category: params.get("category") === c.value ? null : c.value })}>
+          <Chip key={c.value} active={params.get("category") === c.value} onClick={() => update({ category: params.get("category") === c.value ? null : c.value, product: null })}>
             {c.label}
           </Chip>
         ))}
@@ -85,6 +91,19 @@ export function FilterBar({
           <SlidersHorizontal className="h-4 w-4" aria-hidden="true" /> More filters {active > 0 && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-fg">{active}</span>}
         </button>
       </div>
+
+      {(productTypes.length > 1 || product) && (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={`${categoryName ?? "Product"} types`}>
+          <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted">Product</span>
+          <Chip small active={!product} onClick={() => update({ product: null })}>All {categoryName?.toLowerCase() ?? "products"}</Chip>
+          {productTypes.map((t) => (
+            <Chip small key={t.name} active={product === t.name} onClick={() => update({ product: product === t.name ? null : t.name })}>
+              {t.name} <span className={cn("text-xs", product === t.name ? "opacity-80" : "text-muted")}>{t.count}</span>
+            </Chip>
+          ))}
+          {product && !productTypes.some((t) => t.name === product) && <Chip small active onClick={() => update({ product: null })}>{product}</Chip>}
+        </div>
+      )}
 
       {showMore && (
         <div className="card grid animate-rise gap-4 p-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -103,7 +122,7 @@ export function FilterBar({
               options={[{ value: "", label: "Choose your district" }, ...districts.map((d) => ({ value: d, label: d }))]} />
           )}
           {active > 0 && (
-            <button type="button" onClick={() => update({ district: null, urgency: null, stage: null, donationType: null, category: null, near: null })} className="inline-flex h-11 items-center gap-1.5 self-end rounded-full px-3 text-sm font-semibold text-muted hover:bg-surface-2">
+            <button type="button" onClick={() => update({ district: null, urgency: null, stage: null, donationType: null, category: null, product: null, near: null })} className="inline-flex h-11 items-center gap-1.5 self-end rounded-full px-3 text-sm font-semibold text-muted hover:bg-surface-2">
               <X className="h-4 w-4" aria-hidden="true" /> Clear filters
             </button>
           )}
@@ -113,14 +132,15 @@ export function FilterBar({
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({ active, onClick, small, children }: { active: boolean; onClick: () => void; small?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border text-sm font-semibold transition-colors",
+        small ? "h-10 px-3.5 font-medium" : "h-10 px-4",
         active ? "border-primary bg-primary text-primary-fg" : "border-line bg-surface text-fg hover:border-line-strong",
       )}
     >

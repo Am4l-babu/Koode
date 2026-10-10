@@ -6,7 +6,7 @@
 
 [![Koode interactive preview: need cards with product details, the donation form with condition, pack size, best-before date and photos, and a courier donation in transit with DTDC tracking](docs/preview-app.png)](https://am4l-babu.github.io/Koode/)
 
-A click-through demo with sample data: search needs in plain language, make an anonymous donation — describing each item's condition, size or pack, with a description and photos — then send it by courier, add the tracking number and watch it travel. Switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations, and nothing you enter or attach leaves the page. Source: [`docs/index.html`](docs/index.html).
+A click-through demo with sample data: search needs in plain language or narrow a category to one product type, make an anonymous donation — describing each item's condition, size or pack, with a description and photos — then send it by courier, add the tracking number and watch it travel. Switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations, and nothing you enter or attach leaves the page. Source: [`docs/index.html`](docs/index.html).
 
 A privacy-first donation platform that connects people who want to donate specific items with **verified** schools, children's homes, elder-care homes, shelters and community organisations — without either side ever seeing the other's identity. The platform (and only authorised administrators) act as the trusted intermediary.
 
@@ -14,7 +14,7 @@ A privacy-first donation platform that connects people who want to donate specif
 |---|---|
 | **Stack** | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Prisma 6 · PostgreSQL 16 |
 | **Auth** | Database-backed sessions, Argon2id passwords, httpOnly `SameSite=Lax` cookies (`__Host-` + `Secure` in production) |
-| **Tests** | 221 Vitest unit/integration/security tests · 21 Playwright E2E tests (desktop + mobile) |
+| **Tests** | 224 Vitest unit/integration/security tests · 22 Playwright E2E tests (desktop + mobile) |
 | **i18n** | English · Malayalam · Hindi |
 
 ---
@@ -37,7 +37,7 @@ A privacy-first donation platform that connects people who want to donate specif
 
 ## Features
 
-**Donors** — browse/search/filter verified needs (natural-language search such as *"shirts size 30"*, *"food near Thrissur"*, *"toys for 5 year old children"*), guided 4-step anonymous donation modal, **per-item details** (condition for each item plus the product's own questions — actual size, pack size, best-before date, height…, with the recipient's requirement shown alongside), a description and **photos / a short video** of the items, **courier tracking** (pick from 14 courier services used in Kerala and enter the tracking number; the donation moves to *in transit* and the organisation can follow it), live fulfilment counters (Server-Sent Events), animated donation tracking timeline, personal impact + private milestones, "Needs you can fulfil" recommendations, account deletion.
+**Donors** — browse/search/filter verified needs (natural-language search such as *"shirts size 30"*, *"food near Thrissur"*, *"toys for 5 year old children"*), **filter by product type** within a category (e.g. *Clothing → Footwear*, *Food → Rice* — only types with open needs are offered, with counts), guided 4-step anonymous donation modal, **per-item details** (condition for each item plus the product's own questions — actual size, pack size, best-before date, height…, with the recipient's requirement shown alongside), a description and **photos / a short video** of the items, **courier tracking** (pick from 14 courier services used in Kerala and enter the tracking number; the donation moves to *in transit* and the organisation can follow it), live fulfilment counters (Server-Sent Events), animated donation tracking timeline, personal impact + private milestones, "Needs you can fulfil" recommendations, account deletion.
 
 **Recipients** — organisation registration with encrypted private details, document upload to private storage, verification workflow, **schema-driven Smart Request Builder** (category fields come from the database, so admins can add categories without code) with **product types**: choosing e.g. *Footwear*, *Saree*, *Table / desk* or *Wheelchair* shows that product's own measurements (cm/in, kg/g, L/ml), required fields and default unit — 64 product types across the built-in categories in [`src/lib/product-types.ts`](src/lib/product-types.ts). Per-item fulfilment tracking, recurring requests, donors' photos/descriptions/courier tracking on each donation, confirm receipt, anonymous donor references.
 
@@ -124,8 +124,8 @@ Seed data includes the four requests from the brief (school bags in Thrissur, ch
 createdb donation_test
 createdb donation_e2e
 
-npm test            # 221 tests, ~10s — uses TEST_DATABASE_URL (default: localhost/donation_test)
-npm run test:e2e    # 21 tests — uses E2E_DATABASE_URL (default: localhost/donation_e2e)
+npm test            # 224 tests, ~10s — uses TEST_DATABASE_URL (default: localhost/donation_test)
+npm run test:e2e    # 22 tests — uses E2E_DATABASE_URL (default: localhost/donation_e2e)
 ```
 
 | Suite | Covers |
@@ -141,8 +141,8 @@ npm run test:e2e    # 21 tests — uses E2E_DATABASE_URL (default: localhost/don
 | `tests/integration/api-security` | Admin APIs vs anonymous/donor/recipient (36 cases), role tampering, cross-user access, CSRF, enumeration, suspension, signed documents |
 | `tests/integration/flows` | Recipient → verification → request → approval; donor → donate → track → receive; password reset; email verification |
 | `tests/integration/concurrency` | Racing donors never over-commit (2 vs 2 for last 2; 30 vs 7); all-or-nothing multi-item; DB constraints |
-| `tests/integration/product-types` · `courier-tracking` · `review-fixes` | Requests with product types, donor details per item, new-only items, courier tracking and status changes, media upload limits, byte ranges and moderation |
-| `e2e/*` | Full browser journeys for donor, recipient, admin approval, identity reveal, keyboard/a11y, i18n, dark mode, mobile flow, security headers, photos/videos with moderation, courier tracking, password visibility |
+| `tests/integration/product-types` · `courier-tracking` · `review-fixes` | Requests with product types, browsing by product type, donor details per item, new-only items, courier tracking and status changes, media upload limits, byte ranges and moderation |
+| `e2e/*` | Full browser journeys for donor, recipient, admin approval, identity reveal, keyboard/a11y, i18n, dark mode, mobile flow, security headers, photos/videos with moderation, courier tracking, product-type filter, password visibility |
 
 Route handlers are tested by invoking them directly with real `NextRequest` objects against a real PostgreSQL database — the same authorization middleware, validation and SQL that production uses.
 
@@ -181,7 +181,7 @@ All endpoints return `{ data }` or `{ error: { code, message, details?, errorId?
 
 | Audience | Endpoints |
 |---|---|
-| Public | `GET /api/requests` (filters: `q, category, district, urgency, stage, donationType, sort, near, page`) · `GET /api/requests/:id` · `GET /api/requests/:id/stream` (SSE) · `POST /api/requests/:id/report` · `GET /api/categories` · `GET /api/impact` |
+| Public | `GET /api/requests` (filters: `q, category, product, district, urgency, stage, donationType, sort, near, page`) · `GET /api/requests/:id` · `GET /api/requests/:id/stream` (SSE) · `POST /api/requests/:id/report` · `GET /api/categories` · `GET /api/impact` |
 | Auth | `POST /api/auth/{register,login,logout,forgot-password,reset-password,verify-email}` · `POST /api/auth/phone/{send,verify}` · `GET/DELETE /api/me` · `GET/PATCH /api/notifications` · `GET /api/notifications/stream` |
 | Donor | `POST /api/donations` · `GET /api/my-donations` · `GET/PATCH /api/my-donations/:id` · `GET/POST /api/my-donations/:id/media` · `DELETE /api/my-donations/:id/media/:mediaId` · `PUT /api/my-donations/:id/tracking` · `GET /api/recommendations` |
 | Media | `GET /api/media/:id` — donor, addressed organisation (approved files only) or moderating admin; supports byte ranges |

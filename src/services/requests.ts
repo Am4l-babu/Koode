@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { AppError, forbidden, notFound } from "@/lib/errors";
 import { generatePublicId, withUniqueRetry } from "@/lib/ids";
 import { parseSearchQuery } from "@/lib/search";
-import { resolveCategorySchema, validateItemAttributes } from "@/lib/categories";
+import { PRODUCT_TYPE_KEY, resolveCategorySchema, validateItemAttributes } from "@/lib/categories";
 import { suggestPriority } from "@/lib/priority";
 import { DISTRICT_TILES, isKeralaDistrict, type KeralaDistrict } from "@/lib/geo";
 import { ownerRequestSelect, publicRequestSelect, toOwnerRequest, toPublicRequest, type PublicRequestDTO } from "@/lib/dto/requests";
@@ -27,6 +27,7 @@ export const STAGES = ["just_posted", "partial", "almost"] as const;
 export interface BrowseFilters {
   q?: string;
   category?: string;
+  product?: string;
   district?: string;
   urgency?: Priority;
   stage?: (typeof STAGES)[number];
@@ -77,6 +78,7 @@ export function buildBrowseWhere(filters: BrowseFilters) {
 
   const category = filters.category || interpreted?.categorySlug;
   if (category) and.push({ category: { slug: category } });
+  if (filters.product) and.push({ items: { some: { attributes: { path: [PRODUCT_TYPE_KEY], equals: filters.product } } } });
   const district = filters.district || interpreted?.district;
   if (district) and.push({ district });
   if (filters.urgency) and.push({ priority: filters.urgency });
@@ -157,6 +159,31 @@ export async function getPublicRequest(publicId: string): Promise<PublicRequestD
 
 export async function recordView(publicId: string) {
   await db.request.updateMany({ where: { publicId, status: "ACTIVE" }, data: { popularity: { increment: 1 } } });
+}
+
+/**
+ * Product types that currently have open, public needs in a category, with how
+ * many needs each — in the category's own order, so filters never lead nowhere.
+ */
+export async function productTypeCounts(categorySlug: string): Promise<{ name: string; count: number }[]> {
+  const category = await db.category.findFirst({ where: { slug: categorySlug, isActive: true }, select: { slug: true, fieldSchema: true } });
+  if (!category) return [];
+  const items = await db.requestItem.findMany({
+    where: { request: { AND: [PUBLIC_VISIBILITY, { status: "ACTIVE" }, { category: { slug: categorySlug } }] } },
+    select: { requestId: true, attributes: true },
+    take: 5000,
+  });
+  const needs = new Map<string, Set<string>>();
+  for (const item of items) {
+    const type = (item.attributes as Record<string, unknown> | null)?.[PRODUCT_TYPE_KEY];
+    if (typeof type !== "string") continue;
+    if (!needs.has(type)) needs.set(type, new Set());
+    needs.get(type)!.add(item.requestId);
+  }
+  const order = resolveCategorySchema(category.slug, category.fieldSchema).productTypes?.map((t) => t.name) ?? [];
+  return [...needs.entries()]
+    .map(([name, ids]) => ({ name, count: ids.size }))
+    .sort((a, b) => (order.indexOf(a.name) + 1 || 999) - (order.indexOf(b.name) + 1 || 999) || a.name.localeCompare(b.name));
 }
 
 export async function listCategories(includeInactive = false) {

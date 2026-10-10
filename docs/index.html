@@ -155,6 +155,8 @@ section{padding:64px 0}
 .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .cats button{border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg-muted);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.88rem}
 .cats button[aria-pressed=true]{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.prods{align-items:center}.prods>span{font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-subtle);margin-right:2px}
+.prods button small{opacity:.75;margin-left:4px}
 .hints{color:var(--fg-subtle);font-size:.86rem;margin-bottom:18px}
 .hints button{border:0;background:none;color:var(--primary-ink);text-decoration:underline;padding:0 4px;font:inherit;font-size:.86rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
@@ -313,6 +315,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <select id="urgency" aria-label="Urgency"><option value="">Any urgency</option><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="NORMAL">Normal</option></select>
   </div>
   <div class="cats" id="cats" role="group" aria-label="Categories"></div>
+  <div class="cats prods" id="prods" role="group" aria-label="Product types" hidden></div>
   <div class="hints">Try: <button data-try="shirts size 30">shirts size 30</button><button data-try="food near Kozhikode">food near Kozhikode</button><button data-try="toys for 5 year old children">toys for 5 year old children</button><button data-try="urgent blankets">urgent blankets</button></div>
   <div class="live" role="status" aria-live="polite"><i></i><span id="liveText">Listening for live donations…</span></div>
   <div class="grid" id="grid"></div>
@@ -399,7 +402,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const rid=(p)=>p+"-"+Array.from({length:6},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.random()*32|0]).join("");
 const tot=n=>n.items.reduce((a,i)=>a+i[1],0), got=n=>n.items.reduce((a,i)=>a+i[2],0), pct=n=>Math.round(got(n)/tot(n)*100);
-let state={cat:"all",q:"",district:"",urgency:""};
+let state={cat:"all",product:"",q:"",district:"",urgency:""};
 const mine=[]; let reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ───────── i18n (hero + headings) ───────── */
@@ -446,13 +449,23 @@ function visible(){
   const p=parse(state.q);
   return NEEDS.map(n=>({n,s:score(n,p)})).filter(x=>x.s>=0)
    .filter(x=>state.cat==="all"||x.n.cat===state.cat)
+   .filter(x=>!state.product||x.n.items.some(i=>i[3].type===state.product))
    .filter(x=>!state.district||x.n.district===state.district)
    .filter(x=>!state.urgency||x.n.urg===state.urgency)
    .sort((a,b)=>b.s-a.s||URGW[b.n.urg]-URGW[a.n.urg]||a.n.days-b.n.days).map(x=>x.n);
 }
 
 /* ───────── render browse ───────── */
-function renderCats(){$("#cats").innerHTML=Object.entries(CATS).map(([k,[l,e]])=>`<button aria-pressed="${state.cat===k}" data-cat="${k}">${e} ${l}</button>`).join("");$$("#cats button").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;renderCats();renderGrid()})}
+function renderCats(){$("#cats").innerHTML=Object.entries(CATS).map(([k,[l,e]])=>`<button aria-pressed="${state.cat===k}" data-cat="${k}">${e} ${l}</button>`).join("");$$("#cats button").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;state.product="";renderCats();renderGrid()});renderProducts()}
+/* Product types with open needs in the chosen category (mirrors the app's product filter). */
+function renderProducts(){
+  const box=$("#prods"), counts=new Map();
+  if(state.cat!=="all")NEEDS.filter(n=>n.cat===state.cat&&tot(n)>got(n)).forEach(n=>new Set(n.items.map(i=>i[3].type)).forEach(t=>counts.set(t,(counts.get(t)||0)+1)));
+  box.hidden=counts.size<2;
+  if(box.hidden)return;
+  box.innerHTML=`<span>Product</span><button aria-pressed="${!state.product}" data-prod="">All ${esc(CATS[state.cat][0].toLowerCase())}</button>`+[...counts].map(([t,c])=>`<button aria-pressed="${state.product===t}" data-prod="${esc(t)}">${esc(t)}<small>${c}</small></button>`).join("");
+  $$("#prods button").forEach(b=>b.onclick=()=>{state.product=state.product===b.dataset.prod?"":b.dataset.prod;renderProducts();renderGrid()});
+}
 $("#district").insertAdjacentHTML("beforeend",[...new Set(NEEDS.map(n=>n.district))].sort().map(d=>`<option>${d}</option>`).join(""));
 function card(n){
   const p=pct(n), left=tot(n)-got(n);
@@ -483,7 +496,7 @@ function refreshNeed(n,flash){
 $("#q").oninput=e=>{state.q=e.target.value;renderGrid()};
 $("#district").onchange=e=>{state.district=e.target.value;renderGrid()};
 $("#urgency").onchange=e=>{state.urgency=e.target.value;renderGrid()};
-$$("[data-try]").forEach(b=>b.onclick=()=>{$("#q").value=b.dataset.try;state.q=b.dataset.try;state.cat="all";renderCats();renderGrid()});
+$$("[data-try]").forEach(b=>b.onclick=()=>{$("#q").value=b.dataset.try;state.q=b.dataset.try;state.cat="all";state.product="";renderCats();renderGrid()});
 
 /* ───────── live feed (simulates the SSE stream) ───────── */
 const donorAliases=["D7K2Q","M4X9C","T2PJ8","B6RW3","K9HNA","L3ZQ5"];

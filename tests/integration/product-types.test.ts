@@ -8,6 +8,7 @@ import { activeRequest, db, makeFixtures, type Fixtures } from "../helpers/fixtu
 import * as requestsRoute from "@/app/api/requests/route";
 import * as requestRoute from "@/app/api/requests/[id]/route";
 import * as donationsRoute from "@/app/api/donations/route";
+import { productTypeCounts } from "@/services/requests";
 
 let f: Fixtures;
 const categoryId = async (slug: string) => (await db.category.findUniqueOrThrow({ where: { slug } })).id;
@@ -118,5 +119,38 @@ describe("donors describing what they give", () => {
     const r = await donate([{ requestItemId: riceId, quantity: 1 }]);
     expect(r.status).toBe(201);
     expect(r.json.data.condition).toBe("NEW");
+  });
+});
+
+describe("browsing by product type", () => {
+  beforeAll(async () => {
+    const sports = await categoryId("sports");
+    await activeRequest(f.recipientB.org.id, [{ name: "Football", quantity: 4, attributes: { productType: "Ball", size: "Size 4" } }, { name: "Shin guards", quantity: 10, attributes: { productType: "Protective gear", gear: "Shin guards" } }], sports);
+    await activeRequest(f.recipientB.org.id, [{ name: "Volleyball", quantity: 2, attributes: { productType: "Ball", size: "Size 5" } }], sports);
+    await activeRequest(f.recipientB.org.id, [{ name: "Bat", quantity: 2, attributes: { productType: "Cricket bat", size: "Size 4" } }], sports);
+    // Not public: a draft never counts.
+    const draft = await activeRequest(f.recipientB.org.id, [{ name: "Racket", quantity: 1, attributes: { productType: "Racket", sport: "Badminton" } }], sports);
+    await db.request.update({ where: { id: draft.id }, data: { status: "DRAFT" } });
+  });
+
+  it("filters needs to those with an item of that product type", async () => {
+    const r = await call(requestsRoute.GET, { path: "/api/requests?category=sports&product=Ball" });
+    const titles = (r.json.data.items as { items: { name: string }[] }[]).map((n) => n.items.map((i) => i.name).join("+"));
+    expect(titles.sort()).toEqual(["Football+Shin guards", "Volleyball"]);
+    expect(r.json.data.total).toBe(2);
+  });
+
+  it("counts open needs per product type in the catalogue's order, ignoring drafts", async () => {
+    expect(await productTypeCounts("sports")).toEqual([
+      { name: "Ball", count: 2 },
+      { name: "Cricket bat", count: 1 },
+      { name: "Protective gear", count: 1 },
+    ]);
+    expect(await productTypeCounts("no-such-category")).toEqual([]);
+  });
+
+  it("ignores an over-long product parameter instead of failing", async () => {
+    const r = await call(requestsRoute.GET, { path: `/api/requests?category=sports&product=${"x".repeat(80)}` });
+    expect(r.status).toBe(200);
   });
 });

@@ -4,18 +4,19 @@ import { EmptyState } from "@/components/ui/states";
 import { Pagination } from "@/components/ui/pagination";
 import { NeedCard } from "./need-card";
 import { FilterBar } from "./filter-bar";
-import { browseRequests, listCategories, type BrowseFilters } from "@/services/requests";
+import { browseRequests, listCategories, productTypeCounts, type BrowseFilters } from "@/services/requests";
 import { KERALA_DISTRICTS } from "@/lib/geo";
 import type { BrowseQuery } from "@/lib/validation/browse";
 
 export async function BrowseView({ query, basePath, fixedCategory }: { query: BrowseQuery; basePath: string; fixedCategory?: string }) {
   const filters: BrowseFilters = { ...query, category: fixedCategory ?? query.category };
-  const [result, categories] = await Promise.all([browseRequests(filters), listCategories()]);
+  const [result, categories, productTypes] = await Promise.all([browseRequests(filters), listCategories(), filters.category ? productTypeCounts(filters.category) : []]);
 
   const interpreted = result.interpreted
     ? [
         result.interpreted.terms.length ? `“${result.interpreted.terms.join(" ")}”` : null,
         result.interpreted.categorySlug ? categories.find((c) => c.slug === result.interpreted!.categorySlug)?.name : null,
+        query.product ?? null,
         result.interpreted.size ? `size ${result.interpreted.size}` : null,
         result.interpreted.age !== undefined ? `age ${result.interpreted.age}` : null,
         result.interpreted.district ? `near ${result.interpreted.district}` : null,
@@ -39,6 +40,8 @@ export async function BrowseView({ query, basePath, fixedCategory }: { query: Br
         <FilterBar
           categories={categories.map((c) => ({ value: c.slug, label: `${c.icon} ${c.name}` }))}
           districts={[...KERALA_DISTRICTS]}
+          productTypes={productTypes}
+          categoryName={categories.find((c) => c.slug === filters.category)?.name}
           interpreted={interpreted}
         />
       </Suspense>

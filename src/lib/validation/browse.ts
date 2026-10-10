@@ -6,6 +6,8 @@ const empty = (v: unknown) => (v === "" || v === null ? undefined : v);
 export const browseQuerySchema = z.object({
   q: z.preprocess(empty, z.string().trim().max(200).optional()),
   category: z.preprocess(empty, z.string().regex(/^[a-z][a-z0-9-]{1,30}$/).optional()),
+  /** A product type within the category, e.g. "Footwear". */
+  product: z.preprocess(empty, z.string().trim().min(1).max(40).optional()),
   district: z.preprocess(empty, z.enum(KERALA_DISTRICTS).optional()),
   near: z.preprocess(empty, z.enum(KERALA_DISTRICTS).optional()),
   urgency: z.preprocess(empty, z.enum(["CRITICAL", "HIGH", "MEDIUM", "NORMAL"]).optional()),
