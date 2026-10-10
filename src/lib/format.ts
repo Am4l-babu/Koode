@@ -48,3 +48,13 @@ export function relativeDays(value: string | Date | null | undefined, now = new 
 export function pluralize(n: number, one: string, many = `${one}s`): string {
   return `${formatNumber(n)} ${n === 1 ? one : many}`;
 }
+
+/** Short countdown for cards: "5 days left", "Due today", "Past due". */
+export function daysLeft(value: string | Date | null | undefined, now = new Date()): string | null {
+  if (!value) return null;
+  const d = typeof value === "string" ? new Date(value) : value;
+  const days = Math.ceil((d.getTime() - now.getTime()) / 86_400_000);
+  if (days < 0) return "Past due";
+  if (days === 0) return "Due today";
+  return `${days} day${days === 1 ? "" : "s"} left`;
+}

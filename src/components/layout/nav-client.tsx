@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Menu, X } from "lucide-react";
+import { BarChart3, ClipboardList, HandHeart, House, Inbox, LayoutDashboard, LogIn, LogOut, Menu, Search, Sprout, UserRound, X } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 
 export interface NavLink {
@@ -11,8 +11,13 @@ export interface NavLink {
   label: string;
 }
 
+/** Areas with their own sidebar; the top bar drops its duplicate links there. */
+const SIDEBAR_AREAS = ["/donor", "/recipient", "/admin"];
+const inSidebarArea = (pathname: string) => SIDEBAR_AREAS.some((a) => pathname === a || pathname.startsWith(`${a}/`));
+
 export function DesktopLinks({ links }: { links: NavLink[] }) {
   const pathname = usePathname();
+  if (inSidebarArea(pathname)) return null;
   return (
     <ul className="hidden items-center gap-1 lg:flex">
       {links.map((l) => {
@@ -97,5 +102,44 @@ export function MobileMenu({ links, menuLabel, footer }: { links: NavLink[]; men
         </div>
       )}
     </div>
+  );
+}
+
+const TAB_ICONS = { House, Search, HandHeart, UserRound, LayoutDashboard, ClipboardList, Inbox, BarChart3, LogIn, Sprout } as const;
+
+export interface TabLink extends NavLink {
+  icon: keyof typeof TAB_ICONS;
+  exact?: boolean;
+}
+
+/** Phone-only bottom navigation with the four or five most used destinations. */
+export function MobileTabBar({ tabs }: { tabs: TabLink[] }) {
+  const pathname = usePathname();
+  const activeHref = tabs
+    .filter((t) => (t.exact ? pathname === t.href : pathname === t.href || pathname.startsWith(`${t.href}/`)))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  return (
+    <nav aria-label="Quick links" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <ul className="mx-auto flex max-w-lg">
+        {tabs.map((t) => {
+          const Icon = TAB_ICONS[t.icon];
+          const active = t.href === activeHref;
+          return (
+            <li key={t.href} className="flex-1">
+              <Link
+                href={t.href}
+                aria-current={active ? "page" : undefined}
+                className={cn("flex h-16 flex-col items-center justify-center gap-1 text-[0.7rem] font-semibold", active ? "text-primary-ink" : "text-subtle hover:text-fg")}
+              >
+                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-primary-soft")}>
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                {t.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

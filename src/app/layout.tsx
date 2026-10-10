@@ -9,7 +9,7 @@ import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
-  title: { default: "Koode — Give what is needed. Keep every identity private.", template: "%s · Koode" },
+  title: { default: "Koode — Give what matters. Help where it counts.", template: "%s · Koode" },
   description:
     "Koode connects donors with verified organisations across Kerala. Give exactly what is needed, without revealing who you are.",
   applicationName: "Koode",
@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = store.get("sb_theme")?.value;
   return (
     <html lang={locale === "ml" ? "ml" : locale === "hi" ? "hi" : "en-IN"} data-theme={theme === "dark" || theme === "light" ? theme : undefined} suppressHydrationWarning>
-      <body className="flex min-h-dvh flex-col">
+      <body className="flex min-h-dvh flex-col pb-16 lg:pb-0">
         <a href="#main" className="skip-link">
           {t.nav.skip}
         </a>

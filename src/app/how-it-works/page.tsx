@@ -23,7 +23,7 @@ export default async function HowItWorksPage() {
     <>
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6">
         <PageHeader eyebrow={t.nav.how} title="A secure, private bridge between need and generosity" description={t.how.lead} />
-        <HowItWorksSteps t={t} />
+        <HowItWorksSteps t={t} privacyNote />
       </div>
       <Section id="privacy-model" eyebrow="Privacy model" title="What each side can see">
         <PrivacyComparison />

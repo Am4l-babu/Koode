@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Lock } from "lucide-react";
 import { LogoMark } from "@/components/brand/logo";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -15,9 +14,6 @@ export async function Footer() {
             <span className="font-display text-lg font-semibold">{t.brand.name}</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-muted">{t.brand.tagline}</p>
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-ink">
-            <Lock className="h-3.5 w-3.5" aria-hidden="true" /> {t.privacy.badge}
-          </p>
         </div>
         <FooterCol title="Give" links={[["/needs", t.nav.browse], ["/needs/education", "Education needs"], ["/needs/clothing", "Clothing needs"], ["/needs/food", "Food needs"]]} />
         <FooterCol title="Organisations" links={[["/register?role=recipient", t.hero.ctaRequest], ["/how-it-works", t.nav.how], ["/login", t.nav.login]]} />

@@ -6,7 +6,6 @@ import { Gift, Minus, Plus } from "lucide-react";
 import type { PublicRequestDTO } from "@/lib/dto/requests";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button, buttonClass } from "@/components/ui/button";
-import { PrivacyBadge } from "@/components/brand/badges";
 import { formatNumber } from "@/lib/format";
 import { describeAttributes } from "@/lib/categories";
 import { DonationModal } from "./donation-modal";
@@ -70,27 +69,32 @@ export function DonatePanel({
             <span className="font-semibold text-fg">{percent}%</span> fulfilled
           </p>
         </div>
-        <ul className="mt-4 space-y-5">
+        <ul className="mt-4 space-y-3">
           {items.map((i) => (
-            <li key={i.id}>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold text-fg">{i.name}</p>
-                <p className="text-sm text-muted" aria-live="polite">
-                  <span className="font-semibold text-fg">{formatNumber(i.committed)}</span> / {formatNumber(i.required)} {i.unit !== "pcs" ? i.unit : ""} committed
-                  {i.remaining > 0 ? <span className="ml-1 text-primary-ink">· {formatNumber(i.remaining)} remaining</span> : <span className="ml-1 text-secondary-ink">· complete ✓</span>}
-                </p>
+            <li key={i.id} className="rounded-2xl border border-line p-4">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div>
+                  <dt className="text-xs text-subtle">Item</dt>
+                  <dd className="font-semibold text-fg">{i.name}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-subtle">Quantity</dt>
+                  <dd className="font-semibold text-fg" aria-live="polite">
+                    {i.remaining > 0 ? formatNumber(i.remaining) : "Complete ✓"}{" "}
+                    <span className="font-normal text-muted">(of {formatNumber(i.required)}{i.unit !== "pcs" ? ` ${i.unit}` : ""})</span>
+                  </dd>
+                </div>
+                {describeAttributes(i.attributes).map((a) => (
+                  <div key={a.key}>
+                    <dt className="text-xs text-subtle">{a.label}</dt>
+                    <dd className="font-medium text-fg">{a.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-3 flex items-center gap-3">
+                <ProgressBar value={i.percent} size="sm" tone={i.remaining === 0 ? "success" : "primary"} label={`${i.name}: ${i.percent}% committed`} />
+                <span className="shrink-0 text-xs text-muted">{formatNumber(i.committed)} / {formatNumber(i.required)} committed</span>
               </div>
-              <ProgressBar value={i.percent} size="sm" className="mt-2" tone={i.remaining === 0 ? "success" : "primary"} label={`${i.name}: ${i.percent}% committed`} />
-              {describeAttributes(i.attributes).length > 0 && (
-                <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  {describeAttributes(i.attributes).map((a) => (
-                    <div key={a.key} className="flex gap-1">
-                      <dt className="text-subtle">{a.label}:</dt>
-                      <dd className="font-medium text-fg">{a.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
             </li>
           ))}
         </ul>
@@ -102,7 +106,7 @@ export function DonatePanel({
           <p className="mt-3 text-muted">This need has been fully committed by the community. Thank you! 🌱</p>
         ) : viewer === "guest" ? (
           <div className="mt-3 space-y-3">
-            <p className="text-muted">Sign in or create a free donor account to donate. Your identity stays private.</p>
+            <p className="text-muted">Sign in or create a free donor account to donate.</p>
             <Link href={`/login?next=${encodeURIComponent(`/needs/${need.id}?donate=1`)}`} className={buttonClass("primary", "lg", "w-full")}>
               Sign in to donate
             </Link>
@@ -146,7 +150,6 @@ export function DonatePanel({
             </Button>
           </div>
         )}
-        <PrivacyBadge className="mt-5" note="Your identity will not be shared with the organisation." compact />
       </section>
 
       {viewer === "donor" && (

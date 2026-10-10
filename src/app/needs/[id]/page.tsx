@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, MapPin, RefreshCw, Truck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Building2, CalendarDays, MapPin, RefreshCw, Truck } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
-import { PrivacyBadge, UrgencyBadge, VerificationBadge, AnonymousIdentityBadge } from "@/components/brand/badges";
+import { UrgencyBadge } from "@/components/brand/badges";
+import { CategoryArt, CategoryIcon } from "@/components/brand/category-visual";
+import { remainingSummary } from "@/components/needs/need-card";
 import { BrowseView } from "@/components/needs/browse-view";
 import { DonatePanel } from "@/components/needs/donate-panel";
 import { ReportButton } from "@/components/needs/report-button";
@@ -86,59 +88,81 @@ export default async function NeedPage({ params, searchParams }: Params) {
 
       <div className="grid gap-8 lg:grid-cols-[1.25fr_1fr]">
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/needs/${need.category.slug}`} className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-semibold text-muted hover:text-fg">
-              <span aria-hidden="true">{need.category.icon}</span> {need.category.name}
-            </Link>
-            <UrgencyBadge priority={need.priority} />
-            {need.recurrence !== "NONE" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-info-soft px-2.5 py-1 text-xs font-semibold text-info">
-                <RefreshCw className="h-3 w-3" aria-hidden="true" /> Recurring · {need.recurrence.toLowerCase()}
-              </span>
-            )}
-          </div>
-
-          <div>
-            <AnonymousIdentityBadge kind="recipient" label={need.recipient.descriptor} sublabel={`Partner #${need.recipient.ref} · ${need.recipient.typeLabel}`} />
-            <div className="mt-3"><PageHeader title={need.title} /></div>
-          </div>
-
-          <div className="card -mt-4 p-5 sm:p-6">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="font-display text-4xl font-semibold">{need.percent}%</p>
-                <p className="text-sm text-muted">{STAGE_LABELS[need.stage]} · {need.totals.committed} / {need.totals.required} committed</p>
+          <article className="card overflow-hidden" aria-labelledby="need-title">
+            <CategoryArt slug={need.category.slug} emoji={need.category.icon} size="lg" className="h-56 sm:h-72">
+              <div className="absolute right-4 top-4 flex flex-wrap justify-end gap-2">
+                <Link href={`/needs/${need.category.slug}`} className="inline-flex items-center gap-1.5 rounded-full bg-surface/95 py-1 pl-1 pr-3 text-xs font-semibold text-fg shadow-soft hover:text-primary-ink">
+                  <CategoryIcon slug={need.category.slug} emoji={need.category.icon} className="h-6 w-6 rounded-full" iconClassName="h-3.5 w-3.5" />
+                  {need.category.name}
+                </Link>
+                <UrgencyBadge priority={need.priority} className="shadow-soft" />
+                {need.recurrence !== "NONE" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-info-soft px-2.5 py-1 text-xs font-semibold text-info shadow-soft">
+                    <RefreshCw className="h-3 w-3" aria-hidden="true" /> Recurring · {need.recurrence.toLowerCase()}
+                  </span>
+                )}
               </div>
-              <VerificationBadge verified={need.recipient.verified} />
+            </CategoryArt>
+
+            <div className="p-5 sm:p-7">
+              <p className="text-sm font-semibold text-primary-ink">{need.category.name}</p>
+              <h1 id="need-title" className="mt-1 text-3xl font-semibold text-fg sm:text-4xl">{need.title}</h1>
+              <p className="mt-2 text-muted">{remainingSummary(need)}</p>
+
+              <div className="mt-5 flex items-center gap-4">
+                <ProgressBar value={need.percent} size="lg" />
+                <span className="shrink-0 text-sm font-semibold text-fg">{need.percent}% fulfilled</span>
+              </div>
+              <p className="mt-2 text-sm text-muted">{STAGE_LABELS[need.stage]} · {need.totals.committed} of {need.totals.required} committed</p>
+
+              <dl className="mt-6 grid gap-4 border-t border-line pt-5 text-sm sm:grid-cols-3">
+                <div className="flex items-start gap-2.5">
+                  <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-secondary-ink" aria-hidden="true" />
+                  <div>
+                    <dt className="text-subtle">{need.recipient.verified ? "Verified organisation" : "Pending verification"}</dt>
+                    <dd className="font-semibold">{need.recipient.descriptor}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-subtle" aria-hidden="true" />
+                  <div>
+                    <dt className="text-subtle">Area</dt>
+                    <dd className="font-semibold">{need.location.city ? `${need.location.city}, ` : ""}{need.location.district} District</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-subtle" aria-hidden="true" />
+                  <div>
+                    <dt className="text-subtle">Needed by</dt>
+                    <dd className="font-semibold">{formatDate(need.neededBy)}{due && <span className="ml-1 font-normal text-muted">({due})</span>}</dd>
+                  </div>
+                </div>
+              </dl>
             </div>
-            <ProgressBar value={need.percent} size="lg" className="mt-4" />
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
-              <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 text-subtle" aria-hidden="true" />
-                <div><dt className="text-subtle">Area</dt><dd className="font-semibold">{need.location.city ? `${need.location.city}, ` : ""}{need.location.district}</dd></div>
-              </div>
-              <div className="flex items-start gap-2">
-                <CalendarDays className="mt-0.5 h-4 w-4 text-subtle" aria-hidden="true" />
-                <div><dt className="text-subtle">Needed by</dt><dd className="font-semibold">{formatDate(need.neededBy)}{due && <span className="ml-1 font-normal text-muted">({due})</span>}</dd></div>
-              </div>
+          </article>
+
+          <section aria-labelledby="why" className="card p-5 sm:p-7">
+            <h2 id="why" className="text-lg font-semibold">About This Need</h2>
+            <p className="mt-3 whitespace-pre-line leading-relaxed text-fg">{need.description}</p>
+            <dl className="mt-5 grid gap-3 rounded-2xl bg-surface-2 p-4 text-sm sm:grid-cols-2">
               <div className="flex items-start gap-2">
                 <Truck className="mt-0.5 h-4 w-4 text-subtle" aria-hidden="true" />
                 <div><dt className="text-subtle">Delivery</dt><dd className="font-semibold">{need.deliveryMethods.map((m) => DELIVERY_METHOD_LABELS[m as keyof typeof DELIVERY_METHOD_LABELS]).join(" · ")}</dd></div>
               </div>
+              <div className="flex items-start gap-2">
+                <Building2 className="mt-0.5 h-4 w-4 text-subtle" aria-hidden="true" />
+                <div>
+                  <dt className="text-subtle">Partner #{need.recipient.ref}</dt>
+                  <dd className="font-semibold">
+                    {need.recipient.typeLabel}
+                    {need.recipient.focusArea ? ` · ${need.recipient.focusArea}` : ""}
+                    {need.recipient.verifiedSince ? <span className="block font-normal text-muted">Verified since {formatMonthYear(need.recipient.verifiedSince)}</span> : null}
+                  </dd>
+                </div>
+              </div>
             </dl>
-          </div>
-
-          <section aria-labelledby="why" className="card p-5 sm:p-6">
-            <h2 id="why" className="text-lg font-semibold">Why this is needed</h2>
-            <p className="mt-3 whitespace-pre-line leading-relaxed text-fg">{need.description}</p>
-            <p className="mt-4 text-sm text-muted">
-              {need.recipient.descriptor}
-              {need.recipient.focusArea ? ` · ${need.recipient.focusArea}` : ""}
-              {need.recipient.verifiedSince ? ` · Verified since ${formatMonthYear(need.recipient.verifiedSince)}` : ""}
-            </p>
           </section>
 
-          <PrivacyBadge note="Recipient identity protected. The platform coordinates delivery so neither side ever sees the other's personal details." />
           <ReportButton requestId={need.id} />
         </div>
 

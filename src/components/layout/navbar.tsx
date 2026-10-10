@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Heart } from "lucide-react";
+import { Heart, UserRound } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ButtonLink } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { db } from "@/lib/db";
-import { DesktopLinks, LogoutButton, MobileMenu, type NavLink } from "./nav-client";
+import { DesktopLinks, LogoutButton, MobileMenu, MobileTabBar, type NavLink, type TabLink } from "./nav-client";
 import { NotificationCenter } from "./notification-center";
 import { LocaleSwitcher, ThemeToggle } from "./preferences";
 
@@ -46,9 +46,39 @@ export async function Navbar() {
     ];
   }
 
+  const tabs: TabLink[] = !user
+    ? [
+        { href: "/", label: t.nav.home, icon: "House", exact: true },
+        { href: "/needs", label: "Needs", icon: "Search" },
+        { href: "/impact", label: t.nav.impact, icon: "Sprout" },
+        { href: "/login", label: t.nav.login, icon: "LogIn" },
+      ]
+    : user.role === "DONOR"
+      ? [
+          { href: "/donor", label: "Home", icon: "LayoutDashboard", exact: true },
+          { href: "/needs", label: "Needs", icon: "Search" },
+          { href: "/donor/donations", label: "Donations", icon: "HandHeart" },
+          { href: "/donor/profile", label: t.nav.profile, icon: "UserRound" },
+        ]
+      : user.role === "RECIPIENT"
+        ? [
+            { href: "/recipient", label: "Home", icon: "LayoutDashboard", exact: true },
+            { href: "/recipient/requests", label: "Requests", icon: "ClipboardList" },
+            { href: "/recipient/donations", label: "Donations", icon: "Inbox" },
+            { href: "/recipient/profile", label: t.nav.profile, icon: "UserRound" },
+          ]
+        : [
+            { href: "/admin", label: "Home", icon: "LayoutDashboard", exact: true },
+            { href: "/needs", label: "Needs", icon: "Search" },
+            { href: "/admin/analytics", label: "Analytics", icon: "BarChart3" },
+            { href: "/impact", label: t.nav.impact, icon: "Sprout" },
+          ];
+  const profileHref = user?.role === "DONOR" ? "/donor/profile" : user?.role === "RECIPIENT" ? "/recipient/profile" : "/admin/settings";
+
   const unread = user ? await db.notification.count({ where: { userId: user.id, readAt: null } }) : 0;
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-line/70 bg-bg/85 backdrop-blur-xl">
       <nav aria-label="Main" className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex items-center gap-6">
@@ -64,6 +94,9 @@ export async function Navbar() {
             <>
               <NotificationCenter initialUnread={unread} />
               <LogoutButton label={t.nav.logout} className="hidden lg:flex" />
+              <Link href={profileHref} className="ml-1 hidden h-10 w-10 items-center justify-center rounded-full border border-line bg-primary-soft text-primary-ink hover:border-primary sm:flex" aria-label="Your account">
+                <UserRound className="h-5 w-5" aria-hidden="true" />
+              </Link>
             </>
           ) : (
             <>
@@ -89,5 +122,7 @@ export async function Navbar() {
         </div>
       </nav>
     </header>
+    <MobileTabBar tabs={tabs} />
+    </>
   );
 }

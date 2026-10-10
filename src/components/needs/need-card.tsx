@@ -1,78 +1,84 @@
 import Link from "next/link";
-import { CalendarDays, MapPin } from "lucide-react";
+import { BadgeCheck, Clock, MapPin } from "lucide-react";
 import type { PublicRequestDTO } from "@/lib/dto/requests";
 import { ProgressBar } from "@/components/ui/progress";
 import { buttonClass } from "@/components/ui/button";
-import { UrgencyBadge, VerificationBadge } from "@/components/brand/badges";
-import { formatDate, formatNumber } from "@/lib/format";
-import { STAGE_LABELS } from "@/lib/fulfillment";
+import { UrgencyBadge } from "@/components/brand/badges";
+import { CategoryArt, CategoryIcon } from "@/components/brand/category-visual";
+import { daysLeft, formatNumber } from "@/lib/format";
+
+/** What is still needed, in one line: "12 remaining of 40", or the open items for mixed units. */
+export function remainingSummary(need: Pick<PublicRequestDTO, "items" | "totals">) {
+  if (need.items.length === 1) {
+    const i = need.items[0]!;
+    const unit = i.unit !== "pcs" ? ` ${i.unit}` : "";
+    return i.remaining > 0 ? `${formatNumber(i.remaining)}${unit} remaining of ${formatNumber(i.required)}` : "Fully committed";
+  }
+  const open = need.items.filter((i) => i.remaining > 0);
+  if (!open.length) return "Fully committed";
+  return open
+    .slice(0, 2)
+    .map((i) => `${formatNumber(i.remaining)}${i.unit !== "pcs" ? ` ${i.unit}` : ""} ${i.name.toLowerCase()}`)
+    .join(" · ")
+    .concat(open.length > 2 ? ` +${open.length - 2} more` : "", " still needed");
+}
 
 export function NeedCard({ need, index = 0 }: { need: PublicRequestDTO; index?: number }) {
-  const shown = need.items.slice(0, 3);
-  const more = need.items.length - shown.length;
+  const due = daysLeft(need.neededBy);
   return (
     <article
-      className="card card-hover flex h-full animate-rise flex-col p-5"
+      className="card card-hover relative flex h-full animate-rise flex-col overflow-hidden"
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
       aria-labelledby={`need-${need.id}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-muted">
-          <span aria-hidden="true">{need.category.icon}</span> {need.category.name}
-        </span>
-        <UrgencyBadge priority={need.priority} />
-      </div>
-
-      <h3 id={`need-${need.id}`} className="mt-4 text-lg font-semibold leading-snug text-fg">
-        <Link href={`/needs/${need.id}`} className="after:absolute after:inset-0 hover:text-primary-ink focus-visible:shadow-none">
-          {need.title}
-        </Link>
-      </h3>
-
-      <ul className="mt-2 space-y-0.5 text-sm text-muted">
-        {shown.map((i) =>
-          i.remaining > 0 ? (
-            <li key={i.id}>
-              <span className="font-semibold text-fg">{formatNumber(i.remaining)}</span> {i.unit !== "pcs" ? `${i.unit} ` : ""}
-              {i.name.toLowerCase()} <span className="text-subtle">still needed</span>
-            </li>
-          ) : (
-            <li key={i.id} className="text-secondary-ink">✓ {i.name} — fully committed</li>
-          ),
-        )}
-        {more > 0 && <li className="text-subtle">+{more} more item{more > 1 ? "s" : ""}</li>}
-      </ul>
-
-      <div className="mt-auto pt-5">
-        <div className="mb-1.5 flex items-center justify-between text-xs font-medium">
-          <span className="text-primary-ink">{STAGE_LABELS[need.stage]}</span>
-          <span className="text-muted">{need.percent}% fulfilled</span>
+      <CategoryArt slug={need.category.slug} emoji={need.category.icon} className="h-40">
+        <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface/95 py-1 pl-1 pr-2.5 text-xs font-semibold text-fg shadow-soft">
+            <CategoryIcon slug={need.category.slug} emoji={need.category.icon} className="h-5 w-5 rounded-full" iconClassName="h-3 w-3" />
+            {need.category.name}
+          </span>
+          <UrgencyBadge priority={need.priority} className="shadow-soft" />
         </div>
-        <ProgressBar value={need.percent} label={`${need.title}: ${need.percent}% fulfilled`} />
+      </CategoryArt>
 
-        <dl className="mt-4 grid grid-cols-1 gap-1.5 text-sm text-muted">
-          <div className="flex items-center gap-2">
-            <dt className="sr-only">Location</dt>
-            <MapPin className="h-4 w-4 shrink-0 text-subtle" aria-hidden="true" />
-            <dd>{need.location.city ? `${need.location.city}, ` : ""}{need.location.district} District</dd>
-          </div>
-          {need.neededBy && (
-            <div className="flex items-center gap-2">
-              <dt className="sr-only">Needed by</dt>
-              <CalendarDays className="h-4 w-4 shrink-0 text-subtle" aria-hidden="true" />
-              <dd>Needed by {formatDate(need.neededBy, { year: undefined })}</dd>
-            </div>
-          )}
-        </dl>
-
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-fg">{need.recipient.descriptor}</p>
-            <div className="mt-1"><VerificationBadge verified={need.recipient.verified} /></div>
-          </div>
-          <Link href={`/needs/${need.id}?donate=1`} className={buttonClass("primary", "sm", "relative z-10 h-10 px-4")} aria-label={`Help with: ${need.title}`}>
-            Help
+      <div className="flex flex-1 flex-col p-5">
+        <h3 id={`need-${need.id}`} className="text-lg font-semibold leading-snug text-fg">
+          <Link href={`/needs/${need.id}`} className="after:absolute after:inset-0 hover:text-primary-ink focus-visible:shadow-none">
+            {need.title}
           </Link>
+        </h3>
+        <p className="mt-1 text-sm text-muted">{remainingSummary(need)}</p>
+
+        <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-secondary-ink">
+          <BadgeCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="truncate">{need.recipient.verified ? need.recipient.descriptor : `${need.recipient.descriptor} (pending verification)`}</span>
+        </p>
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 shrink-0 text-subtle" aria-hidden="true" />
+            {need.location.city ? `${need.location.city}, ` : ""}{need.location.district}
+          </span>
+          {due && (
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="h-4 w-4 shrink-0 text-subtle" aria-hidden="true" />
+              {due}
+            </span>
+          )}
+        </p>
+
+        <div className="mt-auto pt-5">
+          <div className="flex items-center gap-3">
+            <ProgressBar value={need.percent} size="sm" label={`${need.title}: ${need.percent}% fulfilled`} />
+            <span className="shrink-0 text-xs font-semibold text-muted">{need.percent}% fulfilled</span>
+          </div>
+          <div className="relative z-10 mt-4 flex gap-2">
+            <Link href={`/needs/${need.id}`} className={buttonClass("outline", "sm", "h-10 flex-1 border-primary/40 text-primary-ink")} aria-label={`View details: ${need.title}`}>
+              View Details
+            </Link>
+            <Link href={`/needs/${need.id}?donate=1`} className={buttonClass("primary", "sm", "h-10 px-4")} aria-label={`Help with: ${need.title}`}>
+              Help
+            </Link>
+          </div>
         </div>
       </div>
     </article>
@@ -81,13 +87,14 @@ export function NeedCard({ need, index = 0 }: { need: PublicRequestDTO; index?: 
 
 export function NeedCardSkeleton() {
   return (
-    <div className="card flex flex-col gap-3 p-5" aria-hidden="true">
-      <div className="flex justify-between"><div className="shimmer h-6 w-24 rounded-full" /><div className="shimmer h-6 w-16 rounded-full" /></div>
-      <div className="shimmer mt-2 h-6 w-4/5 rounded-lg" />
-      <div className="shimmer h-4 w-3/5 rounded-lg" />
-      <div className="shimmer mt-6 h-2.5 w-full rounded-full" />
-      <div className="shimmer h-4 w-1/2 rounded-lg" />
-      <div className="shimmer mt-3 h-10 w-full rounded-xl" />
+    <div className="card flex flex-col overflow-hidden" aria-hidden="true">
+      <div className="shimmer h-40 w-full" />
+      <div className="flex flex-col gap-3 p-5">
+        <div className="shimmer h-6 w-4/5 rounded-lg" />
+        <div className="shimmer h-4 w-3/5 rounded-lg" />
+        <div className="shimmer mt-6 h-2 w-full rounded-full" />
+        <div className="shimmer mt-3 h-10 w-full rounded-full" />
+      </div>
     </div>
   );
 }

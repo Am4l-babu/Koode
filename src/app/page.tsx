@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, HeartHandshake, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, HeartHandshake } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import { HeroVisual } from "@/components/brand/hero-visual";
 import { NeedCard } from "@/components/needs/need-card";
-import { CategoryTile, HowItWorksSteps, PrivacyComparison, Section } from "@/components/marketing/sections";
+import { CategoryTile, FeatureRow, HowItWorksSteps, Section } from "@/components/marketing/sections";
 import { CountUp } from "@/components/marketing/count-up";
 import { getDictionary } from "@/lib/i18n/server";
 import { browseRequests, categoryCounts, listCategories } from "@/services/requests";
@@ -25,20 +25,13 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="hero-glow relative overflow-hidden">
-        <div className="grain pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-24 lg:pt-20">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-12 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-16 lg:pt-16">
           <div className="animate-rise">
-            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-primary-ink shadow-soft">
-              <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" /> {t.hero.eyebrow}
-            </p>
-            <h1 className="mt-6 text-[2.6rem] font-semibold leading-[1.05] sm:text-6xl">
+            <h1 className="text-[2.8rem] font-bold leading-[1.02] sm:text-6xl lg:text-7xl">
               {t.hero.title1}
-              <br />
-              <span className="bg-[linear-gradient(100deg,var(--primary),color-mix(in_oklab,var(--primary)_40%,var(--secondary)))] bg-clip-text text-transparent">
-                {t.hero.title2}
-              </span>
+              <span className="mt-3 block text-[1.9rem] font-semibold leading-tight text-primary-ink sm:text-4xl">{t.hero.title2}</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">{t.hero.lead}</p>
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted">{t.hero.lead}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/needs" size="lg" icon={<HeartHandshake className="h-5 w-5" aria-hidden="true" />}>
                 {t.hero.ctaHelp}
@@ -46,17 +39,19 @@ export default async function HomePage() {
               <ButtonLink href="/register?role=recipient" size="lg" variant="outline">
                 {t.hero.ctaRequest}
               </ButtonLink>
-              <ButtonLink href="/how-it-works" size="lg" variant="ghost">
-                {t.hero.ctaHow} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </ButtonLink>
             </div>
-            <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted">
-              <li className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-secondary-ink" aria-hidden="true" /> Every organisation verified</li>
-              <li className="flex items-center gap-2"><Lock className="h-4 w-4 text-primary-ink" aria-hidden="true" /> Identities kept confidential</li>
-              <li className="flex items-center gap-2"><span aria-hidden="true">🎁</span> Give the items people actually need</li>
-            </ul>
+            <Link href="/how-it-works" className="mt-6 inline-flex items-center gap-2 rounded-full py-1 text-sm font-semibold text-primary-ink hover:underline">
+              <ArrowRight className="h-4 w-4" aria-hidden="true" /> {t.hero.ctaHow}
+            </Link>
           </div>
           <HeroVisual />
+        </div>
+      </section>
+
+      {/* Why Koode */}
+      <section aria-label="Why Koode" className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="card px-6 py-10 sm:px-10">
+          <FeatureRow />
         </div>
       </section>
 
@@ -95,11 +90,6 @@ export default async function HomePage() {
         </Section>
       </div>
 
-      {/* Privacy */}
-      <Section id="privacy" eyebrow="Our commitment" title="Privacy is built into every layer" lead="Personal details are kept separate from donations in the database, the API and the interface. Only a small number of authorised administrators can link a donation to a person, and every such access is recorded in an audit log.">
-        <PrivacyComparison />
-      </Section>
-
       {/* Impact strip */}
       <section aria-label="Community impact" className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-12 text-primary-fg sm:px-12">
@@ -118,7 +108,7 @@ export default async function HomePage() {
             ))}
           </dl>
           <div className="relative mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/20 pt-8">
-            <p className="max-w-lg text-lg">Run a school, shelter or care home? Request exactly what you need. Your organisation&apos;s details remain confidential.</p>
+            <p className="max-w-lg text-lg">Run a school, shelter or care home? Post exactly what you need and let the community help.</p>
             <Link href="/register?role=recipient" className="inline-flex h-12 items-center gap-2 rounded-full bg-accent px-6 font-semibold text-[#2a1a00] hover:brightness-105">
               {t.hero.ctaRequest} <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>

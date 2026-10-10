@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { CategoryIcon } from "@/components/brand/category-visual";
+import { Stepper } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import { AttributeField } from "@/components/ui/attribute-field";
@@ -33,7 +35,7 @@ interface ItemDraft {
   attributes: Record<string, string>;
 }
 
-const STEPS = ["Category", "Describe", "Items", "Review"];
+const STEPS = ["Category", "Details", "Items", "Review"];
 const OTHER = "__other";
 const blankItem = (key: number): ItemDraft => ({ key, productType: "", name: "", quantity: "", unit: "pcs", estimatedUnitValue: "", attributes: {} });
 
@@ -153,27 +155,25 @@ export function RequestWizard({ categories, defaultDistrict, recurringEnabled }:
 
   return (
     <div className="card p-5 sm:p-8">
-      <ol className="mb-8 flex items-center gap-2" aria-label="Request steps">
-        {STEPS.map((label, i) => (
-          <li key={label} className="flex flex-1 items-center gap-2" aria-current={i === step ? "step" : undefined}>
-            <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold", i < step ? "bg-secondary text-white" : i === step ? "bg-primary text-primary-fg" : "bg-surface-3 text-muted")}>
-              {i < step ? <Check className="h-4 w-4" aria-hidden="true" /> : i + 1}
-            </span>
-            <span className={cn("hidden text-sm font-semibold md:block", i === step ? "text-fg" : "text-subtle")}>{label}</span>
-            {i < STEPS.length - 1 && <span className="h-px flex-1 bg-line" aria-hidden="true" />}
-          </li>
-        ))}
-      </ol>
+      <Stepper steps={STEPS} current={step} label="Request steps" className="mx-auto mb-8 max-w-2xl" />
 
       {step === 0 && (
         <fieldset>
-          <legend className="text-xl font-semibold">What kind of support do you need?</legend>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <legend className="text-xl font-semibold">1. Select category</legend>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
-              <label key={c.id} className={cn("flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors", categoryId === c.id ? "border-primary bg-primary-soft" : "border-line hover:border-line-strong")}>
+              <label
+                key={c.id}
+                title={c.description ?? undefined}
+                className={cn(
+                  "flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 px-3 py-5 text-center transition-colors has-[:focus-visible]:shadow-[var(--ring)]",
+                  categoryId === c.id ? "border-primary bg-primary-soft/60" : "border-line hover:border-line-strong",
+                )}
+              >
                 <input type="radio" name="category" value={c.id} checked={categoryId === c.id} onChange={() => setCategoryId(c.id)} className="sr-only" />
-                <span className="text-2xl" aria-hidden="true">{c.icon}</span>
-                <span><span className="block font-semibold">{c.name}</span><span className="block text-sm text-muted">{c.description}</span></span>
+                <CategoryIcon slug={c.slug} emoji={c.icon} className="h-14 w-14 rounded-2xl" iconClassName="h-7 w-7" />
+                <span className="font-semibold">{c.name}</span>
+                {c.description && <span className="line-clamp-2 text-xs text-muted">{c.description}</span>}
               </label>
             ))}
           </div>

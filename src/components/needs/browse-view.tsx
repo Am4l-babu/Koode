@@ -38,7 +38,7 @@ export async function BrowseView({ query, basePath, fixedCategory }: { query: Br
     <div className="space-y-8">
       <Suspense>
         <FilterBar
-          categories={categories.map((c) => ({ value: c.slug, label: `${c.icon} ${c.name}` }))}
+          categories={categories.map((c) => ({ value: c.slug, label: c.name, icon: c.icon }))}
           districts={[...KERALA_DISTRICTS]}
           productTypes={productTypes}
           categoryName={categories.find((c) => c.slug === filters.category)?.name}
@@ -51,7 +51,7 @@ export async function BrowseView({ query, basePath, fixedCategory }: { query: Br
       </p>
 
       {result.items.length ? (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {result.items.map((n, i) => <NeedCard key={n.id} need={n} index={i} />)}
         </div>
       ) : urgentFilter ? (

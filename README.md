@@ -1,10 +1,10 @@
 # Koode
 
-> **Give what is needed. Receive what is given. Keep identities private.**
+> **Give what matters. Help where it counts.**
 
 ### 👉 [**Try the interactive preview**](https://am4l-babu.github.io/Koode/)
 
-[![Koode interactive preview: need cards with product details and a product-type filter, the donation form with condition, pack size, best-before date and photos, a courier donation in transit with DTDC tracking, and the admin product-type editor adding a Hearing aid type](docs/preview-koode.png)](https://am4l-babu.github.io/Koode/)
+[![Koode screens: homepage, browse needs with category icons and filters, need detail, the four-step donation modal, donor dashboard, request wizard, recipient dashboard, donation tracking timeline, admin dashboard, user management, analytics and the mobile layout](docs/preview-koode-ui.png)](https://am4l-babu.github.io/Koode/)
 
 A click-through demo with sample data: search needs in plain language or narrow a category to one product type, make an anonymous donation — describing each item's condition, size or pack, with a description and photos — then send it by courier, add the tracking number and watch it travel. As an admin, add a product type (say *Medical support → Hearing aid*) with its own details and preview the form organisations will see. Switch between donor / recipient / moderator / admin to see the privacy rules in action, and flip dark mode or Malayalam / Hindi. It runs entirely in your browser — no real donations, and nothing you enter or attach leaves the page. Source: [`docs/index.html`](docs/index.html).
 
@@ -41,9 +41,11 @@ A privacy-first donation platform that connects people who want to donate specif
 
 **Recipients** — organisation registration with encrypted private details, document upload to private storage, verification workflow, **schema-driven Smart Request Builder** (category fields come from the database, so admins can add categories without code) with **product types**: choosing e.g. *Footwear*, *Saree*, *Table / desk* or *Wheelchair* shows that product's own measurements (cm/in, kg/g, L/ml), required fields and default unit — 64 built-in product types in [`src/lib/product-types.ts`](src/lib/product-types.ts), which admins can change. Per-item fulfilment tracking, recurring requests, donors' photos/descriptions/courier tracking on each donation, confirm receipt, anonymous donor references.
 
-**Administrators** — operations dashboard (KPIs, line/donut/bar charts, district tile-map, fulfilment ring, monthly impact), request moderation with automatic quality checks (PII in text, duplicates, quantity sanity, documents) and a priority engine, verification dossier with signed document links, donation management with **photo/video moderation**, **audited identity resolution**, user/role management, least-privilege delivery coordination (including donors' courier and tracking numbers), report/investigation queue, analytics, append-only audit log, platform settings, dynamic categories, data export and retention purge.
+**Administrators** — operations dashboard (KPIs, donations-over-time and by-category charts, recent activity, pending reviews), analytics with overview / donors / recipients / categories / geography sections and a monthly impact row, request moderation with automatic quality checks (PII in text, duplicates, quantity sanity, documents) and a priority engine, verification dossier with signed document links, donation management with **photo/video moderation**, **audited identity resolution**, user/role management, least-privilege delivery coordination (including donors' courier and tracking numbers), report/investigation queue, analytics, append-only audit log, platform settings, dynamic categories, data export and retention purge.
 
 **Super admins** — create/manage admins, grant granular permissions, system settings, export.
+
+**Interface** — a card-based design in teal and green: illustrated hero, category icon tiles, need cards with an illustrated category header, urgency and *“12 remaining of 40”* progress, a need page with a requirements grid, numbered steppers in the donation modal and the request wizard, a horizontal tracking timeline (*Created → Confirmed → Preparing → In transit → Received → Completed*), sidebar dashboards for donors, organisations and admins, and a bottom tab bar on phones.
 
 **Platform** — light + true dark mode (selected palettes, not inverted), WCAG 2.2 AA-minded components (skip link, native accessible dialogs, focus rings, 44px targets, reduced-motion support, table views for every chart), mobile-first layouts, SEO-friendly public pages (`/needs/education`, JSON-LD, canonical URLs), friendly error states with reference IDs and no stack traces, show/hide toggle on every password field.
 

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Check, ClipboardList, Gift, PackageCheck, Search, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, ClipboardList, Gift, PackageCheck, Search, ShieldCheck, Sprout, Target, Users, X } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 import { cn } from "@/components/ui/cn";
+import { CategoryIcon } from "@/components/brand/category-visual";
 
-export function HowItWorksSteps({ t, compact }: { t: Dictionary; compact?: boolean }) {
+export function HowItWorksSteps({ t, compact, privacyNote }: { t: Dictionary; compact?: boolean; privacyNote?: boolean }) {
   const steps = [
     { n: "01", title: t.how.s1t, body: t.how.s1d, icon: ClipboardList },
     { n: "02", title: t.how.s2t, body: t.how.s2d, icon: Search },
@@ -29,9 +30,11 @@ export function HowItWorksSteps({ t, compact }: { t: Dictionary; compact?: boole
           </li>
         ))}
       </ol>
-      <p className="mt-6 flex items-center justify-center gap-2 text-center font-semibold text-primary-ink">
-        <ShieldCheck className="h-5 w-5" aria-hidden="true" /> {t.how.privacy}
-      </p>
+      {privacyNote && (
+        <p className="mt-6 flex items-center justify-center gap-2 text-center font-semibold text-primary-ink">
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" /> {t.how.privacy}
+        </p>
+      )}
     </div>
   );
 }
@@ -75,9 +78,7 @@ function Column({ title, sees, never, accent }: { title: string; sees: string[];
 export function CategoryTile({ slug, name, icon, count }: { slug: string; name: string; icon: string; count: number }) {
   return (
     <Link href={`/needs/${slug}`} className="card card-hover group flex items-center gap-3 p-4">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-2 text-2xl transition-transform group-hover:scale-110" aria-hidden="true">
-        {icon}
-      </span>
+      <CategoryIcon slug={slug} emoji={icon} className="h-12 w-12 rounded-2xl transition-transform group-hover:scale-110" iconClassName="h-6 w-6" />
       <span>
         <span className="block font-semibold text-fg">{name}</span>
         <span className="block text-sm text-muted">{count} active need{count === 1 ? "" : "s"}</span>
@@ -96,5 +97,28 @@ export function Section({ id, eyebrow, title, lead, children, className }: { id?
       </div>
       {children}
     </section>
+  );
+}
+
+const FEATURES = [
+  { icon: BadgeCheck, title: "Verified Needs", body: "Real requirements from organisations our team has checked." },
+  { icon: Target, title: "Exactly What's Needed", body: "Sizes, ages and quantities, so every gift gets used." },
+  { icon: Users, title: "Community Driven", body: "Neighbours helping schools, homes and shelters nearby." },
+  { icon: Sprout, title: "Lasting Impact", body: "Follow each donation from pledge to delivery." },
+];
+
+export function FeatureRow() {
+  return (
+    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
+      {FEATURES.map((f, i) => (
+        <li key={f.title} className="flex animate-rise flex-col items-center text-center" style={{ animationDelay: `${i * 80}ms` }}>
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink">
+            <f.icon className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <h3 className="mt-3 font-semibold text-fg">{f.title}</h3>
+          <p className="mt-1 max-w-[15rem] text-sm text-muted">{f.body}</p>
+        </li>
+      ))}
+    </ul>
   );
 }

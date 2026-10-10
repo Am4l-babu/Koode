@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Check, Minus, Package, Plus, ShieldCheck, Truck, Warehouse } from "lucide-react";
+import { Check, Minus, Package, Plus, Truck, Warehouse } from "lucide-react";
 import type { PublicRequestDTO } from "@/lib/dto/requests";
 import { Dialog } from "@/components/ui/dialog";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Checkbox, Field, RadioCard, Select, Textarea, Input } from "@/components/ui/form";
 import { Callout } from "@/components/ui/states";
-import { PrivacyBadge } from "@/components/brand/badges";
+import { CategoryArt } from "@/components/brand/category-visual";
+import { Stepper } from "@/components/ui/stepper";
 import { MediaPicker, uploadDonationMedia } from "@/components/donations/media-picker";
 import { AttributeField } from "@/components/ui/attribute-field";
 import { formatAttributeValue, listedChoices } from "@/lib/categories";
@@ -17,7 +18,7 @@ import { api, ApiError } from "@/lib/client-api";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/components/ui/cn";
 
-const STEPS = ["What", "How", "Anonymous", "Review"] as const;
+const STEPS = ["Items", "Shipping", "Confirm", "Review"] as const;
 
 const CONDITIONS = [
   ["NEW", "New"],
@@ -194,22 +195,7 @@ export function DonationModal({
 
   return (
     <Dialog open={open} onClose={onClose} title="Commit to a donation" description={need.title} size="md">
-      <ol className="mb-6 flex items-center gap-2" aria-label="Donation steps">
-        {STEPS.map((label, i) => (
-          <li key={label} className="flex flex-1 items-center gap-2" aria-current={i === step ? "step" : undefined}>
-            <span
-              className={cn(
-                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
-                i < step ? "bg-secondary text-white" : i === step ? "bg-primary text-primary-fg" : "bg-surface-3 text-muted",
-              )}
-            >
-              {i < step ? <Check className="h-4 w-4" aria-hidden="true" /> : i + 1}
-            </span>
-            <span className={cn("hidden text-xs font-semibold sm:block", i === step ? "text-fg" : "text-subtle")}>{label}</span>
-            {i < STEPS.length - 1 && <span className="h-px flex-1 bg-line" aria-hidden="true" />}
-          </li>
-        ))}
-      </ol>
+      <Stepper steps={STEPS} current={step} label="Donation steps" className="mb-6" />
 
       {step === 0 && (
         <div className="space-y-5">
@@ -276,6 +262,20 @@ export function DonationModal({
             <h3 className="mb-2 text-sm font-semibold">Photos or video of the items <span className="font-normal text-muted">(optional)</span></h3>
             <MediaPicker files={files} onChange={setFiles} disabled={submitting} idPrefix="donate-media" />
           </div>
+          {lines.length > 0 && (
+            <div className="rounded-2xl border border-line bg-surface-2 p-4" aria-live="polite">
+              <p className="text-sm font-semibold">Your donation</p>
+              <div className="mt-3 flex items-center gap-3">
+                <CategoryArt slug={need.category.slug} emoji={need.category.icon} size="sm" className="h-12 w-12 shrink-0 rounded-xl" />
+                <p className="min-w-0 text-sm font-medium">{lines.map((l) => `${l.quantity} × ${l.item.name}`).join(", ")}</p>
+              </div>
+              {estimate > 0 && (
+                <p className="mt-3 border-t border-line pt-3 text-sm text-muted">
+                  Estimated value <span className="mt-0.5 block font-display text-2xl font-semibold text-fg">{formatINR(estimate)}</span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -310,18 +310,10 @@ export function DonationModal({
 
       {step === 2 && (
         <div className="space-y-5">
-          <div className="flex flex-col items-center rounded-3xl bg-primary-soft px-6 py-8 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-fg animate-pop">
-              <ShieldCheck className="h-8 w-8" aria-hidden="true" />
-            </span>
-            <h3 className="mt-4 text-xl font-semibold">Your donation is anonymous</h3>
-            <p className="mt-2 max-w-sm text-muted">Koode holds your name securely. The organisation will see only a reference such as &ldquo;Community Donor #D7K2Q&rdquo;.</p>
+          <div>
+            <h3 className="font-semibold">How the handover works</h3>
+            <p className="mt-1 text-sm text-muted">Koode coordinates delivery between you and the organisation. They will see a reference such as &ldquo;Community Donor #D7K2Q&rdquo; rather than your details.</p>
           </div>
-          <ul className="space-y-2 text-sm text-muted">
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Your name, phone number, email and address are never shared.</li>
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> Only a small number of authorised administrators can link a donation to you, and every access is recorded in a permanent audit log.</li>
-            <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary-ink" aria-hidden="true" /> The organisation&apos;s identity is protected in the same way.</li>
-          </ul>
           <Checkbox label="I understand that my donation is anonymous and that Koode coordinates the handover." checked={ack} onChange={(e) => setAck(e.target.checked)} />
         </div>
       )}
@@ -356,7 +348,6 @@ export function DonationModal({
               )}
             </dl>
           </div>
-          <PrivacyBadge note="Your identity will not be shared with the organisation." compact />
         </div>
       )}
 
@@ -401,7 +392,6 @@ function SuccessView({ donationId, uploadNote }: { donationId: string; uploadNot
       <p className="mt-2 max-w-sm text-muted">Thank you. Your donation will go directly toward a verified community need.</p>
       <p className="mt-5 text-sm text-muted">Donation ID</p>
       <p className="font-mono text-2xl font-bold tracking-wide text-primary-ink" data-testid="donation-id">{donationId}</p>
-      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary-ink">Your identity remains private.</p>
       {uploadNote && <div className="mt-4 w-full text-left"><Callout tone="warning" title="Some files could not be added">{uploadNote}</Callout></div>}
       <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
         <Link href={`/donor/donations/${donationId}`} className={buttonClass("primary", "md")}>Track Donation</Link>

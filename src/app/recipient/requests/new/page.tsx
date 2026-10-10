@@ -13,7 +13,7 @@ export default async function NewRequestPage() {
   const [categories, org, settings] = await Promise.all([listCategories(), getOwnOrganization(user), getSettings()]);
   return (
     <>
-      <PageHeader eyebrow="New request" title="Request what you actually need" description="A few simple steps. Your organisation stays anonymous to donors." />
+      <PageHeader title="Create a New Request" description="Let us know what you need. Be specific so more people can help." />
       <RequestWizard
         categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name, icon: c.icon, description: c.description, fieldSchema: resolveCategorySchema(c.slug, c.fieldSchema) }))}
         defaultDistrict={org.district}

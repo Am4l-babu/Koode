@@ -1,4 +1,4 @@
-import { AdminSidebar, type AdminNavItem } from "@/components/admin/sidebar";
+import { AppSidebar, DashboardFrame, type SidebarItem } from "@/components/layout/app-sidebar";
 import { requirePageUser } from "@/lib/auth/guards";
 import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
@@ -13,8 +13,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     can("VERIFICATION_REVIEW") ? db.recipientOrganization.count({ where: { verificationStatus: { in: ["PENDING", "UNDER_REVIEW"] } } }) : 0,
     can("REQUEST_REVIEW") ? db.report.count({ where: { status: { in: ["OPEN", "INVESTIGATING"] } } }) : 0,
   ]);
-  const items: AdminNavItem[] = [
-    { href: "/admin", label: "Dashboard", icon: "Gauge" as const },
+  const items: SidebarItem[] = [
+    { href: "/admin", label: "Dashboard", icon: "LayoutDashboard" as const, exact: true },
     ...(can("REQUEST_REVIEW") ? [{ href: "/admin/requests", label: "Requests", icon: "ClipboardCheck" as const, badge: pendingReq + openReports }] : []),
     ...(can("DONATION_MANAGEMENT") ? [{ href: "/admin/donations", label: "Donations", icon: "HandHeart" as const }] : []),
     ...(can("USER_MANAGEMENT") ? [{ href: "/admin/users", label: "Users", icon: "Users" as const }] : []),
@@ -24,12 +24,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ...(can("AUDIT_LOG_VIEW") ? [{ href: "/admin/audit-logs", label: "Audit Logs", icon: "FileClock" as const }] : []),
     { href: "/admin/settings", label: "Settings", icon: "Settings" as const },
   ];
-  return (
-    <div className="mx-auto max-w-[90rem] px-4 py-8 sm:px-6">
-      <div className="lg:flex lg:gap-8">
-        <AdminSidebar items={items} roleLabel={`${user.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"} #${user.publicId}`} />
-        <div className="min-w-0 flex-1">{children}</div>
-      </div>
-    </div>
-  );
+  return <DashboardFrame sidebar={<AppSidebar items={items} heading={`${user.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"} #${user.publicId}`} />}>{children}</DashboardFrame>;
 }

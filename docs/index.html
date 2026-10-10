@@ -77,8 +77,14 @@ nav.main a:hover{background:var(--surface-3);color:var(--fg)}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--primary-soft);color:var(--primary-ink);border-radius:999px;padding:6px 14px;font-weight:650;font-size:.82rem}
 .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--secondary);box-shadow:0 0 0 0 var(--secondary);animation:pulse 2s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.hero h1{font-size:clamp(2.3rem,5.4vw,3.9rem);margin:18px 0 16px}
-.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--primary),var(--secondary));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1{font-size:clamp(2.6rem,6vw,4.4rem);margin:0 0 16px;line-height:1.02}
+.hero h1 em{display:block;font-style:normal;font-size:.5em;margin-top:12px;color:var(--primary-ink)}
+.wreath svg{width:100%;max-width:460px;height:auto;display:block;margin:0 auto}
+.floaty{animation:floaty 6s ease-in-out infinite}@keyframes floaty{50%{transform:translateY(-6px)}}
+.features{list-style:none;margin:0;padding:28px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:center}
+@media(max-width:760px){.features{grid-template-columns:repeat(2,1fr)}}
+.features span{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 10px;border-radius:16px;background:var(--primary-soft);color:var(--primary-ink);font-size:1.3rem;font-weight:700}
+.features b{display:block}.features small{color:var(--fg-muted);font-size:.86rem}
 .lead{font-size:1.15rem;color:var(--fg-muted);max-width:34em}
 .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
 .trust{display:flex;flex-wrap:wrap;gap:18px;margin-top:28px;color:var(--fg-muted);font-size:.9rem}
@@ -155,12 +161,21 @@ section{padding:64px 0}
 .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .cats button{border:1.5px solid var(--border-strong);background:var(--surface);color:var(--fg-muted);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.88rem}
 .cats button[aria-pressed=true]{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+#cats button{display:flex;flex-direction:column;align-items:center;gap:6px;width:88px;border-radius:16px;border-color:transparent;background:none;padding:8px 4px;font-size:.78rem}
+#cats button i{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;font-style:normal;font-size:1.25rem;background:color-mix(in srgb,var(--h) 16%,var(--surface))}
+#cats button[aria-pressed=true]{background:var(--primary-soft);color:var(--primary-ink);border-color:var(--primary)}
 .prods{align-items:center}.prods>span{font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-subtle);margin-right:2px}
 .prods button small{opacity:.75;margin-left:4px}
 .hints{color:var(--fg-subtle);font-size:.86rem;margin-bottom:18px}
 .hints button{border:0;background:none;color:var(--primary-ink);text-decoration:underline;padding:0 4px;font:inherit;font-size:.86rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
-.need{padding:20px;display:flex;flex-direction:column;gap:12px;transition:transform .25s,box-shadow .25s}
+.need{padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.art{position:relative;overflow:hidden;height:150px;margin:0 -20px 4px;display:grid;place-items:center;background:radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--h) 30%,var(--surface)),transparent 60%),linear-gradient(160deg,color-mix(in srgb,var(--h) 18%,var(--surface)),color-mix(in srgb,var(--h) 7%,var(--surface)))}
+.art::before{content:"";position:absolute;left:-30px;bottom:-40px;width:130px;height:130px;border-radius:50%;background:color-mix(in srgb,var(--h) 22%,var(--surface))}
+.art>b{position:relative;display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow-md);font-size:2rem}
+.art .tags{position:absolute;inset:12px 12px auto;justify-content:space-between}
+.art .chip{box-shadow:var(--shadow-sm)}
+.need .where{display:flex;gap:12px;flex-wrap:wrap;color:var(--fg-muted);font-size:.86rem}
 .need:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .need h3{font-size:1.1rem}
 .need .org{color:var(--fg-muted);font-size:.86rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -285,45 +300,52 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <main id="top">
 <section class="hero" style="padding-top:56px"><div class="wrap hero-grid">
   <div>
-    <span class="eyebrow"><i></i><span data-i="eyebrow">Dignified, privacy-first giving</span></span>
-    <h1><span data-i="h1a">Give what is truly needed.</span><br><em data-i="h1b">Keep every name private.</em></h1>
-    <p class="lead" data-i="lead">Koode connects donors with verified schools, children's homes, care homes and shelters. Organisations state exactly what they need, donors provide it, and neither side learns the other's identity.</p>
+    <h1><span data-i="h1a">Give What Matters.</span><em data-i="h1b">Help Where It Counts.</em></h1>
+    <p class="lead" data-i="lead">A trusted platform where verified needs from schools, children's homes and care homes meet generous people. Give exactly what is asked for, and follow it until it arrives.</p>
     <div class="cta">
       <a class="btn primary" href="#browse" data-i="cta1">Help Someone</a>
-      <a class="btn ghost" href="#privacy" data-i="cta2">See the privacy lens</a>
-    </div>
-    <div class="trust">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-i="t1">Every organisation verified</span></span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span data-i="t2">Personal data encrypted</span></span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span data-i="t3">Every access audited</span></span>
+      <a class="btn ghost" href="#how" data-i="cta2">How It Works</a>
     </div>
   </div>
-  <div class="scene" aria-label="Animation: a donation travels over the Koode bridge between an anonymous donor and a verified recipient">
-    <svg viewBox="0 0 460 280" role="img" aria-hidden="true">
-      <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--secondary)"/></linearGradient></defs>
-      <rect x="0" y="206" width="460" height="74" rx="0" fill="var(--bg-tint)"/>
-      <path d="M0 214 Q 115 196 230 214 T 460 214" fill="none" stroke="var(--border-strong)" stroke-width="2" stroke-dasharray="3 7"/>
-      <path d="M70 190 C 130 70, 330 70, 390 190" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
-      <g stroke="var(--border-strong)" stroke-width="2"><line x1="120" y1="124" x2="120" y2="196"/><line x1="165" y1="100" x2="165" y2="200"/><line x1="295" y1="100" x2="295" y2="200"/><line x1="340" y1="124" x2="340" y2="196"/></g>
-      <circle class="pulse-ring" cx="230" cy="92" r="46" fill="var(--primary)"/>
-      <g transform="translate(206 62)"><path d="M24 0 L46 9 V26 C46 40 37 49 24 54 C11 49 2 40 2 26 V9 Z" fill="var(--primary)"/><path d="M24 36 C 14 30 12 24 14 20 C 16 16 22 16 24 20 C 26 16 32 16 34 20 C 36 24 34 30 24 36 Z" fill="var(--accent)"/></g>
-      <g><circle cx="70" cy="200" r="26" fill="var(--surface)" stroke="var(--primary)" stroke-width="3"/><circle cx="70" cy="193" r="7" fill="var(--fg-subtle)"/><path d="M56 212 q14-17 28 0" fill="var(--fg-subtle)"/><rect x="40" y="226" width="60" height="22" rx="11" fill="var(--primary-soft)"/><text x="70" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="var(--primary-ink)">D·7K2Q</text></g>
-      <g><circle cx="390" cy="200" r="26" fill="var(--surface)" stroke="var(--secondary)" stroke-width="3"/><path d="M376 208 h28 v-12 l-14 -10 l-14 10z" fill="var(--secondary)"/><rect x="386" y="199" width="8" height="9" fill="var(--surface)"/><rect x="354" y="226" width="72" height="22" rx="11" fill="var(--secondary-soft)"/><text x="390" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="var(--secondary-ink)">R·4HT2WP</text></g>
-      <g class="packet"><rect x="-9" y="-9" width="18" height="18" rx="5" fill="var(--accent)"/></g>
-      <g class="packet b"><rect x="-8" y="-8" width="16" height="16" rx="5" fill="var(--secondary)"/></g>
-      <g class="packet c"><rect x="-7" y="-7" width="14" height="14" rx="4" fill="var(--primary)"/></g>
-      <text x="230" y="30" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fg-muted)">only Koode sees both ends</text>
+  <div class="wreath" role="img" aria-label="Illustration: a gift held inside a wreath of leaves">
+    <svg viewBox="0 0 500 480" aria-hidden="true">
+      <defs>
+        <radialGradient id="halo"><stop offset="0" stop-color="var(--secondary)" stop-opacity=".22"/><stop offset="1" stop-color="var(--secondary)" stop-opacity="0"/></radialGradient>
+        <linearGradient id="box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb923c"/><stop offset="1" stop-color="#ea580c"/></linearGradient>
+        <linearGradient id="side" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f97316"/><stop offset="1" stop-color="#c2410c"/></linearGradient>
+        <linearGradient id="hand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#14b8a6"/></linearGradient>
+      </defs>
+      <circle cx="250" cy="240" r="210" fill="url(#halo)"/>
+      <circle cx="250" cy="240" r="128" fill="var(--surface)" opacity=".9"/>
+      <g transform="translate(108.8 321.5) rotate(218.0) scale(0.75)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#0f766e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(80.7 291.6) rotate(281.0) scale(1.15)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#fb923c" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(59.4 253.0) rotate(244.1) scale(0.85)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#84cc16" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(88.1 214.0) rotate(307.1) scale(1.25)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#facc15" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(85.2 172.8) rotate(270.2) scale(0.95)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#14b8a6" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(93.1 129.3) rotate(333.2) scale(1.35)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#22c55e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(140.2 116.9) rotate(296.3) scale(1.05)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#15803d" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(164.1 83.0) rotate(359.3) scale(0.75)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#f59e0b" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(197.9 54.2) rotate(322.3) scale(1.15)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#0f766e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(242.4 74.2) rotate(385.4) scale(0.85)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#fb923c" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(282.6 63.0) rotate(348.4) scale(1.25)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#84cc16" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(322.9 72.2) rotate(411.5) scale(0.95)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#facc15" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(349.4 105.8) rotate(374.5) scale(1.35)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#14b8a6" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(387.8 122.6) rotate(437.6) scale(1.05)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#22c55e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(413.4 155.3) rotate(400.6) scale(0.75)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#15803d" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(412.8 198.4) rotate(463.7) scale(1.15)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#f59e0b" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(432.0 235.9) rotate(426.7) scale(0.85)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#0f766e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(431.1 277.6) rotate(489.7) scale(1.25)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#fb923c" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(403.4 310.8) rotate(452.8) scale(0.95)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#84cc16" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(394.5 352.2) rotate(515.8) scale(1.35)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#facc15" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(367.4 384.3) rotate(478.9) scale(1.05)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#14b8a6" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(324.8 392.7) rotate(541.9) scale(0.75)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#22c55e" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(289.0 408.5) rotate(505.0) scale(1.15)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#15803d" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(250.0 427.0) rotate(568.0) scale(0.85)"><path d="M0,-30 C16,-16 16,12 0,30 C-16,12 -16,-16 0,-30 Z" fill="#f59e0b" opacity=".92"/><path d="M0,-24 L0,24" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/></g>
+      <path d="M92 318 C120 392, 236 420, 330 372 C356 358, 372 340, 380 322 C350 342, 300 356, 250 354 C190 352, 140 340, 92 318 Z" fill="url(#hand)"/>
+      <g class="floaty">
+        <ellipse cx="250" cy="338" rx="78" ry="10" fill="#000" opacity=".08"/>
+        <path d="M184 238 H300 V330 H184 Z" fill="url(#box)"/><path d="M300 238 L326 224 V314 L300 330 Z" fill="url(#side)"/>
+        <path d="M176 214 H306 V242 H176 Z" fill="#fdba74"/><path d="M306 214 L334 199 V226 L306 242 Z" fill="#fb923c"/><path d="M176 214 L204 199 H334 L306 214 Z" fill="#fed7aa"/>
+        <rect x="231" y="214" width="20" height="116" fill="#facc15"/><path d="M231 214 L259 199 H279 L251 214 Z" fill="#fde047"/>
+        <path d="M241 204 C214 170, 182 186, 206 204 C220 213, 236 208, 241 204 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+        <path d="M243 204 C262 166, 300 176, 280 200 C268 212, 250 208, 243 204 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+        <circle cx="242" cy="204" r="8" fill="#eab308"/>
+      </g>
+      <path d="M392 120 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z" fill="var(--accent)"/>
+      <path d="M356 168 c0 -6 8 -8 10 -2 c2 -6 10 -4 10 2 c0 7 -10 12 -10 12 s-10 -5 -10 -12 Z" fill="#fb7185"/>
     </svg>
-    <div class="cap"><span>Anonymous donor</span><span>Verified recipient</span></div>
   </div>
 </div></section>
 
-<section style="padding-top:20px"><div class="wrap">
-  <div class="stats" id="stats">
+<section style="padding-top:12px"><div class="wrap">
+  <ul class="features card">
+    <li><span>✔</span><b>Verified Needs</b><small>Real requirements from organisations our team has checked.</small></li>
+    <li><span>◎</span><b>Exactly What's Needed</b><small>Sizes, ages and quantities, so every gift gets used.</small></li>
+    <li><span>👥</span><b>Community Driven</b><small>Neighbours helping schools, homes and shelters nearby.</small></li>
+    <li><span>🌱</span><b>Lasting Impact</b><small>Follow each donation from pledge to delivery.</small></li>
+  </ul>
+  <div class="stats" id="stats" style="margin-top:18px">
     <div class="stat"><b data-count="1284">0</b><span>items delivered</span></div>
     <div class="stat"><b data-count="86">0</b><span>verified organisations</span></div>
     <div class="stat"><b data-count="14">0</b><span>districts reached</span></div>
-    <div class="stat"><b data-count="0">0</b><span>identities exposed</span></div>
+    <div class="stat"><b data-count="2184">0</b><span>people supported</span></div>
   </div>
 </div></section>
 
@@ -439,7 +461,7 @@ const COURIERS=[
  ["Franch Express","https://franchexpress.com/"],["Shadowfax","https://www.shadowfax.in/"],["Gati (Allcargo)","https://www.allcargologistics.com/"],["KSRTC Courier & Logistics",null]
 ];
 const CONDS=["New","Like new","Good"];
-const CATS={all:["All","✨"],education:["Education","📚"],clothing:["Clothing","👕"],"elder-care":["Elder care","🧓"],children:["Children","🧸"],food:["Food","🍚"],sports:["Sports","⚽"]};
+const CATS={all:["All","▦","#0f766e"],education:["Education","🎒","#0f766e"],clothing:["Clothing","👕","#059669"],"elder-care":["Elder care","🤝","#7c3aed"],children:["Children","🧸","#e11d48"],food:["Food","🍚","#ea580c"],sports:["Sports","⚽","#ca8a04"]};
 const URGW={CRITICAL:4,HIGH:3,MEDIUM:2,NORMAL:1};
 const URGC={CRITICAL:"crit",HIGH:"high",MEDIUM:"med",NORMAL:""};
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -451,9 +473,9 @@ const mine=[]; let reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").
 
 /* ───────── i18n (hero + headings) ───────── */
 const I18N={
- en:{nav_browse:"Browse Needs",nav_privacy:"Privacy lens",nav_how:"How It Works",nav_mine:"My Donations",eyebrow:"Dignified, privacy-first giving",h1a:"Give what is truly needed.",h1b:"Keep every name private.",lead:"Koode connects donors with verified schools, children's homes, care homes and shelters. Organisations state exactly what they need, donors provide it, and neither side learns the other's identity.",cta1:"Help Someone",cta2:"See the privacy lens",t1:"Every organisation verified",t2:"Personal data encrypted",t3:"Every access audited",browse_h:"Browse verified needs",browse_p:"Search in plain language: type what you can give, or where.",priv_h:"The privacy lens",priv_p:"One donation, four points of view. Switch roles and try to look behind the curtain: the system responds as it would in production.",how_h:"How it works",how_p:"Four clear steps from a verified need to a delivered donation.",mine_h:"My donations"},
- ml:{nav_browse:"ആവശ്യങ്ങൾ",nav_privacy:"സ്വകാര്യത",nav_how:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",nav_mine:"എന്റെ സംഭാവനകൾ",eyebrow:"അന്തസ്സോടെയും സ്വകാര്യതയോടെയും ഉള്ള സംഭാവന",h1a:"യഥാർത്ഥത്തിൽ ആവശ്യമുള്ളത് നൽകൂ.",h1b:"ഓരോ വ്യക്തിത്വവും സ്വകാര്യമായി.",lead:"സ്ഥിരീകരിച്ച സ്കൂളുകൾ, ബാലഭവനങ്ങൾ, വൃദ്ധസദനങ്ങൾ, അഭയകേന്ദ്രങ്ങൾ എന്നിവയുമായി Koode ദാതാക്കളെ ബന്ധിപ്പിക്കുന്നു. ഇരുകൂട്ടരും പരസ്പരം വ്യക്തിത്വം അറിയുന്നില്ല.",cta1:"ഒരാളെ സഹായിക്കൂ",cta2:"സ്വകാര്യത കാണൂ",t1:"എല്ലാ സ്ഥാപനങ്ങളും സ്ഥിരീകരിച്ചവ",t2:"വ്യക്തിവിവരങ്ങൾ എൻക്രിപ്റ്റ് ചെയ്തിരിക്കുന്നു",t3:"ഓരോ ആക്സസും ഓഡിറ്റ് ചെയ്യുന്നു",browse_h:"സ്ഥിരീകരിച്ച ആവശ്യങ്ങൾ",browse_p:"ലളിതമായ ഭാഷയിൽ തിരയൂ: നൽകാനാവുന്നത്, അല്ലെങ്കിൽ സ്ഥലം.",priv_h:"സ്വകാര്യതാ ലെൻസ്",priv_p:"ഒരു സംഭാവന, നാല് കാഴ്ചപ്പാടുകൾ. റോൾ മാറ്റി സിസ്റ്റം എങ്ങനെ പ്രതികരിക്കുന്നുവെന്ന് നോക്കൂ.",how_h:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",how_p:"സ്ഥിരീകരിച്ച ആവശ്യത്തിൽ നിന്ന് എത്തിച്ച സംഭാവനയിലേക്ക് നാല് വ്യക്തമായ ഘട്ടങ്ങൾ.",mine_h:"എന്റെ സംഭാവനകൾ"},
- hi:{nav_browse:"ज़रूरतें देखें",nav_privacy:"गोपनीयता लेंस",nav_how:"यह कैसे काम करता है",nav_mine:"मेरे दान",eyebrow:"गरिमा और गोपनीयता के साथ दान",h1a:"जिसकी वास्तव में ज़रूरत है, वही दें।",h1b:"हर पहचान गोपनीय रखें।",lead:"Koode दाताओं को सत्यापित स्कूलों, बाल गृहों, वृद्धाश्रमों और आश्रय स्थलों से जोड़ता है। संस्थाएँ बताती हैं कि उन्हें ठीक क्या चाहिए; दाता उसे उपलब्ध कराते हैं; और कोई भी पक्ष दूसरे की पहचान नहीं जान पाता।",cta1:"किसी की मदद करें",cta2:"गोपनीयता लेंस देखें",t1:"हर संस्था सत्यापित",t2:"व्यक्तिगत डेटा एन्क्रिप्टेड",t3:"हर पहुँच का ऑडिट",browse_h:"सत्यापित ज़रूरतें",browse_p:"सरल भाषा में खोजें: आप क्या दे सकते हैं, या कहाँ।",priv_h:"गोपनीयता लेंस",priv_p:"एक दान, चार दृष्टिकोण। भूमिका बदलकर देखें कि प्रणाली वास्तविक रूप में कैसे प्रतिक्रिया करती है।",how_h:"यह कैसे काम करता है",how_p:"सत्यापित ज़रूरत से पहुँचाए गए दान तक चार स्पष्ट चरण।",mine_h:"मेरे दान"}
+ en:{nav_browse:"Browse Needs",nav_privacy:"Privacy lens",nav_how:"How It Works",nav_mine:"My Donations",h1a:"Give What Matters.",h1b:"Help Where It Counts.",lead:"A trusted platform where verified needs from schools, children's homes and care homes meet generous people. Give exactly what is asked for, and follow it until it arrives.",cta1:"Help Someone",cta2:"How It Works",t1:"Every organisation verified",t2:"Personal data encrypted",t3:"Every access audited",browse_h:"Browse verified needs",browse_p:"Search in plain language: type what you can give, or where.",priv_h:"The privacy lens",priv_p:"One donation, four points of view. Switch roles and try to look behind the curtain: the system responds as it would in production.",how_h:"How it works",how_p:"Four clear steps from a verified need to a delivered donation.",mine_h:"My donations"},
+ ml:{nav_browse:"ആവശ്യങ്ങൾ",nav_privacy:"സ്വകാര്യത",nav_how:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",nav_mine:"എന്റെ സംഭാവനകൾ",eyebrow:"അന്തസ്സോടെയും സ്വകാര്യതയോടെയും ഉള്ള സംഭാവന",h1a:"പ്രാധാന്യമുള്ളത് നൽകൂ.",h1b:"ആവശ്യമുള്ളിടത്ത് സഹായം എത്തിക്കൂ.",lead:"സ്ഥിരീകരിച്ച സ്കൂളുകൾ, ബാലഭവനങ്ങൾ, വൃദ്ധസദനങ്ങൾ, അഭയകേന്ദ്രങ്ങൾ എന്നിവയുമായി Koode ദാതാക്കളെ ബന്ധിപ്പിക്കുന്നു. ഇരുകൂട്ടരും പരസ്പരം വ്യക്തിത്വം അറിയുന്നില്ല.",cta1:"ഒരാളെ സഹായിക്കൂ",cta2:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",t1:"എല്ലാ സ്ഥാപനങ്ങളും സ്ഥിരീകരിച്ചവ",t2:"വ്യക്തിവിവരങ്ങൾ എൻക്രിപ്റ്റ് ചെയ്തിരിക്കുന്നു",t3:"ഓരോ ആക്സസും ഓഡിറ്റ് ചെയ്യുന്നു",browse_h:"സ്ഥിരീകരിച്ച ആവശ്യങ്ങൾ",browse_p:"ലളിതമായ ഭാഷയിൽ തിരയൂ: നൽകാനാവുന്നത്, അല്ലെങ്കിൽ സ്ഥലം.",priv_h:"സ്വകാര്യതാ ലെൻസ്",priv_p:"ഒരു സംഭാവന, നാല് കാഴ്ചപ്പാടുകൾ. റോൾ മാറ്റി സിസ്റ്റം എങ്ങനെ പ്രതികരിക്കുന്നുവെന്ന് നോക്കൂ.",how_h:"എങ്ങനെ പ്രവർത്തിക്കുന്നു",how_p:"സ്ഥിരീകരിച്ച ആവശ്യത്തിൽ നിന്ന് എത്തിച്ച സംഭാവനയിലേക്ക് നാല് വ്യക്തമായ ഘട്ടങ്ങൾ.",mine_h:"എന്റെ സംഭാവനകൾ"},
+ hi:{nav_browse:"ज़रूरतें देखें",nav_privacy:"गोपनीयता लेंस",nav_how:"यह कैसे काम करता है",nav_mine:"मेरे दान",eyebrow:"गरिमा और गोपनीयता के साथ दान",h1a:"वह दें जो मायने रखता है।",h1b:"जहाँ ज़रूरत है, वहाँ मदद करें।",lead:"Koode दाताओं को सत्यापित स्कूलों, बाल गृहों, वृद्धाश्रमों और आश्रय स्थलों से जोड़ता है। संस्थाएँ बताती हैं कि उन्हें ठीक क्या चाहिए; दाता उसे उपलब्ध कराते हैं; और कोई भी पक्ष दूसरे की पहचान नहीं जान पाता।",cta1:"किसी की मदद करें",cta2:"यह कैसे काम करता है",t1:"हर संस्था सत्यापित",t2:"व्यक्तिगत डेटा एन्क्रिप्टेड",t3:"हर पहुँच का ऑडिट",browse_h:"सत्यापित ज़रूरतें",browse_p:"सरल भाषा में खोजें: आप क्या दे सकते हैं, या कहाँ।",priv_h:"गोपनीयता लेंस",priv_p:"एक दान, चार दृष्टिकोण। भूमिका बदलकर देखें कि प्रणाली वास्तविक रूप में कैसे प्रतिक्रिया करती है।",how_h:"यह कैसे काम करता है",how_p:"सत्यापित ज़रूरत से पहुँचाए गए दान तक चार स्पष्ट चरण।",mine_h:"मेरे दान"}
 };
 function setLang(l){document.documentElement.lang=l;$$("[data-i]").forEach(e=>{const v=I18N[l][e.dataset.i];if(v)e.textContent=v});$$("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===l))}
 $$("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
@@ -500,7 +522,7 @@ function visible(){
 }
 
 /* ───────── render browse ───────── */
-function renderCats(){$("#cats").innerHTML=Object.entries(CATS).map(([k,[l,e]])=>`<button aria-pressed="${state.cat===k}" data-cat="${k}">${e} ${l}</button>`).join("");$$("#cats button").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;state.product="";renderCats();renderGrid()});renderProducts()}
+function renderCats(){$("#cats").innerHTML=Object.entries(CATS).map(([k,[l,e,h]])=>`<button aria-pressed="${state.cat===k}" data-cat="${k}" style="--h:${h}"><i aria-hidden="true">${e}</i>${l}</button>`).join("");$$("#cats button").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;state.product="";renderCats();renderGrid()});renderProducts()}
 /* Product types with open needs in the chosen category (mirrors the app's product filter). */
 function renderProducts(){
   const box=$("#prods"), counts=new Map();
@@ -514,14 +536,14 @@ $("#district").insertAdjacentHTML("beforeend",[...new Set(NEEDS.map(n=>n.distric
 function card(n){
   const p=pct(n), left=tot(n)-got(n);
   return `<article class="card need" id="${n.id}" data-id="${n.id}">
-   <div class="tags"><span class="chip ${URGC[n.urg]}">${n.urg==="CRITICAL"?"🔥":""} ${n.urg[0]+n.urg.slice(1).toLowerCase()}</span><span class="chip">${CATS[n.cat][1]} ${CATS[n.cat][0]}</span>${n.rec?`<span class="chip amber">↻ ${n.rec}</span>`:""}</div>
+   <div class="art" style="--h:${CATS[n.cat][2]}" aria-hidden="true"><div class="tags"><span class="chip" style="background:var(--surface);color:var(--fg)">${CATS[n.cat][1]} ${CATS[n.cat][0]}</span><span class="chip ${URGC[n.urg]}">${n.urg[0]+n.urg.slice(1).toLowerCase()}</span></div><b>${CATS[n.cat][1]}</b></div>
    <h3>${esc(n.title)}</h3>
-   <div class="org"><span class="chip ok">✔ Verified</span> ${esc(n.org)} · Partner #${n.ref} · ${n.city}, ${n.district}</div>
+   <div class="org"><span class="chip ok">✔ ${esc(n.org)}</span>${n.rec?`<span class="chip amber">↻ ${n.rec}</span>`:""}</div>
+   <div class="where"><span>📍 ${n.city}, ${n.district}</span><span>⏳ ${n.days} days left</span></div>
    <div class="specs">${n.items.map(i=>`<span title="${esc(i[0])}">${esc(i[3].type)} · ${esc(Object.entries(i[3].req).map(([k,v])=>k+" "+v).join(", "))}</span>`).join("")}</div>
    <div><div class="bar-track" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Fulfilment"><div class="bar-fill" style="width:${p}%"></div></div>
    <div class="meta" style="margin-top:6px"><span><b data-got>${got(n)}</b> / ${tot(n)} items</span><span><b data-pct>${p}%</b> fulfilled</span></div></div>
-   <div class="meta"><span>👥 ${n.people} people</span><span>⏳ needed in ${n.days} days</span></div>
-   <div class="foot"><span class="chip" title="Identity protected">🔒 Identity protected</span><button class="btn primary sm" data-help="${n.id}" ${left<=0?"disabled":""}>${left<=0?"Fulfilled 🎉":"Help"}</button></div>
+   <div class="foot"><span class="chip">👥 ${n.people} people</span><button class="btn primary sm" data-help="${n.id}" ${left<=0?"disabled":""}>${left<=0?"Fulfilled 🎉":"Help"}</button></div>
   </article>`;
 }
 function renderGrid(){
